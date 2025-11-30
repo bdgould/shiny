@@ -1,6 +1,7 @@
 {
   "name": "shiny",
   "version": "0.1.0",
+  "main": "packages/main/dist/index.js",
   "description": "An extensible SPARQL client built with Electron and Vue 3",
   "private": true,
   "author": "Ben Gould",
@@ -27,6 +28,37 @@
     "rimraf": "^5.0.5",
     "typescript": "^5.3.3",
     "wait-on": "^7.2.0"
+  },
+  "dependencies": {
+    "aws4": "^1.12.0",
+    "axios": "^1.6.7",
+    "electron-store": "^8.2.0",
+    "sparqljs": "^3.7.3"
+  },
+  "build": {
+    "appId": "gould.one.shiny",
+    "productName": "Shiny",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "packages/main/dist/**",
+      "packages/preload/dist/**",
+      "packages/renderer/dist/**",
+      "package.json"
+    ],
+    "mac": {
+      "target": "dmg",
+      "icon": "icons/shiny.icns"
+    },
+    "win": {
+      "target": "nsis",
+      "icon": "icons/shiny.ico"
+    },
+    "linux": {
+      "target": "AppImage",
+      "icon": "icons/shiny.ico"
+    }
   },
   "engines": {
     "node": ">=18.0.0",
