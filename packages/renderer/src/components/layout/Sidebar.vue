@@ -21,6 +21,7 @@
         <label for="backend-type">Backend Type</label>
         <select id="backend-type" v-model="backendType" class="select">
           <option value="generic">Generic SPARQL 1.1</option>
+          <option value="graphstudio">Altair GraphStudio</option>
           <option value="neptune">Amazon Neptune</option>
           <option value="stardog">Stardog</option>
           <option value="local">Local RDF File</option>

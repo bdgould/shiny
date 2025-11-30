@@ -3,7 +3,9 @@
     <div class="editor-section" :style="{ height: editorHeight }">
       <div class="editor-header">
         <h3>SPARQL Query</h3>
-        <button class="btn-primary" @click="executeQuery">Execute</button>
+        <button class="btn-primary" @click="executeQuery">
+          Execute <span class="shortcut-hint">{{ shortcutHint }}</span>
+        </button>
       </div>
       <MonacoSparqlEditor />
     </div>
@@ -60,10 +62,24 @@
 <script setup lang="ts">
 import { ref, computed, onUnmounted } from 'vue';
 import { useQueryStore } from '@/stores/query';
+import { useKeyboardShortcuts } from '@/composables/useKeyboardShortcuts';
 import MonacoSparqlEditor from '@/components/editor/MonacoSparqlEditor.vue';
 import ResultsView from '@/components/results/ResultsView.vue';
 
 const queryStore = useQueryStore();
+
+// Register keyboard shortcut: Cmd+Enter (Mac) or Ctrl+Enter (Win/Linux)
+useKeyboardShortcuts([
+  {
+    key: 'Enter',
+    ctrlOrCmd: true,
+    callback: executeQuery
+  }
+]);
+
+// Platform detection for keyboard shortcut hint
+const isMac = ref(navigator.platform.toUpperCase().indexOf('MAC') >= 0);
+const shortcutHint = computed(() => isMac.value ? '⌘↩' : 'Ctrl+↵');
 
 // Results panel state
 const isResultsCollapsed = ref(false);
@@ -253,6 +269,13 @@ onUnmounted(() => {
 
 .btn-primary:active {
   transform: translateY(1px);
+}
+
+.shortcut-hint {
+  opacity: 0.7;
+  font-size: 0.75rem;
+  margin-left: 0.5rem;
+  font-weight: 400;
 }
 
 .btn-icon {

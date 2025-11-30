@@ -348,6 +348,14 @@ onMounted(() => {
       queryStore.setQuery(editor.getValue());
     }
   });
+
+  // Register keyboard shortcut: Cmd+Enter (Mac) or Ctrl+Enter (Win/Linux) to execute query
+  editor.addCommand(
+    monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter,
+    () => {
+      queryStore.executeQuery();
+    }
+  );
 });
 
 // Watch for external changes to the query
