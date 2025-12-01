@@ -1,2 +1,3 @@
 // Import all IPC handlers here
-import './query';
+import './query.js';
+import './backends.js';

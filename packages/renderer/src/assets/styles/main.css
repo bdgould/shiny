@@ -35,6 +35,12 @@ body {
   --color-error: #d32f2f;
   --color-success: #388e3c;
   --color-warning: #f57c00;
+
+  /* Sidebar dimensions */
+  --sidebar-icon-bar-width: 48px;
+  --sidebar-drawer-min-width: 200px;
+  --sidebar-drawer-max-width: 600px;
+  --sidebar-transition-speed: 0.2s;
 }
 
 /* Dark theme */

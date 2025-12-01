@@ -1,38 +1,6 @@
 import { ipcMain } from 'electron';
-import axios from 'axios';
-import { Parser } from 'sparqljs';
-
-const parser = new Parser();
-
-// Detect SPARQL query type
-function detectQueryType(query: string): string {
-  try {
-    const parsed = parser.parse(query);
-    // Check if it's a Query (not an Update)
-    if ('queryType' in parsed) {
-      return parsed.queryType.toUpperCase();
-    }
-    // If it's an Update or unknown, default to SELECT
-    return 'SELECT';
-  } catch {
-    return 'SELECT';
-  }
-}
-
-// Get appropriate Accept header based on query type
-function getAcceptHeader(queryType: string): string {
-  switch (queryType) {
-    case 'SELECT':
-    case 'ASK':
-      return 'application/sparql-results+json';
-    case 'CONSTRUCT':
-    case 'DESCRIBE':
-      // Request Turtle (most readable and parseable RDF format)
-      return 'text/turtle';
-    default:
-      return 'application/sparql-results+json';
-  }
-}
+import { getBackendService } from '../services/index.js';
+import { BackendFactory } from '../backends/BackendFactory.js';
 
 // Validate sender is authorized
 function isAuthorizedSender(frame: Electron.WebFrameMain): boolean {
@@ -41,61 +9,50 @@ function isAuthorizedSender(frame: Electron.WebFrameMain): boolean {
 }
 
 // Execute SPARQL query
-ipcMain.handle('query:execute', async (event, { query, endpoint }) => {
+ipcMain.handle('query:execute', async (event, { query, backendId }) => {
   // 1. Validate sender
   if (!isAuthorizedSender(event.senderFrame)) {
     throw new Error('Unauthorized IPC sender');
   }
 
   // 2. Validate input
-  if (typeof query !== 'string' || typeof endpoint !== 'string') {
-    throw new Error('Invalid parameters');
+  if (typeof query !== 'string') {
+    throw new Error('Invalid query parameter');
+  }
+
+  if (typeof backendId !== 'string' || !backendId) {
+    throw new Error('Invalid backend ID');
   }
 
   if (query.length > 100000) {
     throw new Error('Query too large (max 100KB)');
   }
 
-  if (!endpoint.startsWith('http://') && !endpoint.startsWith('https://')) {
-    throw new Error('Invalid endpoint URL');
-  }
-
   try {
-    // 3. Detect query type and set appropriate headers
-    const queryType = detectQueryType(query);
-    const acceptHeader = getAcceptHeader(queryType);
-    const isRdfResponse = queryType === 'CONSTRUCT' || queryType === 'DESCRIBE';
+    // 3. Get backend service
+    const backendService = getBackendService();
 
-    // 4. Execute query using SPARQL protocol
-    const response = await axios({
-      method: 'POST',
-      url: endpoint,
-      headers: {
-        'Content-Type': 'application/sparql-query',
-        'Accept': acceptHeader,
-      },
-      data: query,
-      timeout: 30000, // 30 second timeout
-      // For RDF responses, get as text; for JSON responses, parse automatically
-      responseType: isRdfResponse ? 'text' : 'json',
-    });
-
-    // Return structured response with metadata
-    return {
-      data: response.data,
-      queryType,
-      contentType: response.headers['content-type'],
-    };
-  } catch (error: any) {
-    if (axios.isAxiosError(error)) {
-      const statusCode = error.response?.status;
-      const message = error.response?.data?.message || error.message;
-
-      throw new Error(
-        `SPARQL query failed (${statusCode || 'network error'}): ${message}`
-      );
+    // 4. Load backend config
+    const config = await backendService.getBackend(backendId);
+    if (!config) {
+      throw new Error(`Backend not found: ${backendId}`);
     }
 
-    throw new Error(`Query execution failed: ${error.message}`);
+    // 5. Load credentials (if any)
+    const credentials = await backendService.getCredentials(backendId);
+
+    // 6. Get provider for backend type
+    const provider = BackendFactory.getProvider(config.type);
+
+    // 7. Execute query via provider
+    const result = await provider.execute(config, query, credentials || undefined);
+
+    // Return structured response
+    return result;
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      throw new Error(`Query execution failed: ${error.message}`);
+    }
+    throw new Error('Query execution failed: Unknown error');
   }
 });

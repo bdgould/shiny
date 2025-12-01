@@ -3,9 +3,29 @@
     <div class="editor-section" :style="{ height: editorHeight }">
       <div class="editor-header">
         <h3>SPARQL Query</h3>
-        <button class="btn-primary" @click="executeQuery">
-          Execute <span class="shortcut-hint">{{ shortcutHint }}</span>
-        </button>
+        <div class="execution-controls">
+          <select
+            v-model="connectionStore.selectedBackendId"
+            class="backend-select"
+            @change="handleBackendChange"
+          >
+            <option :value="null" disabled>Select backend...</option>
+            <option
+              v-for="backend in connectionStore.backends"
+              :key="backend.id"
+              :value="backend.id"
+            >
+              {{ backend.name }}
+            </option>
+          </select>
+          <button
+            class="btn-primary"
+            @click="executeQuery"
+            :disabled="!connectionStore.selectedBackendId"
+          >
+            Execute <span class="shortcut-hint">{{ shortcutHint }}</span>
+          </button>
+        </div>
       </div>
       <MonacoSparqlEditor />
     </div>
@@ -62,11 +82,21 @@
 <script setup lang="ts">
 import { ref, computed, onUnmounted } from 'vue';
 import { useQueryStore } from '@/stores/query';
+import { useConnectionStore } from '@/stores/connection';
 import { useKeyboardShortcuts } from '@/composables/useKeyboardShortcuts';
 import MonacoSparqlEditor from '@/components/editor/MonacoSparqlEditor.vue';
 import ResultsView from '@/components/results/ResultsView.vue';
 
 const queryStore = useQueryStore();
+const connectionStore = useConnectionStore();
+
+function handleBackendChange() {
+  // Backend selection is automatically saved to IPC via the store
+  // Just need to ensure the ID is persisted
+  if (connectionStore.selectedBackendId) {
+    connectionStore.selectBackend(connectionStore.selectedBackendId);
+  }
+}
 
 // Register keyboard shortcut: Cmd+Enter (Mac) or Ctrl+Enter (Win/Linux)
 useKeyboardShortcuts([
@@ -249,6 +279,35 @@ onUnmounted(() => {
   font-size: 1rem;
   font-weight: 600;
   color: var(--color-text-primary);
+}
+
+.execution-controls {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.backend-select {
+  padding: 6px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  background: var(--color-bg-input);
+  color: var(--color-text-primary);
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+  min-width: 180px;
+}
+
+.backend-select:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.backend-select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .btn-primary {

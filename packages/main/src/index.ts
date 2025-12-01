@@ -1,9 +1,17 @@
 import { app, BrowserWindow } from 'electron';
 import { createMainWindow } from './window';
+import { initializeServices } from './services/index.js';
+import { getMigrationService } from './services/MigrationService.js';
 import './ipc';
 
 // Handle creating/recreating a window in the app
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
+  // Run migrations first (create default backend if needed)
+  await getMigrationService().runMigrations();
+
+  // Initialize services (credential storage, backend management)
+  initializeServices();
+
   createMainWindow();
 
   app.on('activate', () => {
