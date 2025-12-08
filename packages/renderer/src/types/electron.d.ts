@@ -42,6 +42,25 @@ export interface Graphmart {
   layers: GraphmartLayer[];
 }
 
+export interface BackendMetadata {
+  id: string;
+  name: string;
+}
+
+export interface QueryFileData {
+  content: string;
+  metadata: BackendMetadata | null;
+  filePath: string;
+}
+
+export interface SaveQueryResult {
+  success: boolean;
+  filePath?: string;
+  error?: string;
+}
+
+export type OpenQueryResult = QueryFileData | { error: string };
+
 export interface ElectronAPI {
   query: {
     execute: (query: string, backendId: string) => Promise<QueryResult>;
@@ -52,12 +71,22 @@ export interface ElectronAPI {
     update: (id: string, updates: Partial<BackendConfig>, credentials?: BackendCredentials) => Promise<BackendConfig>;
     delete: (id: string) => Promise<{ success: boolean }>;
     testConnection: (id: string) => Promise<ValidationResult>;
+    getCredentials: (id: string) => Promise<BackendCredentials | null>;
     getSelected: () => Promise<string | null>;
     setSelected: (id: string | null) => Promise<{ success: boolean }>;
   };
   graphstudio: {
     listGraphmarts: (baseUrl: string, credentials?: { username?: string; password?: string }, allowInsecure?: boolean) => Promise<Graphmart[]>;
     getGraphmartDetails: (baseUrl: string, graphmartUri: string, credentials?: { username?: string; password?: string }, allowInsecure?: boolean) => Promise<Graphmart>;
+  };
+  files: {
+    saveQuery: (query: string, backendMetadata: BackendMetadata | null, currentFilePath?: string) => Promise<SaveQueryResult>;
+    openQuery: () => Promise<OpenQueryResult>;
+    onFileOpened: (callback: (data: QueryFileData) => void) => () => void;
+  };
+  menu: {
+    onSaveQuery: (callback: () => void) => () => void;
+    onOpenQuery: (callback: () => void) => () => void;
   };
 }
 

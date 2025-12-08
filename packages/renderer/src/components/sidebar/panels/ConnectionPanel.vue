@@ -44,18 +44,32 @@ function handleCancel() {
 
 async function handleSave(formData: BackendFormData) {
   try {
-    // Extract credentials
-    const credentials = formData.authType !== 'none' ? {
-      username: formData.username,
-      password: formData.password,
-      token: formData.token,
-      headers: formData.customHeaders?.reduce((acc, h) => {
-        if (h.key && h.value) {
-          acc[h.key] = h.value;
-        }
-        return acc;
-      }, {} as Record<string, string>),
-    } : undefined;
+    // Extract credentials only if user has provided values
+    // When editing, only pass credentials if they've been changed/entered
+    let credentials = undefined;
+
+    if (formData.authType !== 'none') {
+      // Check if user has actually entered credential values
+      const hasBasicAuth = formData.authType === 'basic' && formData.username && formData.password;
+      const hasBearerToken = formData.authType === 'bearer' && formData.token;
+      const hasCustomHeaders = formData.authType === 'custom' &&
+        formData.customHeaders?.some(h => h.key && h.value);
+
+      // Only build credentials object if user has entered values
+      if (hasBasicAuth || hasBearerToken || hasCustomHeaders) {
+        credentials = {
+          username: formData.username,
+          password: formData.password,
+          token: formData.token,
+          headers: formData.customHeaders?.reduce((acc, h) => {
+            if (h.key && h.value) {
+              acc[h.key] = h.value;
+            }
+            return acc;
+          }, {} as Record<string, string>),
+        };
+      }
+    }
 
     // Build provider config for GraphStudio
     let providerConfig: string | undefined = undefined;

@@ -6,11 +6,15 @@
 import { ref, onMounted, onUnmounted, watch } from 'vue';
 import * as monaco from 'monaco-editor';
 import { useQueryStore } from '@/stores/query';
+import { useTabsStore } from '@/stores/tabs';
 import { Parser } from 'sparqljs';
 
 const editorContainer = ref<HTMLElement | null>(null);
 const queryStore = useQueryStore();
+const tabsStore = useTabsStore();
+
 let editor: monaco.editor.IStandaloneCodeEditor | null = null;
+const modelCache = new Map<string, monaco.editor.ITextModel>();
 
 // Detect if user prefers dark mode
 const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -322,11 +326,43 @@ monaco.editor.onDidCreateModel((model) => {
   }
 });
 
+// Function to get or create model for a tab
+function getOrCreateModel(tabId: string, query: string): monaco.editor.ITextModel {
+  let model = modelCache.get(tabId);
+
+  if (!model) {
+    // Create new model for this tab
+    model = monaco.editor.createModel(query, 'sparql');
+
+    // Set up validation for this model
+    model.onDidChangeContent(() => {
+      const markers = validateSparql(model);
+      monaco.editor.setModelMarkers(model!, 'sparql', markers);
+    });
+
+    modelCache.set(tabId, model);
+  }
+
+  return model;
+}
+
+// Function to switch to a tab's model
+function switchToTabModel(tabId: string) {
+  if (!editor) return;
+
+  const tab = tabsStore.getTab(tabId);
+  if (!tab) return;
+
+  const model = getOrCreateModel(tabId, tab.query);
+  editor.setModel(model);
+}
+
 onMounted(() => {
   if (!editorContainer.value) return;
 
+  // Create editor without a model initially
   editor = monaco.editor.create(editorContainer.value, {
-    value: queryStore.currentQuery,
+    model: null, // We'll set the model separately
     language: 'sparql',
     theme: prefersDark ? 'sparql-theme-dark' : 'sparql-theme-light',
     fontSize: 14,
@@ -342,10 +378,19 @@ onMounted(() => {
     padding: { top: 8, bottom: 8 },
   });
 
-  // Sync editor changes to store
+  // Set the model for the active tab
+  if (tabsStore.activeTabId) {
+    switchToTabModel(tabsStore.activeTabId);
+  }
+
+  // Sync editor changes to store (updates the active tab)
   editor.onDidChangeModelContent(() => {
-    if (editor) {
-      queryStore.setQuery(editor.getValue());
+    if (editor && tabsStore.activeTab) {
+      const currentValue = editor.getValue();
+      // Only update if different to avoid circular updates
+      if (currentValue !== tabsStore.activeTab.query) {
+        tabsStore.updateTabQuery(tabsStore.activeTab.id, currentValue);
+      }
     }
   });
 
@@ -356,16 +401,41 @@ onMounted(() => {
       queryStore.executeQuery();
     }
   );
-});
 
-// Watch for external changes to the query
-watch(() => queryStore.currentQuery, (newQuery) => {
-  if (editor && editor.getValue() !== newQuery) {
-    editor.setValue(newQuery);
-  }
+  // Register keyboard shortcut: Cmd+S (Mac) or Ctrl+S (Win/Linux) to save query
+  editor.addCommand(
+    monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS,
+    async () => {
+      const { useFileOperations } = await import('@/composables/useFileOperations');
+      const { saveQuery } = useFileOperations();
+      await saveQuery();
+    }
+  );
+
+  // Register keyboard shortcut: Cmd+O (Mac) or Ctrl+O (Win/Linux) to open query
+  editor.addCommand(
+    monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyO,
+    async () => {
+      const { useFileOperations } = await import('@/composables/useFileOperations');
+      const { openQuery } = useFileOperations();
+      await openQuery();
+    }
+  );
+
+  // Watch for tab switches and update the editor model
+  watch(() => tabsStore.activeTabId, (newTabId) => {
+    if (newTabId) {
+      switchToTabModel(newTabId);
+    }
+  });
 });
 
 onUnmounted(() => {
+  // Dispose all cached models
+  modelCache.forEach(model => model.dispose());
+  modelCache.clear();
+
+  // Dispose the editor
   editor?.dispose();
 });
 </script>

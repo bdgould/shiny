@@ -9,12 +9,15 @@ const ALLOWED_CHANNELS = {
     'backends:update',
     'backends:delete',
     'backends:testConnection',
+    'backends:getCredentials',
     'backends:getSelected',
     'backends:setSelected',
     'graphstudio:listGraphmarts',
     'graphstudio:getGraphmartDetails',
+    'files:saveQuery',
+    'files:openQuery',
   ],
-  on: ['query:result', 'query:error'],
+  on: ['query:result', 'query:error', 'file:opened', 'menu:saveQuery', 'menu:openQuery'],
 };
 
 function validateChannel(channel: string, type: keyof typeof ALLOWED_CHANNELS): boolean {
@@ -70,6 +73,26 @@ export interface Graphmart {
   layers: GraphmartLayer[];
 }
 
+// File operations types
+export interface BackendMetadata {
+  id: string;
+  name: string;
+}
+
+export interface QueryFileData {
+  content: string;
+  metadata: BackendMetadata | null;
+  filePath: string;
+}
+
+export interface SaveQueryResult {
+  success: boolean;
+  filePath?: string;
+  error?: string;
+}
+
+export type OpenQueryResult = QueryFileData | { error: string };
+
 // Define the API that will be exposed to the renderer process
 export interface ElectronAPI {
   query: {
@@ -81,12 +104,22 @@ export interface ElectronAPI {
     update: (id: string, updates: Partial<BackendConfig>, credentials?: BackendCredentials) => Promise<BackendConfig>;
     delete: (id: string) => Promise<{ success: boolean }>;
     testConnection: (id: string) => Promise<ValidationResult>;
+    getCredentials: (id: string) => Promise<BackendCredentials | null>;
     getSelected: () => Promise<string | null>;
     setSelected: (id: string | null) => Promise<{ success: boolean }>;
   };
   graphstudio: {
     listGraphmarts: (baseUrl: string, credentials?: { username?: string; password?: string }, allowInsecure?: boolean) => Promise<Graphmart[]>;
     getGraphmartDetails: (baseUrl: string, graphmartUri: string, credentials?: { username?: string; password?: string }, allowInsecure?: boolean) => Promise<Graphmart>;
+  };
+  files: {
+    saveQuery: (query: string, backendMetadata: BackendMetadata | null, currentFilePath?: string) => Promise<SaveQueryResult>;
+    openQuery: () => Promise<OpenQueryResult>;
+    onFileOpened: (callback: (data: QueryFileData) => void) => () => void;
+  };
+  menu: {
+    onSaveQuery: (callback: () => void) => () => void;
+    onOpenQuery: (callback: () => void) => () => void;
   };
 }
 
@@ -131,6 +164,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
       }
       return ipcRenderer.invoke('backends:testConnection', { id });
     },
+    getCredentials: (id: string) => {
+      if (!validateChannel('backends:getCredentials', 'invoke')) {
+        throw new Error('Unauthorized IPC channel');
+      }
+      return ipcRenderer.invoke('backends:getCredentials', { id });
+    },
     getSelected: () => {
       if (!validateChannel('backends:getSelected', 'invoke')) {
         throw new Error('Unauthorized IPC channel');
@@ -156,6 +195,53 @@ contextBridge.exposeInMainWorld('electronAPI', {
         throw new Error('Unauthorized IPC channel');
       }
       return ipcRenderer.invoke('graphstudio:getGraphmartDetails', { baseUrl, graphmartUri, credentials, allowInsecure });
+    },
+  },
+  files: {
+    saveQuery: (query: string, backendMetadata: BackendMetadata | null, currentFilePath?: string) => {
+      if (!validateChannel('files:saveQuery', 'invoke')) {
+        throw new Error('Unauthorized IPC channel');
+      }
+      return ipcRenderer.invoke('files:saveQuery', query, backendMetadata, currentFilePath);
+    },
+    openQuery: () => {
+      if (!validateChannel('files:openQuery', 'invoke')) {
+        throw new Error('Unauthorized IPC channel');
+      }
+      return ipcRenderer.invoke('files:openQuery');
+    },
+    onFileOpened: (callback: (data: QueryFileData) => void) => {
+      if (!validateChannel('file:opened', 'on')) {
+        throw new Error('Unauthorized IPC channel');
+      }
+      const listener = (_event: any, data: QueryFileData) => callback(data);
+      ipcRenderer.on('file:opened', listener);
+      // Return cleanup function
+      return () => {
+        ipcRenderer.removeListener('file:opened', listener);
+      };
+    },
+  },
+  menu: {
+    onSaveQuery: (callback: () => void) => {
+      if (!validateChannel('menu:saveQuery', 'on')) {
+        throw new Error('Unauthorized IPC channel');
+      }
+      const listener = () => callback();
+      ipcRenderer.on('menu:saveQuery', listener);
+      return () => {
+        ipcRenderer.removeListener('menu:saveQuery', listener);
+      };
+    },
+    onOpenQuery: (callback: () => void) => {
+      if (!validateChannel('menu:openQuery', 'on')) {
+        throw new Error('Unauthorized IPC channel');
+      }
+      const listener = () => callback();
+      ipcRenderer.on('menu:openQuery', listener);
+      return () => {
+        ipcRenderer.removeListener('menu:openQuery', listener);
+      };
     },
   },
 } as ElectronAPI);

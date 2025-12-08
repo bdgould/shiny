@@ -8,74 +8,89 @@ import {
   type ConstructView,
   type AskView,
 } from '@/services/preferences/viewPreferences';
-import { useConnectionStore } from './connection';
+import { useTabsStore } from './tabs';
 
+/**
+ * Query store - now acts as a compatibility layer that proxies to the active tab
+ *
+ * This maintains backward compatibility with existing components while
+ * delegating all state management to the tabs store.
+ */
 export const useQueryStore = defineStore('query', () => {
-  const currentQuery = ref(`PREFIX dbo: <http://dbpedia.org/ontology/>
-PREFIX dbr: <http://dbpedia.org/resource/>
+  const tabsStore = useTabsStore();
 
-SELECT ?city ?population
-WHERE {
-  ?city a dbo:City ;
-        dbo:country dbr:United_States ;
-        dbo:populationTotal ?population .
-  FILTER (?population > 1000000)
-}
-ORDER BY DESC(?population)
-LIMIT 10`);
+  // Computed properties that proxy to active tab
+  const currentQuery = computed({
+    get: () => tabsStore.activeTab?.query ?? '',
+    set: (value: string) => {
+      if (tabsStore.activeTab) {
+        tabsStore.updateTabQuery(tabsStore.activeTab.id, value);
+      }
+    }
+  });
 
-  const results = ref<any>(null);
-  const error = ref<string | null>(null);
-  const isExecuting = ref(false);
+  const results = computed(() => tabsStore.activeTab?.results ?? null);
+  const error = computed(() => tabsStore.activeTab?.error ?? null);
+  const isExecuting = computed(() => tabsStore.activeTab?.isExecuting ?? false);
+  const queryType = computed(() => tabsStore.activeTab?.queryType ?? null);
 
-  // Query type detection (only updated on execution)
-  const queryType = ref<QueryType | null>(null);
+  // Backend selection is now per-tab
+  const selectedBackend = computed(() => {
+    const backendId = tabsStore.activeTab?.backendId;
+    if (!backendId) return null;
 
-  // View preferences per query type
+    // Get the backend from connection store
+    const { useConnectionStore } = require('./connection');
+    const connectionStore = useConnectionStore();
+    return connectionStore.backends.find((b: any) => b.id === backendId) || null;
+  });
+
+  // View preferences remain global (not per-tab)
   const currentSelectView = ref<SelectView>(getViewPreference('select'));
   const currentConstructView = ref<ConstructView>(getViewPreference('construct'));
   const currentAskView = ref<AskView>(getViewPreference('ask'));
 
-  // Computed: get selected backend from connection store
-  const connectionStore = useConnectionStore();
-  const selectedBackend = computed(() => connectionStore.selectedBackend);
-
   async function executeQuery() {
-    if (!currentQuery.value.trim()) {
-      error.value = 'Query cannot be empty';
+    const activeTab = tabsStore.activeTab;
+    if (!activeTab) {
+      console.error('No active tab');
       return;
     }
 
-    // Check if a backend is selected
-    if (!connectionStore.selectedBackendId) {
-      error.value = 'No backend selected. Please select a backend in the connection panel.';
+    if (!activeTab.query.trim()) {
+      tabsStore.setTabError(activeTab.id, 'Query cannot be empty');
       return;
     }
 
-    isExecuting.value = true;
-    error.value = null;
-    results.value = null;
+    // Check if a backend is selected for this tab
+    if (!activeTab.backendId) {
+      tabsStore.setTabError(activeTab.id, 'No backend selected. Please select a backend.');
+      return;
+    }
+
+    tabsStore.setTabExecuting(activeTab.id, true);
 
     try {
       // Use the Electron API to execute the query with selected backend
       const response = await window.electronAPI.query.execute(
-        currentQuery.value,
-        connectionStore.selectedBackendId
+        activeTab.query,
+        activeTab.backendId
       );
-      results.value = response;
 
-      // Update query type from the response
-      queryType.value = response.queryType as QueryType;
+      tabsStore.setTabResults(activeTab.id, response, response.queryType as QueryType);
     } catch (err: any) {
-      error.value = err.message || 'Failed to execute query';
+      const errorMessage = err.message || 'Failed to execute query';
+      tabsStore.setTabError(activeTab.id, errorMessage);
       console.error('Query execution error:', err);
     } finally {
-      isExecuting.value = false;
+      tabsStore.setTabExecuting(activeTab.id, false);
     }
   }
 
   function setQuery(query: string) {
-    currentQuery.value = query;
+    if (tabsStore.activeTab) {
+      tabsStore.updateTabQuery(tabsStore.activeTab.id, query);
+    }
   }
 
   function setSelectView(view: SelectView) {

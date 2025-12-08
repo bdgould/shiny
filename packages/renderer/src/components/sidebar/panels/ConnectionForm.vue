@@ -399,8 +399,36 @@ function onAllLayersToggle() {
   }
 }
 
-// Auto-load graphmarts when editing existing GraphStudio backend
+// Load existing credentials when editing
+async function loadExistingCredentials() {
+  if (!isEditing || !props.backend) return;
+
+  try {
+    const credentials = await window.electronAPI.backends.getCredentials(props.backend.id);
+
+    if (credentials) {
+      // Populate form with existing credentials
+      if (credentials.username) formData.value.username = credentials.username;
+      if (credentials.password) formData.value.password = credentials.password;
+      if (credentials.token) formData.value.token = credentials.token;
+      if (credentials.headers) {
+        formData.value.customHeaders = Object.entries(credentials.headers).map(([key, value]) => ({
+          key,
+          value,
+        }));
+      }
+    }
+  } catch (error) {
+    console.error('Failed to load credentials:', error);
+  }
+}
+
+// Auto-load credentials and graphmarts when editing
 onMounted(async () => {
+  // Load credentials first
+  await loadExistingCredentials();
+
+  // Then load graphmarts for GraphStudio backends
   if (isEditing && formData.value.type === 'graphstudio' && formData.value.endpoint) {
     const credentials = formData.value.authType === 'basic'
       ? { username: formData.value.username, password: formData.value.password }

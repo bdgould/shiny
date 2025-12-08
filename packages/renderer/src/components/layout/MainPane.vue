@@ -1,31 +1,29 @@
 <template>
   <main class="main-pane">
     <div class="editor-section" :style="{ height: editorHeight }">
-      <div class="editor-header">
-        <h3>SPARQL Query</h3>
-        <div class="execution-controls">
-          <select
-            v-model="connectionStore.selectedBackendId"
-            class="backend-select"
-            @change="handleBackendChange"
+      <TabBar />
+      <div class="editor-controls">
+        <select
+          v-model="activeTabBackend"
+          class="backend-select"
+          @change="handleBackendChange"
+        >
+          <option :value="null" disabled>Select backend...</option>
+          <option
+            v-for="backend in connectionStore.backends"
+            :key="backend.id"
+            :value="backend.id"
           >
-            <option :value="null" disabled>Select backend...</option>
-            <option
-              v-for="backend in connectionStore.backends"
-              :key="backend.id"
-              :value="backend.id"
-            >
-              {{ backend.name }}
-            </option>
-          </select>
-          <button
-            class="btn-primary"
-            @click="executeQuery"
-            :disabled="!connectionStore.selectedBackendId"
-          >
-            Execute <span class="shortcut-hint">{{ shortcutHint }}</span>
-          </button>
-        </div>
+            {{ backend.name }}
+          </option>
+        </select>
+        <button
+          class="btn-primary"
+          @click="executeQuery"
+          :disabled="!activeTabBackend"
+        >
+          Execute <span class="shortcut-hint">{{ shortcutHint }}</span>
+        </button>
       </div>
       <MonacoSparqlEditor />
     </div>
@@ -82,20 +80,30 @@
 <script setup lang="ts">
 import { ref, computed, onUnmounted } from 'vue';
 import { useQueryStore } from '@/stores/query';
+import { useTabsStore } from '@/stores/tabs';
 import { useConnectionStore } from '@/stores/connection';
 import { useKeyboardShortcuts } from '@/composables/useKeyboardShortcuts';
+import TabBar from '@/components/tabs/TabBar.vue';
 import MonacoSparqlEditor from '@/components/editor/MonacoSparqlEditor.vue';
 import ResultsView from '@/components/results/ResultsView.vue';
 
 const queryStore = useQueryStore();
+const tabsStore = useTabsStore();
 const connectionStore = useConnectionStore();
 
-function handleBackendChange() {
-  // Backend selection is automatically saved to IPC via the store
-  // Just need to ensure the ID is persisted
-  if (connectionStore.selectedBackendId) {
-    connectionStore.selectBackend(connectionStore.selectedBackendId);
+// Per-tab backend selection
+const activeTabBackend = computed({
+  get: () => tabsStore.activeTab?.backendId ?? null,
+  set: (backendId: string | null) => {
+    if (tabsStore.activeTab) {
+      tabsStore.setTabBackend(tabsStore.activeTab.id, backendId);
+    }
   }
+});
+
+function handleBackendChange() {
+  // Backend is now per-tab, stored in tabs store
+  // No need for additional persistence
 }
 
 // Register keyboard shortcut: Cmd+Enter (Mac) or Ctrl+Enter (Win/Linux)
@@ -281,10 +289,17 @@ onUnmounted(() => {
   color: var(--color-text-primary);
 }
 
-.execution-controls {
+.execution-controls,
+.editor-controls {
   display: flex;
   gap: 12px;
   align-items: center;
+}
+
+.editor-controls {
+  padding: 0.5rem 1rem;
+  background: var(--color-bg-header);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .backend-select {

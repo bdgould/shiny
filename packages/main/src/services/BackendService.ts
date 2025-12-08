@@ -102,8 +102,12 @@ export class BackendService {
     // Save updated config
     await this.credentialService.saveBackendConfig(updated);
 
-    // Update credentials if provided
+    // Handle credentials:
+    // - If credentials provided: save/update them
+    // - If credentials undefined and auth type requires them: preserve existing credentials
+    // - If auth type is 'none': delete credentials
     if (credentials && this.requiresCredentials(updated.authType)) {
+      // Update credentials with new values
       await this.credentialService.saveCredentials(id, {
         ...credentials,
         backendId: id,
@@ -112,6 +116,7 @@ export class BackendService {
       // Delete credentials if auth type changed to 'none'
       await this.credentialService.deleteCredentials(id);
     }
+    // If credentials undefined and auth type requires them: do nothing (preserve existing)
 
     return updated;
   }

@@ -9,20 +9,95 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue';
+import { onMounted, onUnmounted } from 'vue';
 import TopBar from './components/layout/TopBar.vue';
 import IconSidebar from './components/sidebar/IconSidebar.vue';
 import MainPane from './components/layout/MainPane.vue';
 import { useConnectionStore } from './stores/connection';
+import { useTabsStore } from './stores/tabs';
+import type { QueryFileData } from './types/electron';
 
 const connectionStore = useConnectionStore();
+const tabsStore = useTabsStore();
 
-// Load backends on app startup
+// Load backends and restore tabs on app startup
 onMounted(async () => {
   try {
+    // Load backends first
     await connectionStore.loadBackends();
+
+    // Restore tabs from previous session
+    tabsStore.restoreFromLocalStorage();
   } catch (error) {
-    console.error('Failed to load backends on startup:', error);
+    console.error('Failed to initialize app on startup:', error);
+  }
+});
+
+// Listen for files opened via OS (double-click .rq file)
+let removeFileOpenedListener: (() => void) | null = null;
+let removeMenuSaveListener: (() => void) | null = null;
+let removeMenuOpenListener: (() => void) | null = null;
+
+onMounted(async () => {
+  // Import file operations composable
+  const { useFileOperations } = await import('./composables/useFileOperations');
+  const { saveQuery, openQuery } = useFileOperations();
+
+  // Listen for native menu events
+  removeMenuSaveListener = window.electronAPI.menu.onSaveQuery(async () => {
+    await saveQuery();
+  });
+
+  removeMenuOpenListener = window.electronAPI.menu.onOpenQuery(async () => {
+    await openQuery();
+  });
+
+  // Listen for files opened via OS (double-click .rq file)
+  removeFileOpenedListener = window.electronAPI.files.onFileOpened(async (data: QueryFileData) => {
+    try {
+      // Extract filename from file path
+      const fileName = data.filePath.split('/').pop()?.replace(/\.rq$/, '') || 'Untitled';
+
+      // Find backend by ID or name
+      let backendId: string | null = null;
+      if (data.metadata) {
+        let backend = connectionStore.backends.find(b => b.id === data.metadata!.id);
+        if (!backend) {
+          backend = connectionStore.backends.find(b => b.name === data.metadata!.name);
+        }
+
+        if (backend) {
+          backendId = backend.id;
+        } else {
+          alert(`Backend "${data.metadata.name}" not found in configuration. Please select a backend manually.`);
+        }
+      }
+
+      // Create new tab with file content
+      tabsStore.openFileInNewTab({
+        content: data.content,
+        filePath: data.filePath,
+        fileName,
+        backendId,
+      });
+
+      console.log('File opened successfully via OS:', data.filePath);
+    } catch (error) {
+      console.error('Error handling file opened event:', error);
+      alert(`Error opening file: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  });
+});
+
+onUnmounted(() => {
+  if (removeFileOpenedListener) {
+    removeFileOpenedListener();
+  }
+  if (removeMenuSaveListener) {
+    removeMenuSaveListener();
+  }
+  if (removeMenuOpenListener) {
+    removeMenuOpenListener();
   }
 });
 </script>

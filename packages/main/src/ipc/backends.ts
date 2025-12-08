@@ -100,6 +100,26 @@ ipcMain.handle('backends:testConnection', async (event, { id }) => {
 });
 
 /**
+ * Get credentials for a backend
+ * Note: This is sensitive data - only use when necessary (e.g., editing backends)
+ */
+ipcMain.handle('backends:getCredentials', async (event, { id }) => {
+  if (!isAuthorizedSender(event.senderFrame)) {
+    throw new Error('Unauthorized IPC sender');
+  }
+
+  // Validate input
+  if (typeof id !== 'string' || !id) {
+    throw new Error('Invalid backend ID');
+  }
+
+  const backendService = getBackendService();
+  const credentials = await backendService.getCredentials(id);
+
+  return credentials || null;
+});
+
+/**
  * Get selected backend ID
  */
 ipcMain.handle('backends:getSelected', async (event) => {

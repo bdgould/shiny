@@ -33,9 +33,11 @@
     "rdf-ext": "^2.6.0",
     "readable-stream": "^4.7.0",
     "sparqljs": "^3.7.3",
+    "uuid": "^13.0.0",
     "vue": "^3.4.15"
   },
   "devDependencies": {
+    "@types/uuid": "^10.0.0",
     "@vitejs/plugin-vue": "^5.0.3",
     "@vue/tsconfig": "^0.5.1",
     "terser": "^5.44.1",
