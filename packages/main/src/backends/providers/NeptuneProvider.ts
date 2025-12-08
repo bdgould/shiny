@@ -17,7 +17,7 @@ export class NeptuneProvider extends BaseProvider {
     throw new Error('AWS Neptune provider not yet implemented');
   }
 
-  async validate(_config: BackendConfig): Promise<ValidationResult> {
+  async validate(_config: BackendConfig, _credentials?: BackendCredentials): Promise<ValidationResult> {
     return {
       valid: false,
       error: 'AWS Neptune provider not yet implemented',

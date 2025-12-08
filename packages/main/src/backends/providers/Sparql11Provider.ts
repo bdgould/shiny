@@ -48,6 +48,7 @@ export class Sparql11Provider extends BaseProvider {
         timeout: 30000, // 30 second timeout
         // For RDF responses, get as text; for JSON responses, parse automatically
         responseType: isRdfResponse ? 'text' : 'json',
+        httpsAgent: this.createHttpsAgent(config),
       });
 
       // Return structured response with metadata
@@ -77,26 +78,31 @@ export class Sparql11Provider extends BaseProvider {
   /**
    * Validate backend configuration (test connection)
    */
-  async validate(config: BackendConfig): Promise<ValidationResult> {
+  async validate(config: BackendConfig, credentials?: BackendCredentials): Promise<ValidationResult> {
     // Validate URL format
     if (!this.validateUrl(config.endpoint)) {
       return { valid: false, error: 'Invalid endpoint URL' };
     }
 
     // Test connection with a simple ASK query
-    const testQuery = 'ASK { ?s ?p ?o }';
+    const testQuery = 'SELECT (COUNT(?s) as ?subjects) WHERE { ?s ?p ?o . } LIMIT 1';
 
     try {
+      // Get authentication headers
+      const authHeaders = this.getAuthHeaders(config, credentials);
+
       const response = await axios({
         method: 'POST',
         url: config.endpoint,
         headers: {
           'Content-Type': 'application/sparql-query',
-          'Accept': 'application/sparql-results+json',
+          'Accept': 'application/sparql-results+json, application/json',
+          ...authHeaders,
         },
         data: testQuery,
         timeout: 10000, // 10 second timeout for validation
         responseType: 'json',
+        httpsAgent: this.createHttpsAgent(config),
       });
 
       // Check if response is valid
@@ -150,13 +156,13 @@ export class Sparql11Provider extends BaseProvider {
     switch (queryType) {
       case 'SELECT':
       case 'ASK':
-        return 'application/sparql-results+json';
+        return 'application/sparql-results+json, application/json';
       case 'CONSTRUCT':
       case 'DESCRIBE':
         // Request Turtle (most readable and parseable RDF format)
         return 'text/turtle';
       default:
-        return 'application/sparql-results+json';
+        return 'application/sparql-results+json, application/json';
     }
   }
 }

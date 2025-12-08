@@ -3,6 +3,7 @@
  * All backend providers must extend this class
  */
 
+import https from 'https';
 import { BackendConfig, BackendCredentials, ValidationResult, QueryResult, BackendType } from '../types.js';
 
 export abstract class BaseProvider {
@@ -20,7 +21,18 @@ export abstract class BaseProvider {
   /**
    * Validate backend configuration (test connection)
    */
-  abstract validate(config: BackendConfig): Promise<ValidationResult>;
+  abstract validate(config: BackendConfig, credentials?: BackendCredentials): Promise<ValidationResult>;
+
+  /**
+   * Build the final endpoint URL for query execution
+   * Providers can override this to construct custom URLs based on provider-specific config
+   * @param config - Backend configuration
+   * @returns Final endpoint URL to use for SPARQL queries
+   */
+  protected buildEndpointUrl(config: BackendConfig): string {
+    // Default implementation: return endpoint as-is
+    return config.endpoint;
+  }
 
   /**
    * Get authentication headers based on auth type and credentials
@@ -40,6 +52,7 @@ export abstract class BaseProvider {
         if (credentials.username && credentials.password) {
           const encoded = Buffer.from(`${credentials.username}:${credentials.password}`).toString('base64');
           headers['Authorization'] = `Basic ${encoded}`;
+          console.warn('Using Basic authentication for SPARQL endpoint');
         }
         break;
 
@@ -69,5 +82,20 @@ export abstract class BaseProvider {
     } catch {
       return false;
     }
+  }
+
+  /**
+   * Create HTTPS agent with SSL certificate handling
+   * If allowInsecure is true, bypasses certificate validation (for self-signed certs)
+   */
+  protected createHttpsAgent(config: BackendConfig): https.Agent | undefined {
+    // Only create agent for HTTPS URLs
+    if (!config.endpoint.startsWith('https:')) {
+      return undefined;
+    }
+
+    return new https.Agent({
+      rejectUnauthorized: !config.allowInsecure,
+    });
   }
 }

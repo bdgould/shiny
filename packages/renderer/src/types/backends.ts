@@ -18,6 +18,8 @@ export interface BackendConfig {
   authType: AuthType;
   createdAt: number;
   updatedAt: number;
+  providerConfig?: string;
+  allowInsecure?: boolean;
 }
 
 /**
@@ -28,6 +30,8 @@ export interface BackendConfigInput {
   type: BackendType;
   endpoint: string;
   authType: AuthType;
+  providerConfig?: string;
+  allowInsecure?: boolean;
 }
 
 /**

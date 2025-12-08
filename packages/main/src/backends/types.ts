@@ -17,6 +17,8 @@ export interface BackendConfig {
   authType: AuthType;      // Authentication method
   createdAt: number;       // Unix timestamp
   updatedAt: number;       // Unix timestamp
+  providerConfig?: string; // JSON-serialized provider-specific configuration (e.g., GraphStudio graphmart/layer selection)
+  allowInsecure?: boolean; // Allow self-signed/invalid SSL certificates (development only)
 }
 
 /**

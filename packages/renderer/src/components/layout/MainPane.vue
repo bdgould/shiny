@@ -147,7 +147,7 @@ function handleResize(event: MouseEvent) {
   if (!isResizing.value) return;
 
   const deltaY = startY - event.clientY; // Inverted because we're dragging up/down
-  const newHeight = Math.max(100, Math.min(800, startHeight + deltaY));
+  const newHeight = Math.max(100, startHeight + deltaY); // No max constraint - can expand to full height
   resultsHeightPx.value = newHeight;
 }
 

@@ -138,8 +138,11 @@ export class BackendService {
     }
 
     try {
+      // Get credentials if backend requires authentication
+      const credentials = await this.credentialService.getCredentials(id);
+
       const provider = BackendFactory.getProvider(config.type);
-      return await provider.validate(config);
+      return await provider.validate(config, credentials || undefined);
     } catch (error) {
       return {
         valid: false,

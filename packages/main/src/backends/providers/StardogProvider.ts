@@ -17,7 +17,7 @@ export class StardogProvider extends BaseProvider {
     throw new Error('Stardog provider not yet implemented');
   }
 
-  async validate(_config: BackendConfig): Promise<ValidationResult> {
+  async validate(_config: BackendConfig, _credentials?: BackendCredentials): Promise<ValidationResult> {
     return {
       valid: false,
       error: 'Stardog provider not yet implemented',

@@ -57,6 +57,16 @@ async function handleSave(formData: BackendFormData) {
       }, {} as Record<string, string>),
     } : undefined;
 
+    // Build provider config for GraphStudio
+    let providerConfig: string | undefined = undefined;
+    if (formData.type === 'graphstudio' && formData.graphmartUri) {
+      providerConfig = JSON.stringify({
+        graphmartUri: formData.graphmartUri,
+        graphmartName: formData.graphmartName || '',
+        selectedLayers: formData.selectedLayers || ['ALL_LAYERS'],
+      });
+    }
+
     if (editingBackend.value) {
       // Update existing backend
       await connectionStore.updateBackend(
@@ -66,6 +76,8 @@ async function handleSave(formData: BackendFormData) {
           type: formData.type,
           endpoint: formData.endpoint,
           authType: formData.authType,
+          providerConfig,
+          allowInsecure: formData.allowInsecure,
         },
         credentials
       );
@@ -77,6 +89,8 @@ async function handleSave(formData: BackendFormData) {
           type: formData.type,
           endpoint: formData.endpoint,
           authType: formData.authType,
+          providerConfig,
+          allowInsecure: formData.allowInsecure,
         },
         credentials
       );

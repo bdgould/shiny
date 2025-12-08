@@ -12,6 +12,8 @@ export interface BackendConfig {
   authType: string;
   createdAt: number;
   updatedAt: number;
+  providerConfig?: string;
+  allowInsecure?: boolean;
 }
 
 export interface BackendCredentials {
@@ -26,6 +28,20 @@ export interface ValidationResult {
   error?: string;
 }
 
+export interface GraphmartLayer {
+  uri: string;
+  name: string;
+  type?: string;
+}
+
+export interface Graphmart {
+  uri: string;
+  name: string;
+  status: 'active' | 'inactive' | 'error';
+  description?: string;
+  layers: GraphmartLayer[];
+}
+
 export interface ElectronAPI {
   query: {
     execute: (query: string, backendId: string) => Promise<QueryResult>;
@@ -38,6 +54,10 @@ export interface ElectronAPI {
     testConnection: (id: string) => Promise<ValidationResult>;
     getSelected: () => Promise<string | null>;
     setSelected: (id: string | null) => Promise<{ success: boolean }>;
+  };
+  graphstudio: {
+    listGraphmarts: (baseUrl: string, credentials?: { username?: string; password?: string }, allowInsecure?: boolean) => Promise<Graphmart[]>;
+    getGraphmartDetails: (baseUrl: string, graphmartUri: string, credentials?: { username?: string; password?: string }, allowInsecure?: boolean) => Promise<Graphmart>;
   };
 }
 

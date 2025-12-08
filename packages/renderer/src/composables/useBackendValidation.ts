@@ -10,12 +10,18 @@ export interface BackendFormData {
   type: BackendType;
   endpoint: string;
   authType: AuthType;
+  allowInsecure?: boolean;
 
   // Credentials (optional based on auth type)
   username?: string;
   password?: string;
   token?: string;
   customHeaders?: Array<{ key: string; value: string }>;
+
+  // GraphStudio-specific fields
+  graphmartUri?: string;
+  graphmartName?: string;
+  selectedLayers?: string[]; // Array of layer URIs or ['ALL_LAYERS']
 }
 
 export interface ValidationErrors {
@@ -25,6 +31,8 @@ export interface ValidationErrors {
   password?: string;
   token?: string;
   customHeaders?: string;
+  graphmart?: string;
+  layers?: string;
 }
 
 export function useBackendValidation() {
@@ -94,6 +102,19 @@ export function useBackendValidation() {
     return undefined;
   }
 
+  function validateGraphStudio(formData: BackendFormData): { graphmart?: string; layers?: string } {
+    const errors: { graphmart?: string; layers?: string } = {};
+
+    // GraphStudio requires a graphmart to be selected
+    if (!formData.graphmartUri || formData.graphmartUri.trim().length === 0) {
+      errors.graphmart = 'Please select a graphmart';
+    }
+
+    // Note: selectedLayers is optional - empty or ['ALL_LAYERS'] means query all layers
+
+    return errors;
+  }
+
   function validateForm(formData: BackendFormData): boolean {
     errors.value = {};
 
@@ -115,6 +136,13 @@ export function useBackendValidation() {
     } else if (formData.authType === 'custom') {
       const headersError = validateCustomHeaders(formData.customHeaders);
       if (headersError) errors.value.customHeaders = headersError;
+    }
+
+    // Validate GraphStudio-specific fields
+    if (formData.type === 'graphstudio') {
+      const graphstudioErrors = validateGraphStudio(formData);
+      if (graphstudioErrors.graphmart) errors.value.graphmart = graphstudioErrors.graphmart;
+      if (graphstudioErrors.layers) errors.value.layers = graphstudioErrors.layers;
     }
 
     // Return true if no errors
