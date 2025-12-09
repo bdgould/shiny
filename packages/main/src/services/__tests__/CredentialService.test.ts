@@ -67,6 +67,7 @@ describe('CredentialService', () => {
     it('should encrypt and save credentials', async () => {
       const backendId = 'test-backend-1'
       const credentials: BackendCredentials = {
+        backendId,
         username: 'testuser',
         password: 'testpass123',
       }
@@ -89,7 +90,11 @@ describe('CredentialService', () => {
       const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
       vi.mocked(safeStorage.isEncryptionAvailable).mockReturnValue(false)
 
-      await service.saveCredentials('backend-1', { username: 'test', password: 'test' })
+      await service.saveCredentials('backend-1', {
+        backendId: 'backend-1',
+        username: 'test',
+        password: 'test',
+      })
 
       expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('Encryption not available'))
 
@@ -101,6 +106,7 @@ describe('CredentialService', () => {
     it('should decrypt and return credentials', async () => {
       const backendId = 'test-backend-1'
       const credentials: BackendCredentials = {
+        backendId,
         username: 'testuser',
         password: 'testpass123',
       }
@@ -128,7 +134,7 @@ describe('CredentialService', () => {
       })
 
       // Manually add corrupted credentials
-      service['store'].get.mockReturnValue({ 'backend-1': 'corrupted-data' })
+      ;(service['store'].get as any).mockReturnValue({ 'backend-1': 'corrupted-data' })
 
       const retrieved = await service.getCredentials('backend-1')
 
@@ -144,7 +150,11 @@ describe('CredentialService', () => {
       const backendId = 'test-backend-1'
 
       // Add credentials first
-      await service.saveCredentials(backendId, { username: 'test', password: 'test' })
+      await service.saveCredentials(backendId, {
+        backendId,
+        username: 'test',
+        password: 'test',
+      })
 
       // Delete credentials
       await service.deleteCredentials(backendId)
@@ -164,7 +174,7 @@ describe('CredentialService', () => {
       const config: BackendConfig = {
         id: 'backend-1',
         name: 'Test Backend',
-        provider: 'sparql11',
+        type: 'sparql-1.1', authType: 'none', createdAt: Date.now(), updatedAt: Date.now(),
         endpoint: 'http://localhost:3030/dataset/query',
       }
 
@@ -177,7 +187,7 @@ describe('CredentialService', () => {
       const originalConfig: BackendConfig = {
         id: 'backend-1',
         name: 'Original Name',
-        provider: 'sparql11',
+        type: 'sparql-1.1', authType: 'none', createdAt: Date.now(), updatedAt: Date.now(),
         endpoint: 'http://localhost:3030/dataset/query',
       }
 
@@ -194,7 +204,7 @@ describe('CredentialService', () => {
 
       // Verify only one backend exists with updated name
       // Get the last call with 'backends' key
-      const backendCalls = service['store'].set.mock.calls.filter(
+      const backendCalls = (service['store'].set as any).mock.calls.filter(
         (call: any) => call[0] === 'backends'
       )
       const lastCall = backendCalls[backendCalls.length - 1]
@@ -208,13 +218,13 @@ describe('CredentialService', () => {
       const config: BackendConfig = {
         id: 'backend-1',
         name: 'Test Backend',
-        provider: 'sparql11',
+        type: 'sparql-1.1', authType: 'none', createdAt: Date.now(), updatedAt: Date.now(),
         endpoint: 'http://localhost:3030/dataset/query',
       }
 
       await service.saveBackendConfig(config)
 
-      service['store'].get.mockReturnValue([config])
+      ;(service['store'].get as any).mockReturnValue([config])
 
       const retrieved = await service.getBackendConfig('backend-1')
 
@@ -222,7 +232,7 @@ describe('CredentialService', () => {
     })
 
     it('should return null for non-existent backend', async () => {
-      service['store'].get.mockReturnValue([])
+      ;(service['store'].get as any).mockReturnValue([])
 
       const retrieved = await service.getBackendConfig('nonexistent')
 
@@ -236,18 +246,18 @@ describe('CredentialService', () => {
         {
           id: 'backend-1',
           name: 'Backend 1',
-          provider: 'sparql11',
+          type: 'sparql-1.1', authType: 'none', createdAt: Date.now(), updatedAt: Date.now(),
           endpoint: 'http://localhost:3030/dataset1/query',
         },
         {
           id: 'backend-2',
           name: 'Backend 2',
-          provider: 'graphstudio',
+          type: 'graphstudio', authType: 'none', createdAt: Date.now(), updatedAt: Date.now(),
           endpoint: 'http://localhost:7200',
         },
       ]
 
-      service['store'].get.mockReturnValue(configs)
+      ;(service['store'].get as any).mockReturnValue(configs)
 
       const retrieved = await service.getAllBackendConfigs()
 
@@ -256,7 +266,7 @@ describe('CredentialService', () => {
     })
 
     it('should return empty array when no backends exist', async () => {
-      service['store'].get.mockReturnValue([])
+      ;(service['store'].get as any).mockReturnValue([])
 
       const retrieved = await service.getAllBackendConfigs()
 
@@ -269,13 +279,17 @@ describe('CredentialService', () => {
       const config: BackendConfig = {
         id: 'backend-1',
         name: 'Test Backend',
-        provider: 'sparql11',
+        type: 'sparql-1.1', authType: 'none', createdAt: Date.now(), updatedAt: Date.now(),
         endpoint: 'http://localhost:3030/dataset/query',
       }
 
       // Add backend and credentials
       await service.saveBackendConfig(config)
-      await service.saveCredentials(config.id, { username: 'test', password: 'test' })
+      await service.saveCredentials(config.id, {
+        backendId: config.id,
+        username: 'test',
+        password: 'test',
+      })
 
       // Delete backend
       await service.deleteBackendConfig(config.id)
@@ -288,7 +302,7 @@ describe('CredentialService', () => {
       service.setSelectedBackendId('backend-1')
 
       // Mock get to return the right value based on key
-      service['store'].get.mockImplementation((key: string) => {
+      ;(service['store'].get as any).mockImplementation((key: string) => {
         if (key === 'selectedBackendId') return 'backend-1'
         if (key === 'backends') return []
         return storeData[key]
@@ -302,7 +316,7 @@ describe('CredentialService', () => {
 
   describe('selected backend management', () => {
     it('should get selected backend ID', () => {
-      service['store'].get.mockReturnValue('backend-1')
+      ;(service['store'].get as any).mockReturnValue('backend-1')
 
       const selectedId = service.getSelectedBackendId()
 
@@ -325,7 +339,7 @@ describe('CredentialService', () => {
 
   describe('schema version management', () => {
     it('should get schema version', () => {
-      service['store'].get.mockReturnValue(1)
+      ;(service['store'].get as any).mockReturnValue(1)
 
       const version = service.getSchemaVersion()
 
