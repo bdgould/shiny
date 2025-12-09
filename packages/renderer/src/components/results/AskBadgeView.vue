@@ -9,19 +9,19 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
-import CheckIcon from './icons/CheckIcon.vue';
-import XIcon from './icons/XIcon.vue';
+import { computed } from 'vue'
+import CheckIcon from './icons/CheckIcon.vue'
+import XIcon from './icons/XIcon.vue'
 
 const props = defineProps<{
   result: {
-    head: any;
-    boolean: boolean;
-  };
-}>();
+    head: any
+    boolean: boolean
+  }
+}>()
 
 // Extract boolean value
-const result = computed(() => props.result.boolean);
+const result = computed(() => props.result.boolean)
 </script>
 
 <style scoped>

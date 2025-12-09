@@ -4,11 +4,11 @@
       <button
         v-for="tab in tabsStore.tabs"
         :key="tab.id"
-        @click="tabsStore.setActiveTab(tab.id)"
-        @mousedown.middle.prevent="handleMiddleClick(tab.id)"
         :class="{ active: tab.id === tabsStore.activeTabId }"
         class="tab"
         :title="getTabTooltip(tab)"
+        @click="tabsStore.setActiveTab(tab.id)"
+        @mousedown.middle.prevent="handleMiddleClick(tab.id)"
       >
         <span class="tab-name">{{ tab.name }}</span>
         <span v-if="tab.isDirty" class="dirty-indicator">●</span>
@@ -18,11 +18,11 @@
           </svg>
         </span>
         <span
-          @click.stop="handleCloseTab(tab.id)"
           class="tab-close"
           :title="`Close ${tab.name}`"
           role="button"
           tabindex="0"
+          @click.stop="handleCloseTab(tab.id)"
           @keydown.enter.stop="handleCloseTab(tab.id)"
           @keydown.space.stop="handleCloseTab(tab.id)"
         >
@@ -30,44 +30,38 @@
         </span>
       </button>
     </div>
-    <button
-      @click="tabsStore.createTab()"
-      class="tab-new"
-      title="New Query (Ctrl/Cmd+T)"
-    >
-      +
-    </button>
+    <button class="tab-new" title="New Query (Ctrl/Cmd+T)" @click="tabsStore.createTab()">+</button>
   </div>
 </template>
 
 <script setup lang="ts">
-import { useTabsStore } from '@/stores/tabs';
-import type { Tab } from '@/stores/tabs';
+import { useTabsStore } from '@/stores/tabs'
+import type { Tab } from '@/stores/tabs'
 
-const tabsStore = useTabsStore();
+const tabsStore = useTabsStore()
 
 function handleMiddleClick(tabId: string) {
-  handleCloseTab(tabId);
+  handleCloseTab(tabId)
 }
 
 async function handleCloseTab(tabId: string) {
-  const tab = tabsStore.getTab(tabId);
-  if (!tab) return;
+  const tab = tabsStore.getTab(tabId)
+  if (!tab) return
 
   // TODO: In Phase 9, add unsaved changes warning here
   if (tab.isDirty) {
-    const confirmed = confirm(`"${tab.name}" has unsaved changes. Do you want to close it anyway?`);
-    if (!confirmed) return;
+    const confirmed = confirm(`"${tab.name}" has unsaved changes. Do you want to close it anyway?`)
+    if (!confirmed) return
   }
 
-  tabsStore.closeTab(tabId);
+  tabsStore.closeTab(tabId)
 }
 
 function getTabTooltip(tab: Tab): string {
   if (tab.filePath) {
-    return tab.filePath;
+    return tab.filePath
   }
-  return tab.name;
+  return tab.name
 }
 </script>
 
@@ -118,7 +112,9 @@ function getTabTooltip(tab: Tab): string {
   white-space: nowrap;
   min-width: 120px;
   max-width: 200px;
-  transition: background-color 0.15s, color 0.15s;
+  transition:
+    background-color 0.15s,
+    color 0.15s;
   position: relative;
 }
 
@@ -195,7 +191,10 @@ function getTabTooltip(tab: Tab): string {
   line-height: 1;
   flex-shrink: 0;
   opacity: 0;
-  transition: opacity 0.15s, background-color 0.15s, color 0.15s;
+  transition:
+    opacity 0.15s,
+    background-color 0.15s,
+    color 0.15s;
 }
 
 .tab:hover .tab-close {
@@ -225,7 +224,9 @@ function getTabTooltip(tab: Tab): string {
   cursor: pointer;
   font-size: 1.25rem;
   flex-shrink: 0;
-  transition: background-color 0.15s, color 0.15s;
+  transition:
+    background-color 0.15s,
+    color 0.15s;
 }
 
 .tab-new:hover {

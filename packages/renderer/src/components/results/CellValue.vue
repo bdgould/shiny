@@ -24,29 +24,29 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
-import { shortenURI, isURI } from '@/utils/uriShortener';
+import { computed } from 'vue'
+import { shortenURI, isURI } from '@/utils/uriShortener'
 
 const props = defineProps<{
-  value: string;
-  type: 'uri' | 'literal' | 'bnode' | string;
-  datatype?: string;
-  language?: string;
-}>();
+  value: string
+  type: 'uri' | 'literal' | 'bnode' | string
+  datatype?: string
+  language?: string
+}>()
 
 const displayValue = computed(() => {
   if (props.type === 'uri' && isURI(props.value)) {
-    return shortenURI(props.value);
+    return shortenURI(props.value)
   }
-  return props.value;
-});
+  return props.value
+})
 
 const isDefaultDatatype = computed(() => {
   return (
     props.datatype === 'http://www.w3.org/2001/XMLSchema#string' ||
     props.datatype === 'http://www.w3.org/1999/02/22-rdf-syntax-ns#langString'
-  );
-});
+  )
+})
 </script>
 
 <style scoped>

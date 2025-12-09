@@ -3,25 +3,13 @@
     <div class="editor-section" :style="{ height: editorHeight }">
       <TabBar />
       <div class="editor-controls">
-        <select
-          v-model="activeTabBackend"
-          class="backend-select"
-          @change="handleBackendChange"
-        >
+        <select v-model="activeTabBackend" class="backend-select" @change="handleBackendChange">
           <option :value="null" disabled>Select backend...</option>
-          <option
-            v-for="backend in connectionStore.backends"
-            :key="backend.id"
-            :value="backend.id"
-          >
+          <option v-for="backend in connectionStore.backends" :key="backend.id" :value="backend.id">
             {{ backend.name }}
           </option>
         </select>
-        <button
-          class="btn-primary"
-          @click="executeQuery"
-          :disabled="!activeTabBackend"
-        >
+        <button class="btn-primary" :disabled="!activeTabBackend" @click="executeQuery">
           Execute <span class="shortcut-hint">{{ shortcutHint }}</span>
         </button>
       </div>
@@ -31,45 +19,37 @@
     <div
       v-if="!isResultsCollapsed"
       class="resizer"
+      :class="{ resizing: isResizing }"
       @mousedown="startResize"
-      :class="{ 'resizing': isResizing }"
     >
       <div class="resizer-line"></div>
     </div>
 
-    <div
-      v-if="!isResultsCollapsed"
-      class="results-section"
-      :style="{ height: resultsHeight }"
-    >
+    <div v-if="!isResultsCollapsed" class="results-section" :style="{ height: resultsHeight }">
       <div class="results-header">
         <h3>Results</h3>
-        <button class="btn-icon" @click="toggleResultsCollapse" title="Collapse results">
+        <button class="btn-icon" title="Collapse results" @click="toggleResultsCollapse">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-            <path d="M8 11L3 6h10l-5 5z"/>
+            <path d="M8 11L3 6h10l-5 5z" />
           </svg>
         </button>
       </div>
       <div class="results-content">
-        <div v-if="queryStore.isExecuting" class="loading">
-          Executing query...
-        </div>
+        <div v-if="queryStore.isExecuting" class="loading">Executing query...</div>
         <div v-else-if="queryStore.error" class="error">
           {{ queryStore.error }}
         </div>
         <div v-else-if="queryStore.results" class="results">
           <ResultsView />
         </div>
-        <div v-else class="empty">
-          No results yet. Write a query and click Execute.
-        </div>
+        <div v-else class="empty">No results yet. Write a query and click Execute.</div>
       </div>
     </div>
 
     <div v-else class="results-collapsed">
-      <button class="btn-expand" @click="toggleResultsCollapse" title="Expand results">
+      <button class="btn-expand" title="Expand results" @click="toggleResultsCollapse">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-          <path d="M8 5l5 5H3l5-5z"/>
+          <path d="M8 5l5 5H3l5-5z" />
         </svg>
         <span>Results</span>
       </button>
@@ -78,28 +58,28 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onUnmounted } from 'vue';
-import { useQueryStore } from '@/stores/query';
-import { useTabsStore } from '@/stores/tabs';
-import { useConnectionStore } from '@/stores/connection';
-import { useKeyboardShortcuts } from '@/composables/useKeyboardShortcuts';
-import TabBar from '@/components/tabs/TabBar.vue';
-import MonacoSparqlEditor from '@/components/editor/MonacoSparqlEditor.vue';
-import ResultsView from '@/components/results/ResultsView.vue';
+import { ref, computed, onUnmounted } from 'vue'
+import { useQueryStore } from '@/stores/query'
+import { useTabsStore } from '@/stores/tabs'
+import { useConnectionStore } from '@/stores/connection'
+import { useKeyboardShortcuts } from '@/composables/useKeyboardShortcuts'
+import TabBar from '@/components/tabs/TabBar.vue'
+import MonacoSparqlEditor from '@/components/editor/MonacoSparqlEditor.vue'
+import ResultsView from '@/components/results/ResultsView.vue'
 
-const queryStore = useQueryStore();
-const tabsStore = useTabsStore();
-const connectionStore = useConnectionStore();
+const queryStore = useQueryStore()
+const tabsStore = useTabsStore()
+const connectionStore = useConnectionStore()
 
 // Per-tab backend selection
 const activeTabBackend = computed({
   get: () => tabsStore.activeTab?.backendId ?? null,
   set: (backendId: string | null) => {
     if (tabsStore.activeTab) {
-      tabsStore.setTabBackend(tabsStore.activeTab.id, backendId);
+      tabsStore.setTabBackend(tabsStore.activeTab.id, backendId)
     }
-  }
-});
+  },
+})
 
 function handleBackendChange() {
   // Backend is now per-tab, stored in tabs store
@@ -111,73 +91,73 @@ useKeyboardShortcuts([
   {
     key: 'Enter',
     ctrlOrCmd: true,
-    callback: executeQuery
-  }
-]);
+    callback: executeQuery,
+  },
+])
 
 // Platform detection for keyboard shortcut hint
-const isMac = ref(navigator.platform.toUpperCase().indexOf('MAC') >= 0);
-const shortcutHint = computed(() => isMac.value ? '⌘↩' : 'Ctrl+↵');
+const isMac = ref(navigator.platform.toUpperCase().indexOf('MAC') >= 0)
+const shortcutHint = computed(() => (isMac.value ? '⌘↩' : 'Ctrl+↵'))
 
 // Results panel state
-const isResultsCollapsed = ref(false);
-const resultsHeightPx = ref(300); // Default 300px
-const isResizing = ref(false);
+const isResultsCollapsed = ref(false)
+const resultsHeightPx = ref(300) // Default 300px
+const isResizing = ref(false)
 
 const editorHeight = computed(() => {
   if (isResultsCollapsed.value) {
-    return 'calc(100% - 32px)'; // Full height minus collapsed bar
+    return 'calc(100% - 32px)' // Full height minus collapsed bar
   }
-  return `calc(100% - ${resultsHeightPx.value}px - 6px)`; // 6px for resizer
-});
+  return `calc(100% - ${resultsHeightPx.value}px - 6px)` // 6px for resizer
+})
 
-const resultsHeight = computed(() => `${resultsHeightPx.value}px`);
+const resultsHeight = computed(() => `${resultsHeightPx.value}px`)
 
 function toggleResultsCollapse() {
-  isResultsCollapsed.value = !isResultsCollapsed.value;
+  isResultsCollapsed.value = !isResultsCollapsed.value
 }
 
 // Resize functionality
-let startY = 0;
-let startHeight = 0;
+let startY = 0
+let startHeight = 0
 
 function startResize(event: MouseEvent) {
-  isResizing.value = true;
-  startY = event.clientY;
-  startHeight = resultsHeightPx.value;
+  isResizing.value = true
+  startY = event.clientY
+  startHeight = resultsHeightPx.value
 
-  document.addEventListener('mousemove', handleResize);
-  document.addEventListener('mouseup', stopResize);
-  event.preventDefault();
+  document.addEventListener('mousemove', handleResize)
+  document.addEventListener('mouseup', stopResize)
+  event.preventDefault()
 }
 
 function handleResize(event: MouseEvent) {
-  if (!isResizing.value) return;
+  if (!isResizing.value) return
 
-  const deltaY = startY - event.clientY; // Inverted because we're dragging up/down
-  const newHeight = Math.max(100, startHeight + deltaY); // No max constraint - can expand to full height
-  resultsHeightPx.value = newHeight;
+  const deltaY = startY - event.clientY // Inverted because we're dragging up/down
+  const newHeight = Math.max(100, startHeight + deltaY) // No max constraint - can expand to full height
+  resultsHeightPx.value = newHeight
 }
 
 function stopResize() {
-  isResizing.value = false;
-  document.removeEventListener('mousemove', handleResize);
-  document.removeEventListener('mouseup', stopResize);
+  isResizing.value = false
+  document.removeEventListener('mousemove', handleResize)
+  document.removeEventListener('mouseup', stopResize)
 }
 
 async function executeQuery() {
-  await queryStore.executeQuery();
+  await queryStore.executeQuery()
   // Auto-expand results when query executes
   if (isResultsCollapsed.value) {
-    isResultsCollapsed.value = false;
+    isResultsCollapsed.value = false
   }
 }
 
 // Cleanup on unmount
 onUnmounted(() => {
-  document.removeEventListener('mousemove', handleResize);
-  document.removeEventListener('mouseup', stopResize);
-});
+  document.removeEventListener('mousemove', handleResize)
+  document.removeEventListener('mouseup', stopResize)
+})
 </script>
 
 <style scoped>

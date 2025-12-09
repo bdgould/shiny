@@ -2,37 +2,37 @@
  * Composable for GraphStudio API operations with caching
  */
 
-import { ref, computed } from 'vue';
-import type { Graphmart } from '../types/electron';
+import { ref, computed } from 'vue'
+import type { Graphmart } from '../types/electron'
 
 // Cache structure
 interface CacheEntry {
-  data: Graphmart[];
-  timestamp: number;
+  data: Graphmart[]
+  timestamp: number
 }
 
 // Cache TTL: 5 minutes
-const CACHE_TTL = 5 * 60 * 1000;
+const CACHE_TTL = 5 * 60 * 1000
 
 // Global cache (shared across all instances)
-const graphmartCache = new Map<string, CacheEntry>();
+const graphmartCache = new Map<string, CacheEntry>()
 
 export function useGraphStudioAPI() {
   // State
-  const graphmarts = ref<Graphmart[]>([]);
-  const isLoading = ref(false);
-  const error = ref<string | null>(null);
-  const lastFetched = ref<number>(0);
+  const graphmarts = ref<Graphmart[]>([])
+  const isLoading = ref(false)
+  const error = ref<string | null>(null)
+  const lastFetched = ref<number>(0)
 
   /**
    * Check if cached data is still valid
    */
   function isCacheValid(baseUrl: string): boolean {
-    const cached = graphmartCache.get(baseUrl);
-    if (!cached) return false;
+    const cached = graphmartCache.get(baseUrl)
+    if (!cached) return false
 
-    const age = Date.now() - cached.timestamp;
-    return age < CACHE_TTL;
+    const age = Date.now() - cached.timestamp
+    return age < CACHE_TTL
   }
 
   /**
@@ -46,51 +46,55 @@ export function useGraphStudioAPI() {
   ): Promise<void> {
     // Validate input
     if (!baseUrl || typeof baseUrl !== 'string') {
-      error.value = 'Base URL is required';
-      return;
+      error.value = 'Base URL is required'
+      return
     }
 
     // Check cache first (unless force refresh)
     if (!forceRefresh && isCacheValid(baseUrl)) {
-      const cached = graphmartCache.get(baseUrl);
+      const cached = graphmartCache.get(baseUrl)
       if (cached) {
-        graphmarts.value = cached.data;
-        lastFetched.value = cached.timestamp;
-        error.value = null;
-        return;
+        graphmarts.value = cached.data
+        lastFetched.value = cached.timestamp
+        error.value = null
+        return
       }
     }
 
     // Fetch from server
-    isLoading.value = true;
-    error.value = null;
+    isLoading.value = true
+    error.value = null
 
     try {
-      const result = await window.electronAPI.graphstudio.listGraphmarts(baseUrl, credentials, allowInsecure);
+      const result = await window.electronAPI.graphstudio.listGraphmarts(
+        baseUrl,
+        credentials,
+        allowInsecure
+      )
 
       // Sort: active first, then inactive, then error
       const sorted = [...result].sort((a, b) => {
-        const statusOrder = { active: 0, inactive: 1, error: 2 };
-        return statusOrder[a.status] - statusOrder[b.status];
-      });
+        const statusOrder = { active: 0, inactive: 1, error: 2 }
+        return statusOrder[a.status] - statusOrder[b.status]
+      })
 
       // Update state
-      graphmarts.value = sorted;
-      lastFetched.value = Date.now();
+      graphmarts.value = sorted
+      lastFetched.value = Date.now()
 
       // Update cache
       graphmartCache.set(baseUrl, {
         data: sorted,
         timestamp: Date.now(),
-      });
+      })
 
-      error.value = null;
+      error.value = null
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to load graphmarts';
-      error.value = message;
-      console.error('Failed to load graphmarts:', err);
+      const message = err instanceof Error ? err.message : 'Failed to load graphmarts'
+      error.value = message
+      console.error('Failed to load graphmarts:', err)
     } finally {
-      isLoading.value = false;
+      isLoading.value = false
     }
   }
 
@@ -103,10 +107,10 @@ export function useGraphStudioAPI() {
     allowInsecure?: boolean
   ): Promise<void> {
     // Clear cache for this URL
-    graphmartCache.delete(baseUrl);
+    graphmartCache.delete(baseUrl)
 
     // Load fresh data
-    await loadGraphmarts(baseUrl, credentials, true, allowInsecure);
+    await loadGraphmarts(baseUrl, credentials, true, allowInsecure)
   }
 
   /**
@@ -119,7 +123,7 @@ export function useGraphStudioAPI() {
     allowInsecure?: boolean
   ): Promise<Graphmart | null> {
     if (!baseUrl || !graphmartUri) {
-      throw new Error('Base URL and Graphmart URI are required');
+      throw new Error('Base URL and Graphmart URI are required')
     }
 
     try {
@@ -128,12 +132,12 @@ export function useGraphStudioAPI() {
         graphmartUri,
         credentials,
         allowInsecure
-      );
+      )
 
-      return result;
+      return result
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to load graphmart details';
-      throw new Error(message);
+      const message = err instanceof Error ? err.message : 'Failed to load graphmart details'
+      throw new Error(message)
     }
   }
 
@@ -141,48 +145,44 @@ export function useGraphStudioAPI() {
    * Clear all cached data
    */
   function clearCache(): void {
-    graphmartCache.clear();
-    graphmarts.value = [];
-    lastFetched.value = 0;
-    error.value = null;
+    graphmartCache.clear()
+    graphmarts.value = []
+    lastFetched.value = 0
+    error.value = null
   }
 
   /**
    * Get cache age in seconds
    */
   const cacheAgeSeconds = computed(() => {
-    if (!lastFetched.value) return null;
-    return Math.floor((Date.now() - lastFetched.value) / 1000);
-  });
+    if (!lastFetched.value) return null
+    return Math.floor((Date.now() - lastFetched.value) / 1000)
+  })
 
   /**
    * Check if cache will expire soon (within 1 minute)
    */
   const cacheExpiringSoon = computed(() => {
-    if (!lastFetched.value) return false;
-    const age = Date.now() - lastFetched.value;
-    return age > (CACHE_TTL - 60000); // Less than 1 minute remaining
-  });
+    if (!lastFetched.value) return false
+    const age = Date.now() - lastFetched.value
+    return age > CACHE_TTL - 60000 // Less than 1 minute remaining
+  })
 
   /**
    * Get graphmarts by status
    */
-  const activeGraphmarts = computed(() =>
-    graphmarts.value.filter(gm => gm.status === 'active')
-  );
+  const activeGraphmarts = computed(() => graphmarts.value.filter((gm) => gm.status === 'active'))
 
   const inactiveGraphmarts = computed(() =>
-    graphmarts.value.filter(gm => gm.status === 'inactive')
-  );
+    graphmarts.value.filter((gm) => gm.status === 'inactive')
+  )
 
-  const errorGraphmarts = computed(() =>
-    graphmarts.value.filter(gm => gm.status === 'error')
-  );
+  const errorGraphmarts = computed(() => graphmarts.value.filter((gm) => gm.status === 'error'))
 
   /**
    * Check if any graphmarts are available
    */
-  const hasGraphmarts = computed(() => graphmarts.value.length > 0);
+  const hasGraphmarts = computed(() => graphmarts.value.length > 0)
 
   return {
     // State
@@ -204,5 +204,5 @@ export function useGraphStudioAPI() {
     refreshGraphmarts,
     getGraphmartDetails,
     clearCache,
-  };
+  }
 }

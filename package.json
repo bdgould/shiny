@@ -12,7 +12,20 @@
   "scripts": {
     "dev": "node scripts/dev.js",
     "build": "node scripts/build.js",
+    "test": "npm run test:main && npm run test:renderer",
+    "test:run": "npm run test:main && npm run test:renderer",
+    "test:ui": "vitest --ui",
+    "test:coverage": "npm run test:coverage:main && npm run test:coverage:renderer && npm run test:coverage:preload",
+    "test:main": "cd packages/main && npx vitest run",
+    "test:renderer": "cd packages/renderer && npx vitest run",
+    "test:preload": "cd packages/preload && npx vitest run",
+    "test:coverage:main": "cd packages/main && npx vitest run --coverage",
+    "test:coverage:renderer": "cd packages/renderer && npx vitest run --coverage",
+    "test:coverage:preload": "cd packages/preload && npx vitest run --coverage",
     "lint": "eslint . --ext .ts,.vue",
+    "lint:fix": "eslint . --ext .ts,.vue --fix",
+    "format": "prettier --write \"**/*.{ts,vue,js,json,css,md}\"",
+    "format:check": "prettier --check \"**/*.{ts,vue,js,json,css,md}\"",
     "type-check": "tsc --noEmit",
     "clean": "rimraf dist packages/*/dist",
     "bump-version": "node scripts/bump-version.js"
@@ -21,13 +34,19 @@
     "@types/node": "^20.11.0",
     "@typescript-eslint/eslint-plugin": "^6.19.0",
     "@typescript-eslint/parser": "^6.19.0",
+    "@vitest/coverage-v8": "^4.0.15",
+    "@vitest/ui": "^4.0.15",
     "concurrently": "^8.2.2",
     "electron": "^29.0.1",
     "electron-builder": "^24.13.0",
     "eslint": "^8.56.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.4",
     "eslint-plugin-vue": "^9.20.0",
+    "prettier": "^3.7.4",
     "rimraf": "^5.0.5",
     "typescript": "^5.3.3",
+    "vitest": "^4.0.15",
     "wait-on": "^7.2.0"
   },
   "dependencies": {
@@ -52,7 +71,10 @@
       "target": [
         {
           "target": "dmg",
-          "arch": ["x64", "arm64"]
+          "arch": [
+            "x64",
+            "arm64"
+          ]
         }
       ],
       "icon": "icons/shiny.icns"
@@ -61,7 +83,10 @@
       "target": [
         {
           "target": "nsis",
-          "arch": ["x64", "arm64"]
+          "arch": [
+            "x64",
+            "arm64"
+          ]
         }
       ],
       "icon": "icons/shiny.ico"

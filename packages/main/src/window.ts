@@ -1,8 +1,8 @@
-import { BrowserWindow, app } from 'electron';
-import * as path from 'path';
+import { BrowserWindow, app } from 'electron'
+import * as path from 'path'
 
 export function createMainWindow(): BrowserWindow {
-  const isDev = !app.isPackaged;
+  const isDev = !app.isPackaged
 
   const window = new BrowserWindow({
     width: 1400,
@@ -20,16 +20,16 @@ export function createMainWindow(): BrowserWindow {
       // Preload script for secure IPC
       preload: path.join(__dirname, '../../preload/dist/index.js'),
     },
-  });
+  })
 
   if (isDev) {
     // In development, load from Vite dev server
-    window.loadURL('http://localhost:5173');
-    window.webContents.openDevTools();
+    window.loadURL('http://localhost:5173')
+    window.webContents.openDevTools()
   } else {
     // In production, load from built files
-    window.loadFile(path.join(__dirname, '../../renderer/dist/index.html'));
+    window.loadFile(path.join(__dirname, '../../renderer/dist/index.html'))
   }
 
-  return window;
+  return window
 }

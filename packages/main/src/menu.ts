@@ -1,7 +1,7 @@
-import { Menu, BrowserWindow, app, shell, dialog } from 'electron';
+import { Menu, BrowserWindow, app, shell, dialog } from 'electron'
 
 export function createApplicationMenu(mainWindow: BrowserWindow) {
-  const isMac = process.platform === 'darwin';
+  const isMac = process.platform === 'darwin'
 
   // Custom About handler
   const showAboutDialog = async () => {
@@ -12,34 +12,38 @@ export function createApplicationMenu(mainWindow: BrowserWindow) {
       detail: 'An extensible SPARQL client built with Electron and Vue 3',
       buttons: ['GitHub Wiki', 'OK'],
       defaultId: 1,
-      cancelId: 1
-    });
+      cancelId: 1,
+    })
 
     // If "GitHub Wiki" button (index 0) was clicked
     if (response.response === 0) {
-      await shell.openExternal('https://github.com/bdgould/shiny/wiki');
+      await shell.openExternal('https://github.com/bdgould/shiny/wiki')
     }
-  };
+  }
 
   const template: Electron.MenuItemConstructorOptions[] = [
     // App menu (macOS only)
-    ...(isMac ? [{
-      label: app.name,
-      submenu: [
-        {
-          label: 'About Shiny',
-          click: showAboutDialog
-        },
-        { type: 'separator' as const },
-        { role: 'services' as const },
-        { type: 'separator' as const },
-        { role: 'hide' as const },
-        { role: 'hideOthers' as const },
-        { role: 'unhide' as const },
-        { type: 'separator' as const },
-        { role: 'quit' as const }
-      ]
-    }] : []),
+    ...(isMac
+      ? [
+          {
+            label: app.name,
+            submenu: [
+              {
+                label: 'About Shiny',
+                click: showAboutDialog,
+              },
+              { type: 'separator' as const },
+              { role: 'services' as const },
+              { type: 'separator' as const },
+              { role: 'hide' as const },
+              { role: 'hideOthers' as const },
+              { role: 'unhide' as const },
+              { type: 'separator' as const },
+              { role: 'quit' as const },
+            ],
+          },
+        ]
+      : []),
 
     // File menu
     {
@@ -49,26 +53,26 @@ export function createApplicationMenu(mainWindow: BrowserWindow) {
           label: 'Open Query...',
           accelerator: 'CmdOrCtrl+O',
           click: () => {
-            mainWindow.webContents.send('menu:openQuery');
-          }
+            mainWindow.webContents.send('menu:openQuery')
+          },
         },
         {
           label: 'Save Query...',
           accelerator: 'CmdOrCtrl+S',
           click: () => {
-            mainWindow.webContents.send('menu:saveQuery');
-          }
+            mainWindow.webContents.send('menu:saveQuery')
+          },
         },
         {
           label: 'Save Results...',
           accelerator: 'CmdOrCtrl+Shift+S',
           click: () => {
-            mainWindow.webContents.send('menu:saveResults');
-          }
+            mainWindow.webContents.send('menu:saveResults')
+          },
         },
         { type: 'separator' as const },
-        isMac ? { role: 'close' as const } : { role: 'quit' as const }
-      ]
+        isMac ? { role: 'close' as const } : { role: 'quit' as const },
+      ],
     },
 
     // Edit menu
@@ -81,24 +85,23 @@ export function createApplicationMenu(mainWindow: BrowserWindow) {
         { role: 'cut' as const },
         { role: 'copy' as const },
         { role: 'paste' as const },
-        ...(isMac ? [
-          { role: 'pasteAndMatchStyle' as const },
-          { role: 'delete' as const },
-          { role: 'selectAll' as const },
-          { type: 'separator' as const },
-          {
-            label: 'Speech',
-            submenu: [
-              { role: 'startSpeaking' as const },
-              { role: 'stopSpeaking' as const }
+        ...(isMac
+          ? [
+              { role: 'pasteAndMatchStyle' as const },
+              { role: 'delete' as const },
+              { role: 'selectAll' as const },
+              { type: 'separator' as const },
+              {
+                label: 'Speech',
+                submenu: [{ role: 'startSpeaking' as const }, { role: 'stopSpeaking' as const }],
+              },
             ]
-          }
-        ] : [
-          { role: 'delete' as const },
-          { type: 'separator' as const },
-          { role: 'selectAll' as const }
-        ])
-      ]
+          : [
+              { role: 'delete' as const },
+              { type: 'separator' as const },
+              { role: 'selectAll' as const },
+            ]),
+      ],
     },
 
     // View menu
@@ -113,8 +116,8 @@ export function createApplicationMenu(mainWindow: BrowserWindow) {
         { role: 'zoomIn' as const },
         { role: 'zoomOut' as const },
         { type: 'separator' as const },
-        { role: 'togglefullscreen' as const }
-      ]
+        { role: 'togglefullscreen' as const },
+      ],
     },
 
     // Window menu
@@ -123,15 +126,15 @@ export function createApplicationMenu(mainWindow: BrowserWindow) {
       submenu: [
         { role: 'minimize' as const },
         { role: 'zoom' as const },
-        ...(isMac ? [
-          { type: 'separator' as const },
-          { role: 'front' as const },
-          { type: 'separator' as const },
-          { role: 'window' as const }
-        ] : [
-          { role: 'close' as const }
-        ])
-      ]
+        ...(isMac
+          ? [
+              { type: 'separator' as const },
+              { role: 'front' as const },
+              { type: 'separator' as const },
+              { role: 'window' as const },
+            ]
+          : [{ role: 'close' as const }]),
+      ],
     },
 
     // Help menu
@@ -141,20 +144,22 @@ export function createApplicationMenu(mainWindow: BrowserWindow) {
         {
           label: 'Learn More',
           click: async () => {
-            await shell.openExternal('https://github.com/bdgould/shiny');
-          }
+            await shell.openExternal('https://github.com/bdgould/shiny')
+          },
         },
-        ...(isMac ? [] : [
-          { type: 'separator' as const },
-          {
-            label: 'About Shiny',
-            click: showAboutDialog
-          }
-        ])
-      ]
-    }
-  ];
+        ...(isMac
+          ? []
+          : [
+              { type: 'separator' as const },
+              {
+                label: 'About Shiny',
+                click: showAboutDialog,
+              },
+            ]),
+      ],
+    },
+  ]
 
-  const menu = Menu.buildFromTemplate(template);
-  Menu.setApplicationMenu(menu);
+  const menu = Menu.buildFromTemplate(template)
+  Menu.setApplicationMenu(menu)
 }

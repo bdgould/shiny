@@ -1,54 +1,51 @@
 <template>
-  <div
-    class="drawer-resizer"
-    @mousedown="startResize"
-  ></div>
+  <div class="drawer-resizer" @mousedown="startResize"></div>
 </template>
 
 <script setup lang="ts">
-import { ref, onBeforeUnmount } from 'vue';
-import { useSidebarStore } from '@/stores/sidebar';
+import { ref, onBeforeUnmount } from 'vue'
+import { useSidebarStore } from '@/stores/sidebar'
 
-const sidebarStore = useSidebarStore();
-const isResizing = ref(false);
+const sidebarStore = useSidebarStore()
+const isResizing = ref(false)
 
-const MIN_WIDTH = 200;
-const MAX_WIDTH = 600;
+const MIN_WIDTH = 200
+const MAX_WIDTH = 600
 
 function startResize(event: MouseEvent) {
-  event.preventDefault();
-  isResizing.value = true;
+  event.preventDefault()
+  isResizing.value = true
 
-  const startX = event.clientX;
-  const startWidth = sidebarStore.drawerWidth;
+  const startX = event.clientX
+  const startWidth = sidebarStore.drawerWidth
 
   function handleMouseMove(e: MouseEvent) {
-    if (!isResizing.value) return;
+    if (!isResizing.value) return
 
-    const deltaX = e.clientX - startX;
-    const newWidth = startWidth + deltaX;
+    const deltaX = e.clientX - startX
+    const newWidth = startWidth + deltaX
 
     // Clamp to min/max bounds
-    const clampedWidth = Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, newWidth));
-    sidebarStore.setDrawerWidth(clampedWidth);
+    const clampedWidth = Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, newWidth))
+    sidebarStore.setDrawerWidth(clampedWidth)
   }
 
   function handleMouseUp() {
-    isResizing.value = false;
-    document.removeEventListener('mousemove', handleMouseMove);
-    document.removeEventListener('mouseup', handleMouseUp);
+    isResizing.value = false
+    document.removeEventListener('mousemove', handleMouseMove)
+    document.removeEventListener('mouseup', handleMouseUp)
   }
 
-  document.addEventListener('mousemove', handleMouseMove);
-  document.addEventListener('mouseup', handleMouseUp);
+  document.addEventListener('mousemove', handleMouseMove)
+  document.addEventListener('mouseup', handleMouseUp)
 }
 
 // Cleanup on unmount
 onBeforeUnmount(() => {
   if (isResizing.value) {
-    isResizing.value = false;
+    isResizing.value = false
   }
-});
+})
 </script>
 
 <style scoped>

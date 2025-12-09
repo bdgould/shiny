@@ -1,20 +1,20 @@
-export type SelectView = 'table' | 'json';
-export type ConstructView = 'entity-table' | 'turtle' | 'ntriples' | 'nquads' | 'jsonld';
-export type AskView = 'badge' | 'json';
+export type SelectView = 'table' | 'json'
+export type ConstructView = 'entity-table' | 'turtle' | 'ntriples' | 'nquads' | 'jsonld'
+export type AskView = 'badge' | 'json'
 
 interface ViewPreferences {
-  select: SelectView;
-  construct: ConstructView;
-  ask: AskView;
+  select: SelectView
+  construct: ConstructView
+  ask: AskView
 }
 
-const STORAGE_KEY = 'shiny:query:view-preferences';
+const STORAGE_KEY = 'shiny:query:view-preferences'
 
 const DEFAULT_PREFERENCES: ViewPreferences = {
   select: 'table',
   construct: 'entity-table',
   ask: 'badge',
-};
+}
 
 /**
  * Get all view preferences from localStorage
@@ -22,14 +22,14 @@ const DEFAULT_PREFERENCES: ViewPreferences = {
  */
 export function getViewPreferences(): ViewPreferences {
   try {
-    const stored = localStorage.getItem(STORAGE_KEY);
+    const stored = localStorage.getItem(STORAGE_KEY)
     if (stored) {
-      return { ...DEFAULT_PREFERENCES, ...JSON.parse(stored) };
+      return { ...DEFAULT_PREFERENCES, ...JSON.parse(stored) }
     }
   } catch (error) {
-    console.error('Failed to load view preferences:', error);
+    console.error('Failed to load view preferences:', error)
   }
-  return DEFAULT_PREFERENCES;
+  return DEFAULT_PREFERENCES
 }
 
 /**
@@ -42,11 +42,11 @@ export function setViewPreference<T extends keyof ViewPreferences>(
   view: ViewPreferences[T]
 ): void {
   try {
-    const prefs = getViewPreferences();
-    prefs[queryType] = view;
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(prefs));
+    const prefs = getViewPreferences()
+    prefs[queryType] = view
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(prefs))
   } catch (error) {
-    console.error('Failed to save view preference:', error);
+    console.error('Failed to save view preference:', error)
   }
 }
 
@@ -58,5 +58,5 @@ export function setViewPreference<T extends keyof ViewPreferences>(
 export function getViewPreference<T extends keyof ViewPreferences>(
   queryType: T
 ): ViewPreferences[T] {
-  return getViewPreferences()[queryType];
+  return getViewPreferences()[queryType]
 }

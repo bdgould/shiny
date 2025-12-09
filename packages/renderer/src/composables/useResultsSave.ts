@@ -1,27 +1,27 @@
-import { useTabsStore } from '../stores/tabs';
-import type { QueryType } from '../services/sparql/queryDetector';
-import { serializeResults, getAvailableFormats } from '../utils/serializeResults';
+import { useTabsStore } from '../stores/tabs'
+import type { QueryType } from '../services/sparql/queryDetector'
+import { serializeResults, getAvailableFormats } from '../utils/serializeResults'
 
 export function useResultsSave() {
-  const tabsStore = useTabsStore();
+  const tabsStore = useTabsStore()
 
   /**
    * Check if save results is available for the active tab
    */
   function canSaveResults(): boolean {
-    const activeTab = tabsStore.activeTab;
-    return !!(activeTab && activeTab.results && activeTab.queryType);
+    const activeTab = tabsStore.activeTab
+    return !!(activeTab && activeTab.results && activeTab.queryType)
   }
 
   /**
    * Get available export formats for the active tab's query type
    */
-  function getExportFormats(): Array<{value: string, label: string}> {
-    const activeTab = tabsStore.activeTab;
+  function getExportFormats(): Array<{ value: string; label: string }> {
+    const activeTab = tabsStore.activeTab
     if (!activeTab || !activeTab.queryType) {
-      return [];
+      return []
     }
-    return getAvailableFormats(activeTab.queryType);
+    return getAvailableFormats(activeTab.queryType)
   }
 
   /**
@@ -32,15 +32,15 @@ export function useResultsSave() {
    */
   async function saveResults(format: string): Promise<boolean> {
     try {
-      const activeTab = tabsStore.activeTab;
+      const activeTab = tabsStore.activeTab
       if (!activeTab) {
-        alert('No active tab');
-        return false;
+        alert('No active tab')
+        return false
       }
 
       if (!activeTab.results || !activeTab.queryType) {
-        alert('No results to save');
-        return false;
+        alert('No results to save')
+        return false
       }
 
       // Serialize results based on query type and format
@@ -48,26 +48,27 @@ export function useResultsSave() {
         activeTab.results,
         activeTab.queryType as QueryType,
         format
-      );
+      )
 
       // Call Electron API to save file
       const result = await window.electronAPI.files.saveResults(
         serialized,
         activeTab.queryType,
         format
-      );
+      )
 
       if (result.success) {
-        console.log('Results saved successfully:', result.filePath);
-        return true;
+        // eslint-disable-next-line no-console
+        console.log('Results saved successfully:', result.filePath)
+        return true
       } else {
-        alert(`Failed to save results: ${result.error || 'Unknown error'}`);
-        return false;
+        alert(`Failed to save results: ${result.error || 'Unknown error'}`)
+        return false
       }
     } catch (error) {
-      console.error('Error saving results:', error);
-      alert(`Error saving results: ${error instanceof Error ? error.message : 'Unknown error'}`);
-      return false;
+      console.error('Error saving results:', error)
+      alert(`Error saving results: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      return false
     }
   }
 
@@ -75,5 +76,5 @@ export function useResultsSave() {
     canSaveResults,
     getExportFormats,
     saveResults,
-  };
+  }
 }

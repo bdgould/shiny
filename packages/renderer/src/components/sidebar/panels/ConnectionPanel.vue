@@ -1,59 +1,50 @@
 <template>
   <div class="connection-panel">
-    <BackendList
-      v-if="!showForm"
-      @add="handleAdd"
-      @edit="handleEdit"
-    />
-    <ConnectionForm
-      v-else
-      :backend="editingBackend"
-      @save="handleSave"
-      @cancel="handleCancel"
-    />
+    <BackendList v-if="!showForm" @add="handleAdd" @edit="handleEdit" />
+    <ConnectionForm v-else :backend="editingBackend" @save="handleSave" @cancel="handleCancel" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
-import { useConnectionStore } from '@/stores/connection';
-import BackendList from './BackendList.vue';
-import ConnectionForm from './ConnectionForm.vue';
-import type { BackendConfig } from '@/types/backends';
-import type { BackendFormData } from '@/composables/useBackendValidation';
+import { ref } from 'vue'
+import { useConnectionStore } from '@/stores/connection'
+import BackendList from './BackendList.vue'
+import ConnectionForm from './ConnectionForm.vue'
+import type { BackendConfig } from '@/types/backends'
+import type { BackendFormData } from '@/composables/useBackendValidation'
 
-const connectionStore = useConnectionStore();
+const connectionStore = useConnectionStore()
 
-const showForm = ref(false);
-const editingBackend = ref<BackendConfig | undefined>(undefined);
+const showForm = ref(false)
+const editingBackend = ref<BackendConfig | undefined>(undefined)
 
 function handleAdd() {
-  editingBackend.value = undefined;
-  showForm.value = true;
+  editingBackend.value = undefined
+  showForm.value = true
 }
 
 function handleEdit(backend: BackendConfig) {
-  editingBackend.value = backend;
-  showForm.value = true;
+  editingBackend.value = backend
+  showForm.value = true
 }
 
 function handleCancel() {
-  showForm.value = false;
-  editingBackend.value = undefined;
+  showForm.value = false
+  editingBackend.value = undefined
 }
 
 async function handleSave(formData: BackendFormData) {
   try {
     // Extract credentials only if user has provided values
     // When editing, only pass credentials if they've been changed/entered
-    let credentials = undefined;
+    let credentials = undefined
 
     if (formData.authType !== 'none') {
       // Check if user has actually entered credential values
-      const hasBasicAuth = formData.authType === 'basic' && formData.username && formData.password;
-      const hasBearerToken = formData.authType === 'bearer' && formData.token;
-      const hasCustomHeaders = formData.authType === 'custom' &&
-        formData.customHeaders?.some(h => h.key && h.value);
+      const hasBasicAuth = formData.authType === 'basic' && formData.username && formData.password
+      const hasBearerToken = formData.authType === 'bearer' && formData.token
+      const hasCustomHeaders =
+        formData.authType === 'custom' && formData.customHeaders?.some((h) => h.key && h.value)
 
       // Only build credentials object if user has entered values
       if (hasBasicAuth || hasBearerToken || hasCustomHeaders) {
@@ -61,24 +52,27 @@ async function handleSave(formData: BackendFormData) {
           username: formData.username,
           password: formData.password,
           token: formData.token,
-          headers: formData.customHeaders?.reduce((acc, h) => {
-            if (h.key && h.value) {
-              acc[h.key] = h.value;
-            }
-            return acc;
-          }, {} as Record<string, string>),
-        };
+          headers: formData.customHeaders?.reduce(
+            (acc, h) => {
+              if (h.key && h.value) {
+                acc[h.key] = h.value
+              }
+              return acc
+            },
+            {} as Record<string, string>
+          ),
+        }
       }
     }
 
     // Build provider config for GraphStudio
-    let providerConfig: string | undefined = undefined;
+    let providerConfig: string | undefined = undefined
     if (formData.type === 'graphstudio' && formData.graphmartUri) {
       providerConfig = JSON.stringify({
         graphmartUri: formData.graphmartUri,
         graphmartName: formData.graphmartName || '',
         selectedLayers: formData.selectedLayers || ['ALL_LAYERS'],
-      });
+      })
     }
 
     if (editingBackend.value) {
@@ -94,7 +88,7 @@ async function handleSave(formData: BackendFormData) {
           allowInsecure: formData.allowInsecure,
         },
         credentials
-      );
+      )
     } else {
       // Create new backend
       await connectionStore.createBackend(
@@ -107,14 +101,14 @@ async function handleSave(formData: BackendFormData) {
           allowInsecure: formData.allowInsecure,
         },
         credentials
-      );
+      )
     }
 
     // Close form on success
-    handleCancel();
+    handleCancel()
   } catch (error) {
-    console.error('Failed to save backend:', error);
-    alert(error instanceof Error ? error.message : 'Failed to save backend');
+    console.error('Failed to save backend:', error)
+    alert(error instanceof Error ? error.message : 'Failed to save backend')
   }
 }
 </script>

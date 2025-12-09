@@ -9,24 +9,22 @@
     <div v-else-if="serializedData" class="serialization-container">
       <pre>{{ serializedData }}</pre>
     </div>
-    <div v-else class="empty">
-      No data to display
-    </div>
+    <div v-else class="empty">No data to display</div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, watch, computed, onMounted } from 'vue';
-import { rdfProcessor } from '@/services/rdf/rdfProcessor';
+import { ref, watch, computed, onMounted } from 'vue'
+import { rdfProcessor } from '@/services/rdf/rdfProcessor'
 
 const props = defineProps<{
-  turtleData: string;
-  format: 'turtle' | 'ntriples' | 'nquads' | 'jsonld';
-}>();
+  turtleData: string
+  format: 'turtle' | 'ntriples' | 'nquads' | 'jsonld'
+}>()
 
-const isLoading = ref(false);
-const serializedData = ref<string | null>(null);
-const error = ref<string | null>(null);
+const isLoading = ref(false)
+const serializedData = ref<string | null>(null)
+const error = ref<string | null>(null)
 
 const formatLabel = computed(() => {
   const labels = {
@@ -34,61 +32,61 @@ const formatLabel = computed(() => {
     ntriples: 'N-Triples',
     nquads: 'N-Quads',
     jsonld: 'JSON-LD',
-  };
-  return labels[props.format];
-});
+  }
+  return labels[props.format]
+})
 
 async function serialize() {
   if (!props.turtleData) {
-    serializedData.value = null;
-    error.value = null;
-    return;
+    serializedData.value = null
+    error.value = null
+    return
   }
 
-  isLoading.value = true;
-  error.value = null;
-  serializedData.value = null;
+  isLoading.value = true
+  error.value = null
+  serializedData.value = null
 
   try {
     // If the requested format is Turtle, just use the original data
     // This avoids unnecessary parse/serialize round-trip and potential issues
     if (props.format === 'turtle') {
-      serializedData.value = props.turtleData;
-      isLoading.value = false;
-      return;
+      serializedData.value = props.turtleData
+      isLoading.value = false
+      return
     }
 
     // Parse Turtle data for other formats
-    const dataset = await rdfProcessor.parseTurtle(props.turtleData);
+    const dataset = await rdfProcessor.parseTurtle(props.turtleData)
 
     // Serialize to requested format
-    let result: string;
+    let result: string
     switch (props.format) {
       case 'ntriples':
-        result = await rdfProcessor.serializeToNTriples(dataset);
-        break;
+        result = await rdfProcessor.serializeToNTriples(dataset)
+        break
       case 'nquads':
-        result = await rdfProcessor.serializeToNQuads(dataset);
-        break;
+        result = await rdfProcessor.serializeToNQuads(dataset)
+        break
       case 'jsonld':
-        result = await rdfProcessor.serializeToJsonLD(dataset);
-        break;
+        result = await rdfProcessor.serializeToJsonLD(dataset)
+        break
       default:
-        throw new Error(`Unsupported format: ${props.format}`);
+        throw new Error(`Unsupported format: ${props.format}`)
     }
 
-    serializedData.value = result;
+    serializedData.value = result
   } catch (err: any) {
-    error.value = `Failed to serialize RDF data: ${err.message}`;
-    console.error('RDF serialization error:', err);
+    error.value = `Failed to serialize RDF data: ${err.message}`
+    console.error('RDF serialization error:', err)
   } finally {
-    isLoading.value = false;
+    isLoading.value = false
   }
 }
 
 // Serialize when component mounts or when inputs change
-onMounted(() => serialize());
-watch(() => [props.turtleData, props.format], serialize);
+onMounted(() => serialize())
+watch(() => [props.turtleData, props.format], serialize)
 </script>
 
 <style scoped>

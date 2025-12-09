@@ -4,15 +4,15 @@
       <div class="dialog" @click.stop>
         <div class="dialog-header">
           <h3>Select Export Format</h3>
-          <button class="btn-close" @click="close" aria-label="Close dialog">×</button>
+          <button class="btn-close" aria-label="Close dialog" @click="close">×</button>
         </div>
         <div class="dialog-content">
           <div class="format-options">
             <button
               v-for="format in formats"
               :key="format.value"
-              @click="selectFormat(format.value)"
               class="format-option"
+              @click="selectFormat(format.value)"
             >
               <span class="format-label">{{ format.label }}</span>
               <span class="format-extension">.{{ getExtension(format.value) }}</span>
@@ -20,7 +20,7 @@
           </div>
         </div>
         <div class="dialog-footer">
-          <button @click="close" class="btn-secondary">Cancel</button>
+          <button class="btn-secondary" @click="close">Cancel</button>
         </div>
       </div>
     </div>
@@ -28,62 +28,62 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref } from 'vue'
 
 interface Format {
-  value: string;
-  label: string;
+  value: string
+  label: string
 }
 
 interface Props {
-  formats: Format[];
+  formats: Format[]
 }
 
 interface Emits {
-  (e: 'select', format: string): void;
-  (e: 'close'): void;
+  (e: 'select', format: string): void
+  (e: 'close'): void
 }
 
-const props = defineProps<Props>();
-const emit = defineEmits<Emits>();
+defineProps<Props>()
+const emit = defineEmits<Emits>()
 
-const isOpen = ref(false);
+const isOpen = ref(false)
 
 function open() {
-  isOpen.value = true;
+  isOpen.value = true
 }
 
 function close() {
-  isOpen.value = false;
-  emit('close');
+  isOpen.value = false
+  emit('close')
 }
 
 function selectFormat(format: string) {
-  emit('select', format);
-  close();
+  emit('select', format)
+  close()
 }
 
 function handleOverlayClick() {
-  close();
+  close()
 }
 
 function getExtension(format: string): string {
   const extensionMap: Record<string, string> = {
-    'csv': 'csv',
-    'json': 'json',
-    'turtle': 'ttl',
-    'trig': 'trig',
-    'ntriples': 'nt',
-    'nquads': 'nq',
-    'jsonld': 'jsonld',
-  };
-  return extensionMap[format] || format;
+    csv: 'csv',
+    json: 'json',
+    turtle: 'ttl',
+    trig: 'trig',
+    ntriples: 'nt',
+    nquads: 'nq',
+    jsonld: 'jsonld',
+  }
+  return extensionMap[format] || format
 }
 
 defineExpose({
   open,
   close,
-});
+})
 </script>
 
 <style scoped>

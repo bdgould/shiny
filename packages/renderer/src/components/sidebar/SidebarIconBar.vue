@@ -3,8 +3,8 @@
     <button
       class="icon-button"
       :class="{ active: sidebarStore.activePanel === 'connection' }"
-      @click="sidebarStore.togglePanel('connection')"
       title="Connections"
+      @click="sidebarStore.togglePanel('connection')"
     >
       <ConnectionIcon />
     </button>
@@ -12,8 +12,8 @@
     <button
       class="icon-button"
       :class="{ active: sidebarStore.activePanel === 'ai' }"
-      @click="sidebarStore.togglePanel('ai')"
       title="AI Configuration"
+      @click="sidebarStore.togglePanel('ai')"
     >
       <AIIcon />
     </button>
@@ -21,8 +21,8 @@
     <button
       class="icon-button"
       :class="{ active: sidebarStore.activePanel === 'history' }"
-      @click="sidebarStore.togglePanel('history')"
       title="Query History"
+      @click="sidebarStore.togglePanel('history')"
     >
       <HistoryIcon />
     </button>
@@ -30,12 +30,12 @@
 </template>
 
 <script setup lang="ts">
-import { useSidebarStore } from '@/stores/sidebar';
-import ConnectionIcon from './icons/ConnectionIcon.vue';
-import AIIcon from './icons/AIIcon.vue';
-import HistoryIcon from './icons/HistoryIcon.vue';
+import { useSidebarStore } from '@/stores/sidebar'
+import ConnectionIcon from './icons/ConnectionIcon.vue'
+import AIIcon from './icons/AIIcon.vue'
+import HistoryIcon from './icons/HistoryIcon.vue'
 
-const sidebarStore = useSidebarStore();
+const sidebarStore = useSidebarStore()
 </script>
 
 <style scoped>

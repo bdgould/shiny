@@ -10,17 +10,17 @@
       <!-- SELECT query views -->
       <template v-if="queryType === 'SELECT'">
         <button
-          @click="queryStore.setSelectView('table')"
           :class="{ active: currentView === 'table' }"
           class="view-button"
+          @click="queryStore.setSelectView('table')"
         >
           <TableIcon />
           <span>Table</span>
         </button>
         <button
-          @click="queryStore.setSelectView('json')"
           :class="{ active: currentView === 'json' }"
           class="view-button"
+          @click="queryStore.setSelectView('json')"
         >
           <CodeIcon />
           <span>JSON</span>
@@ -30,38 +30,38 @@
       <!-- CONSTRUCT/DESCRIBE query views -->
       <template v-if="isConstruct">
         <button
-          @click="queryStore.setConstructView('entity-table')"
           :class="{ active: currentView === 'entity-table' }"
           class="view-button"
+          @click="queryStore.setConstructView('entity-table')"
         >
           <TableIcon />
           <span>Entity View</span>
         </button>
         <button
-          @click="queryStore.setConstructView('turtle')"
           :class="{ active: currentView === 'turtle' }"
           class="view-button"
+          @click="queryStore.setConstructView('turtle')"
         >
           <span>Turtle</span>
         </button>
         <button
-          @click="queryStore.setConstructView('ntriples')"
           :class="{ active: currentView === 'ntriples' }"
           class="view-button"
+          @click="queryStore.setConstructView('ntriples')"
         >
           <span>N-Triples</span>
         </button>
         <button
-          @click="queryStore.setConstructView('nquads')"
           :class="{ active: currentView === 'nquads' }"
           class="view-button"
+          @click="queryStore.setConstructView('nquads')"
         >
           <span>N-Quads</span>
         </button>
         <button
-          @click="queryStore.setConstructView('jsonld')"
           :class="{ active: currentView === 'jsonld' }"
           class="view-button"
+          @click="queryStore.setConstructView('jsonld')"
         >
           <span>JSON-LD</span>
         </button>
@@ -70,16 +70,16 @@
       <!-- ASK query views -->
       <template v-if="queryType === 'ASK'">
         <button
-          @click="queryStore.setAskView('badge')"
           :class="{ active: currentView === 'badge' }"
           class="view-button"
+          @click="queryStore.setAskView('badge')"
         >
           <span>Badge</span>
         </button>
         <button
-          @click="queryStore.setAskView('json')"
           :class="{ active: currentView === 'json' }"
           class="view-button"
+          @click="queryStore.setAskView('json')"
         >
           <CodeIcon />
           <span>JSON</span>
@@ -94,24 +94,24 @@
         v-if="queryType === 'SELECT' && currentView === 'table'"
         :results="results.data"
       />
-      <JsonView
-        v-else-if="queryType === 'SELECT' && currentView === 'json'"
-        :data="results.data"
-      />
+      <JsonView v-else-if="queryType === 'SELECT' && currentView === 'json'" :data="results.data" />
 
       <!-- CONSTRUCT/DESCRIBE views -->
       <ConstructEntityTableView
         v-else-if="isConstruct && currentView === 'entity-table'"
-        :turtleData="results.data"
+        :turtle-data="results.data"
       />
       <RdfSerializationView
         v-else-if="isConstruct && currentView !== 'entity-table'"
-        :turtleData="results.data"
+        :turtle-data="results.data"
         :format="currentView"
       />
 
       <!-- ASK views -->
-      <AskBadgeView v-else-if="queryType === 'ASK' && currentView === 'badge'" :result="results.data" />
+      <AskBadgeView
+        v-else-if="queryType === 'ASK' && currentView === 'badge'"
+        :result="results.data"
+      />
       <JsonView v-else-if="queryType === 'ASK' && currentView === 'json'" :data="results.data" />
 
       <!-- Fallback for unknown query types -->
@@ -121,32 +121,32 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
-import { useQueryStore } from '@/stores/query';
-import TableIcon from './icons/TableIcon.vue';
-import CodeIcon from './icons/CodeIcon.vue';
-import SelectTableView from './SelectTableView.vue';
-import ConstructEntityTableView from './ConstructEntityTableView.vue';
-import RdfSerializationView from './RdfSerializationView.vue';
-import AskBadgeView from './AskBadgeView.vue';
-import JsonView from './JsonView.vue';
+import { computed } from 'vue'
+import { useQueryStore } from '@/stores/query'
+import TableIcon from './icons/TableIcon.vue'
+import CodeIcon from './icons/CodeIcon.vue'
+import SelectTableView from './SelectTableView.vue'
+import ConstructEntityTableView from './ConstructEntityTableView.vue'
+import RdfSerializationView from './RdfSerializationView.vue'
+import AskBadgeView from './AskBadgeView.vue'
+import JsonView from './JsonView.vue'
 
-const queryStore = useQueryStore();
+const queryStore = useQueryStore()
 
-const queryType = computed(() => queryStore.queryType);
-const results = computed(() => queryStore.results);
+const queryType = computed(() => queryStore.queryType)
+const results = computed(() => queryStore.results)
 
 const currentView = computed(() => {
-  if (queryType.value === 'SELECT') return queryStore.currentSelectView;
+  if (queryType.value === 'SELECT') return queryStore.currentSelectView
   if (queryType.value === 'CONSTRUCT' || queryType.value === 'DESCRIBE')
-    return queryStore.currentConstructView;
-  if (queryType.value === 'ASK') return queryStore.currentAskView;
-  return null;
-});
+    return queryStore.currentConstructView
+  if (queryType.value === 'ASK') return queryStore.currentAskView
+  return null
+})
 
 const isConstruct = computed(() => {
-  return queryType.value === 'CONSTRUCT' || queryType.value === 'DESCRIBE';
-});
+  return queryType.value === 'CONSTRUCT' || queryType.value === 'DESCRIBE'
+})
 </script>
 
 <style scoped>

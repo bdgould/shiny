@@ -3,11 +3,17 @@
  * All backend providers must extend this class
  */
 
-import https from 'https';
-import { BackendConfig, BackendCredentials, ValidationResult, QueryResult, BackendType } from '../types.js';
+import https from 'https'
+import {
+  BackendConfig,
+  BackendCredentials,
+  ValidationResult,
+  QueryResult,
+  BackendType,
+} from '../types.js'
 
 export abstract class BaseProvider {
-  abstract readonly type: BackendType;
+  abstract readonly type: BackendType
 
   /**
    * Execute a SPARQL query against the backend
@@ -16,12 +22,15 @@ export abstract class BaseProvider {
     config: BackendConfig,
     query: string,
     credentials?: BackendCredentials
-  ): Promise<QueryResult>;
+  ): Promise<QueryResult>
 
   /**
    * Validate backend configuration (test connection)
    */
-  abstract validate(config: BackendConfig, credentials?: BackendCredentials): Promise<ValidationResult>;
+  abstract validate(
+    config: BackendConfig,
+    credentials?: BackendCredentials
+  ): Promise<ValidationResult>
 
   /**
    * Build the final endpoint URL for query execution
@@ -31,7 +40,7 @@ export abstract class BaseProvider {
    */
   protected buildEndpointUrl(config: BackendConfig): string {
     // Default implementation: return endpoint as-is
-    return config.endpoint;
+    return config.endpoint
   }
 
   /**
@@ -41,35 +50,37 @@ export abstract class BaseProvider {
     config: BackendConfig,
     credentials?: BackendCredentials
   ): Record<string, string> {
-    const headers: Record<string, string> = {};
+    const headers: Record<string, string> = {}
 
     if (!credentials || config.authType === 'none') {
-      return headers;
+      return headers
     }
 
     switch (config.authType) {
       case 'basic':
         if (credentials.username && credentials.password) {
-          const encoded = Buffer.from(`${credentials.username}:${credentials.password}`).toString('base64');
-          headers['Authorization'] = `Basic ${encoded}`;
-          console.warn('Using Basic authentication for SPARQL endpoint');
+          const encoded = Buffer.from(`${credentials.username}:${credentials.password}`).toString(
+            'base64'
+          )
+          headers['Authorization'] = `Basic ${encoded}`
+          console.warn('Using Basic authentication for SPARQL endpoint')
         }
-        break;
+        break
 
       case 'bearer':
         if (credentials.token) {
-          headers['Authorization'] = `Bearer ${credentials.token}`;
+          headers['Authorization'] = `Bearer ${credentials.token}`
         }
-        break;
+        break
 
       case 'custom':
         if (credentials.headers) {
-          Object.assign(headers, credentials.headers);
+          Object.assign(headers, credentials.headers)
         }
-        break;
+        break
     }
 
-    return headers;
+    return headers
   }
 
   /**
@@ -77,10 +88,10 @@ export abstract class BaseProvider {
    */
   protected validateUrl(url: string): boolean {
     try {
-      const parsed = new URL(url);
-      return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+      const parsed = new URL(url)
+      return parsed.protocol === 'http:' || parsed.protocol === 'https:'
     } catch {
-      return false;
+      return false
     }
   }
 
@@ -91,11 +102,11 @@ export abstract class BaseProvider {
   protected createHttpsAgent(config: BackendConfig): https.Agent | undefined {
     // Only create agent for HTTPS URLs
     if (!config.endpoint.startsWith('https:')) {
-      return undefined;
+      return undefined
     }
 
     return new https.Agent({
       rejectUnauthorized: !config.allowInsecure,
-    });
+    })
   }
 }

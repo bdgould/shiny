@@ -1,0 +1,24 @@
+# Build outputs
+dist/
+build/
+out/
+*.tsbuildinfo
+
+# Dependencies
+node_modules/
+
+# Coverage reports
+coverage/
+.nyc_output/
+
+# IDE
+.vscode/
+.idea/
+
+# Misc
+.DS_Store
+
+# Generated files
+packages/renderer/dist/
+packages/main/dist/
+packages/preload/dist/

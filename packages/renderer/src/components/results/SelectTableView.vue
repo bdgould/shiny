@@ -30,22 +30,22 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
-import CellValue from './CellValue.vue';
+import { computed } from 'vue'
+import CellValue from './CellValue.vue'
 
 const props = defineProps<{
   results: {
     head: {
-      vars: string[];
-    };
+      vars: string[]
+    }
     results: {
-      bindings: Record<string, any>[];
-    };
-  };
-}>();
+      bindings: Record<string, any>[]
+    }
+  }
+}>()
 
-const columns = computed(() => props.results.head.vars);
-const rows = computed(() => props.results.results.bindings);
+const columns = computed(() => props.results.head.vars)
+const rows = computed(() => props.results.results.bindings)
 </script>
 
 <style scoped>

@@ -1,19 +1,29 @@
-import { defineConfig } from 'vite';
-import vue from '@vitejs/plugin-vue';
-import * as path from 'path';
+import { defineConfig } from 'vite'
+import vue from '@vitejs/plugin-vue'
+import * as path from 'path'
 
 export default defineConfig({
-  plugins: [
-    vue(),
-  ],
+  plugins: [vue()],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
       // Stub out unused Monaco features to reduce bundle size
-      'monaco-editor/esm/vs/language/typescript/ts.worker': path.resolve(__dirname, './src/utils/empty.ts'),
-      'monaco-editor/esm/vs/language/json/json.worker': path.resolve(__dirname, './src/utils/empty.ts'),
-      'monaco-editor/esm/vs/language/css/css.worker': path.resolve(__dirname, './src/utils/empty.ts'),
-      'monaco-editor/esm/vs/language/html/html.worker': path.resolve(__dirname, './src/utils/empty.ts'),
+      'monaco-editor/esm/vs/language/typescript/ts.worker': path.resolve(
+        __dirname,
+        './src/utils/empty.ts'
+      ),
+      'monaco-editor/esm/vs/language/json/json.worker': path.resolve(
+        __dirname,
+        './src/utils/empty.ts'
+      ),
+      'monaco-editor/esm/vs/language/css/css.worker': path.resolve(
+        __dirname,
+        './src/utils/empty.ts'
+      ),
+      'monaco-editor/esm/vs/language/html/html.worker': path.resolve(
+        __dirname,
+        './src/utils/empty.ts'
+      ),
     },
   },
   server: {
@@ -60,4 +70,4 @@ export default defineConfig({
   optimizeDeps: {
     include: ['monaco-editor', 'sparqljs'],
   },
-});
+})

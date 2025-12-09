@@ -14,26 +14,26 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from 'vue';
-import TopBar from './components/layout/TopBar.vue';
-import IconSidebar from './components/sidebar/IconSidebar.vue';
-import MainPane from './components/layout/MainPane.vue';
-import FormatSelectorDialog from './components/dialogs/FormatSelectorDialog.vue';
-import { useConnectionStore } from './stores/connection';
-import { useTabsStore } from './stores/tabs';
-import type { QueryFileData } from './types/electron';
+import { onMounted, onUnmounted, ref } from 'vue'
+import TopBar from './components/layout/TopBar.vue'
+import IconSidebar from './components/sidebar/IconSidebar.vue'
+import MainPane from './components/layout/MainPane.vue'
+import FormatSelectorDialog from './components/dialogs/FormatSelectorDialog.vue'
+import { useConnectionStore } from './stores/connection'
+import { useTabsStore } from './stores/tabs'
+import type { QueryFileData } from './types/electron'
 
-const connectionStore = useConnectionStore();
-const tabsStore = useTabsStore();
-const formatDialogRef = ref<InstanceType<typeof FormatSelectorDialog> | null>(null);
-const exportFormats = ref<Array<{value: string, label: string}>>([]);
+const connectionStore = useConnectionStore()
+const tabsStore = useTabsStore()
+const formatDialogRef = ref<InstanceType<typeof FormatSelectorDialog> | null>(null)
+const exportFormats = ref<Array<{ value: string; label: string }>>([])
 
 // Will be set in onMounted
-let saveResultsFunction: ((format: string) => Promise<void>) | null = null;
+let saveResultsFunction: ((format: string) => Promise<void>) | null = null
 
 async function handleFormatSelected(format: string) {
   if (saveResultsFunction) {
-    await saveResultsFunction(format);
+    await saveResultsFunction(format)
   }
 }
 
@@ -41,59 +41,59 @@ async function handleFormatSelected(format: string) {
 onMounted(async () => {
   try {
     // Load backends first
-    await connectionStore.loadBackends();
+    await connectionStore.loadBackends()
 
     // Restore tabs from previous session
-    tabsStore.restoreFromLocalStorage();
+    tabsStore.restoreFromLocalStorage()
   } catch (error) {
-    console.error('Failed to initialize app on startup:', error);
+    console.error('Failed to initialize app on startup:', error)
   }
-});
+})
 
 // Listen for files opened via OS (double-click .rq file)
-let removeFileOpenedListener: (() => void) | null = null;
-let removeMenuSaveListener: (() => void) | null = null;
-let removeMenuOpenListener: (() => void) | null = null;
-let removeMenuSaveResultsListener: (() => void) | null = null;
+let removeFileOpenedListener: (() => void) | null = null
+let removeMenuSaveListener: (() => void) | null = null
+let removeMenuOpenListener: (() => void) | null = null
+let removeMenuSaveResultsListener: (() => void) | null = null
 
 onMounted(async () => {
   // Import file operations composable
-  const { useFileOperations } = await import('./composables/useFileOperations');
-  const { useResultsSave } = await import('./composables/useResultsSave');
-  const { saveQuery, openQuery } = useFileOperations();
-  const { canSaveResults, getExportFormats, saveResults } = useResultsSave();
+  const { useFileOperations } = await import('./composables/useFileOperations')
+  const { useResultsSave } = await import('./composables/useResultsSave')
+  const { saveQuery, openQuery } = useFileOperations()
+  const { canSaveResults, getExportFormats, saveResults } = useResultsSave()
 
   // Listen for native menu events
   removeMenuSaveListener = window.electronAPI.menu.onSaveQuery(async () => {
-    await saveQuery();
-  });
+    await saveQuery()
+  })
 
   removeMenuOpenListener = window.electronAPI.menu.onOpenQuery(async () => {
-    await openQuery();
-  });
+    await openQuery()
+  })
 
   // Store saveResults function for use by handleFormatSelected
-  saveResultsFunction = saveResults;
+  saveResultsFunction = saveResults
 
   removeMenuSaveResultsListener = window.electronAPI.menu.onSaveResults(async () => {
-    await handleSaveResultsMenu();
-  });
+    await handleSaveResultsMenu()
+  })
 
   async function handleSaveResultsMenu() {
     if (!canSaveResults()) {
-      alert('No results to save. Please execute a query first.');
-      return;
+      alert('No results to save. Please execute a query first.')
+      return
     }
 
-    const formats = getExportFormats();
+    const formats = getExportFormats()
 
     // If only one format available (ASK queries), save directly
     if (formats.length === 1) {
-      await saveResults(formats[0].value);
+      await saveResults(formats[0].value)
     } else {
       // Show format selection dialog
-      exportFormats.value = formats;
-      formatDialogRef.value?.open();
+      exportFormats.value = formats
+      formatDialogRef.value?.open()
     }
   }
 
@@ -101,20 +101,24 @@ onMounted(async () => {
   removeFileOpenedListener = window.electronAPI.files.onFileOpened(async (data: QueryFileData) => {
     try {
       // Extract filename from file path
-      const fileName = data.filePath.split('/').pop()?.replace(/\.rq$/, '') || 'Untitled';
+      const fileName = data.filePath.split('/').pop()?.replace(/\.rq$/, '') || 'Untitled'
 
       // Find backend by ID or name
-      let backendId: string | null = null;
+      let backendId: string | null = null
       if (data.metadata) {
-        let backend = connectionStore.backends.find(b => b.id === data.metadata!.id);
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        let backend = connectionStore.backends.find((b) => b.id === data.metadata!.id)
         if (!backend) {
-          backend = connectionStore.backends.find(b => b.name === data.metadata!.name);
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          backend = connectionStore.backends.find((b) => b.name === data.metadata!.name)
         }
 
         if (backend) {
-          backendId = backend.id;
+          backendId = backend.id
         } else {
-          alert(`Backend "${data.metadata.name}" not found in configuration. Please select a backend manually.`);
+          alert(
+            `Backend "${data.metadata.name}" not found in configuration. Please select a backend manually.`
+          )
         }
       }
 
@@ -124,30 +128,31 @@ onMounted(async () => {
         filePath: data.filePath,
         fileName,
         backendId,
-      });
+      })
 
-      console.log('File opened successfully via OS:', data.filePath);
+      // eslint-disable-next-line no-console
+      console.log('File opened successfully via OS:', data.filePath)
     } catch (error) {
-      console.error('Error handling file opened event:', error);
-      alert(`Error opening file: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      console.error('Error handling file opened event:', error)
+      alert(`Error opening file: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
-  });
-});
+  })
+})
 
 onUnmounted(() => {
   if (removeFileOpenedListener) {
-    removeFileOpenedListener();
+    removeFileOpenedListener()
   }
   if (removeMenuSaveListener) {
-    removeMenuSaveListener();
+    removeMenuSaveListener()
   }
   if (removeMenuOpenListener) {
-    removeMenuOpenListener();
+    removeMenuOpenListener()
   }
   if (removeMenuSaveResultsListener) {
-    removeMenuSaveResultsListener();
+    removeMenuSaveResultsListener()
   }
-});
+})
 </script>
 
 <style scoped>

@@ -2,20 +2,14 @@
   <div class="backend-list">
     <div class="list-header">
       <h2>Backends</h2>
-      <button class="btn-primary btn-sm" @click="$emit('add')">
-        + Add Backend
-      </button>
+      <button class="btn-primary btn-sm" @click="$emit('add')">+ Add Backend</button>
     </div>
 
-    <div v-if="connectionStore.isLoading" class="loading-state">
-      Loading backends...
-    </div>
+    <div v-if="connectionStore.isLoading" class="loading-state">Loading backends...</div>
 
     <div v-else-if="connectionStore.error" class="error-state">
       <p>{{ connectionStore.error }}</p>
-      <button class="btn-secondary btn-sm" @click="connectionStore.loadBackends()">
-        Retry
-      </button>
+      <button class="btn-secondary btn-sm" @click="connectionStore.loadBackends()">Retry</button>
     </div>
 
     <div v-else-if="!connectionStore.hasBackends" class="empty-state">
@@ -40,56 +34,56 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
-import { useConnectionStore } from '@/stores/connection';
-import BackendListItem from './BackendListItem.vue';
-import type { BackendConfig } from '@/types/backends';
+import { ref } from 'vue'
+import { useConnectionStore } from '@/stores/connection'
+import BackendListItem from './BackendListItem.vue'
+import type { BackendConfig } from '@/types/backends'
 
-const connectionStore = useConnectionStore();
+const connectionStore = useConnectionStore()
 
 defineEmits<{
-  add: [];
-  edit: [backend: BackendConfig];
-}>();
+  add: []
+  edit: [backend: BackendConfig]
+}>()
 
 // Test connection state
-const testingBackendId = ref<string | null>(null);
-const testResults = ref<Record<string, { valid: boolean; error?: string }>>({});
+const testingBackendId = ref<string | null>(null)
+const testResults = ref<Record<string, { valid: boolean; error?: string }>>({})
 
 async function handleTest(backendId: string) {
-  testingBackendId.value = backendId;
-  testResults.value[backendId] = { valid: false, error: 'Testing...' };
+  testingBackendId.value = backendId
+  testResults.value[backendId] = { valid: false, error: 'Testing...' }
 
   try {
-    const result = await connectionStore.testConnection(backendId);
-    testResults.value[backendId] = result;
+    const result = await connectionStore.testConnection(backendId)
+    testResults.value[backendId] = result
 
     // Clear result after 5 seconds
     setTimeout(() => {
       if (testResults.value[backendId]) {
-        delete testResults.value[backendId];
+        delete testResults.value[backendId]
       }
-    }, 5000);
+    }, 5000)
   } catch (error) {
     testResults.value[backendId] = {
       valid: false,
       error: error instanceof Error ? error.message : 'Test failed',
-    };
+    }
   } finally {
-    testingBackendId.value = null;
+    testingBackendId.value = null
   }
 }
 
 async function handleDelete(backendId: string) {
   if (!confirm('Are you sure you want to delete this backend?')) {
-    return;
+    return
   }
 
   try {
-    await connectionStore.deleteBackend(backendId);
+    await connectionStore.deleteBackend(backendId)
   } catch (error) {
-    console.error('Failed to delete backend:', error);
-    alert(error instanceof Error ? error.message : 'Failed to delete backend');
+    console.error('Failed to delete backend:', error)
+    alert(error instanceof Error ? error.message : 'Failed to delete backend')
   }
 }
 </script>

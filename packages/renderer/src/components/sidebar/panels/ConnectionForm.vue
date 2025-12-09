@@ -43,10 +43,7 @@
 
       <div class="form-group">
         <label class="checkbox-label">
-          <input
-            type="checkbox"
-            v-model="formData.allowInsecure"
-          />
+          <input v-model="formData.allowInsecure" type="checkbox" />
           <span>Allow insecure SSL certificates (self-signed/invalid)</span>
         </label>
         <p class="hint-text">Enable this for development servers with self-signed certificates</p>
@@ -109,11 +106,7 @@
         <div class="form-group">
           <label>Custom Headers *</label>
           <div class="custom-headers">
-            <div
-              v-for="(header, index) in formData.customHeaders"
-              :key="index"
-              class="header-row"
-            >
+            <div v-for="(header, index) in formData.customHeaders" :key="index" class="header-row">
               <input
                 v-model="header.key"
                 type="text"
@@ -129,8 +122,8 @@
               <button
                 type="button"
                 class="btn-icon-sm"
-                @click="removeHeader(index)"
                 title="Remove header"
+                @click="removeHeader(index)"
               >
                 ✕
               </button>
@@ -153,8 +146,8 @@
             <button
               type="button"
               class="btn-secondary btn-sm"
-              @click="loadGraphmartsFromServer"
               :disabled="!canLoadGraphmarts || graphstudioAPI.isLoading.value"
+              @click="loadGraphmartsFromServer"
             >
               {{ graphstudioAPI.isLoading.value ? 'Loading...' : 'Load Graphmarts' }}
             </button>
@@ -163,8 +156,8 @@
               v-if="graphstudioAPI.hasGraphmarts.value"
               type="button"
               class="btn-icon-sm"
-              @click="refreshGraphmarts"
               title="Refresh graphmart list"
+              @click="refreshGraphmarts"
             >
               🔄
             </button>
@@ -173,16 +166,12 @@
           <select
             v-if="graphstudioAPI.hasGraphmarts.value"
             v-model="formData.graphmartUri"
-            @change="onGraphmartSelected"
             :class="{ error: errors.graphmart }"
             class="graphmart-dropdown"
+            @change="onGraphmartSelected"
           >
             <option value="">Select a graphmart...</option>
-            <option
-              v-for="gm in graphstudioAPI.graphmarts.value"
-              :key="gm.uri"
-              :value="gm.uri"
-            >
+            <option v-for="gm in graphstudioAPI.graphmarts.value" :key="gm.uri" :value="gm.uri">
               {{ getGraphmartStatusIcon(gm.status) }} {{ gm.name }}
             </option>
           </select>
@@ -198,11 +187,7 @@
           <label>Layers</label>
           <div class="layer-selection">
             <label class="checkbox-label">
-              <input
-                type="checkbox"
-                v-model="useAllLayers"
-                @change="onAllLayersToggle"
-              />
+              <input v-model="useAllLayers" type="checkbox" @change="onAllLayersToggle" />
               <span>All Layers (default)</span>
             </label>
 
@@ -212,11 +197,7 @@
                 :key="layer.uri"
                 class="checkbox-label"
               >
-                <input
-                  type="checkbox"
-                  :value="layer.uri"
-                  v-model="formData.selectedLayers"
-                />
+                <input v-model="formData.selectedLayers" type="checkbox" :value="layer.uri" />
                 <span>{{ layer.name }}</span>
               </label>
             </div>
@@ -229,11 +210,9 @@
       </template>
 
       <div class="form-actions">
-        <button type="button" class="btn-secondary" @click="$emit('cancel')">
-          Cancel
-        </button>
+        <button type="button" class="btn-secondary" @click="$emit('cancel')">Cancel</button>
         <button type="submit" class="btn-primary" :disabled="isSaving">
-          {{ isSaving ? 'Saving...' : (isEditing ? 'Update' : 'Create') }}
+          {{ isSaving ? 'Saving...' : isEditing ? 'Update' : 'Create' }}
         </button>
       </div>
     </form>
@@ -241,47 +220,48 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue';
-import type { BackendConfig } from '@/types/backends';
-import type { Graphmart } from '@/types/electron';
-import { useBackendValidation, type BackendFormData } from '@/composables/useBackendValidation';
-import { useGraphStudioAPI } from '@/composables/useGraphStudioAPI';
+import { ref, computed, watch, onMounted } from 'vue'
+import type { BackendConfig } from '@/types/backends'
+import type { Graphmart } from '@/types/electron'
+import { useBackendValidation, type BackendFormData } from '@/composables/useBackendValidation'
+import { useGraphStudioAPI } from '@/composables/useGraphStudioAPI'
 
 interface Props {
-  backend?: BackendConfig;
+  backend?: BackendConfig
 }
 
-const props = defineProps<Props>();
+const props = defineProps<Props>()
 
 const emit = defineEmits<{
-  save: [data: BackendFormData];
-  cancel: [];
-}>();
+  save: [data: BackendFormData]
+  cancel: []
+}>()
 
-const isEditing = !!props.backend;
-const isSaving = ref(false);
+const isEditing = !!props.backend
+const isSaving = ref(false)
 
 // GraphStudio API composable
-const graphstudioAPI = useGraphStudioAPI();
+const graphstudioAPI = useGraphStudioAPI()
 
 // GraphStudio state
-const useAllLayers = ref(true);
-const selectedGraphmart = ref<Graphmart | null>(null);
+const useAllLayers = ref(true)
+const selectedGraphmart = ref<Graphmart | null>(null)
 
 // Parse existing provider config if editing GraphStudio backend
-let initialGraphmartUri = '';
-let initialGraphmartName = '';
-let initialSelectedLayers: string[] = [];
+let initialGraphmartUri = ''
+let initialGraphmartName = ''
+let initialSelectedLayers: string[] = []
 
 if (props.backend && props.backend.type === 'graphstudio' && props.backend.providerConfig) {
   try {
-    const providerConfig = JSON.parse(props.backend.providerConfig);
-    initialGraphmartUri = providerConfig.graphmartUri || '';
-    initialGraphmartName = providerConfig.graphmartName || '';
-    initialSelectedLayers = providerConfig.selectedLayers || [];
-    useAllLayers.value = initialSelectedLayers.length === 0 || initialSelectedLayers.includes('ALL_LAYERS');
+    const providerConfig = JSON.parse(props.backend.providerConfig)
+    initialGraphmartUri = providerConfig.graphmartUri || ''
+    initialGraphmartName = providerConfig.graphmartName || ''
+    initialSelectedLayers = providerConfig.selectedLayers || []
+    useAllLayers.value =
+      initialSelectedLayers.length === 0 || initialSelectedLayers.includes('ALL_LAYERS')
   } catch (e) {
-    console.error('Failed to parse provider config:', e);
+    console.error('Failed to parse provider config:', e)
   }
 }
 
@@ -299,171 +279,194 @@ const formData = ref<BackendFormData>({
   graphmartUri: initialGraphmartUri,
   graphmartName: initialGraphmartName,
   selectedLayers: useAllLayers.value ? ['ALL_LAYERS'] : initialSelectedLayers,
-});
+})
 
-const { errors, validateForm, clearErrors } = useBackendValidation();
+const { errors, validateForm, clearErrors } = useBackendValidation()
 
 // Clear credentials when auth type changes
-watch(() => formData.value.authType, () => {
-  formData.value.username = '';
-  formData.value.password = '';
-  formData.value.token = '';
-  formData.value.customHeaders = [{ key: '', value: '' }];
-  clearErrors();
-});
+watch(
+  () => formData.value.authType,
+  () => {
+    formData.value.username = ''
+    formData.value.password = ''
+    formData.value.token = ''
+    formData.value.customHeaders = [{ key: '', value: '' }]
+    clearErrors()
+  }
+)
 
 // Watch for backend type changes
-watch(() => formData.value.type, (newType) => {
-  // Clear GraphStudio-specific fields when switching away
-  if (newType !== 'graphstudio') {
-    formData.value.graphmartUri = '';
-    formData.value.graphmartName = '';
-    formData.value.selectedLayers = [];
-    selectedGraphmart.value = null;
+watch(
+  () => formData.value.type,
+  (newType) => {
+    // Clear GraphStudio-specific fields when switching away
+    if (newType !== 'graphstudio') {
+      formData.value.graphmartUri = ''
+      formData.value.graphmartName = ''
+      formData.value.selectedLayers = []
+      selectedGraphmart.value = null
+    }
   }
-});
+)
 
 // Computed: Can load graphmarts (need endpoint and optional credentials)
 const canLoadGraphmarts = computed(() => {
-  if (!formData.value.endpoint) return false;
+  if (!formData.value.endpoint) return false
 
   // If Basic Auth selected, require credentials
   if (formData.value.authType === 'basic') {
-    return !!formData.value.username && !!formData.value.password;
+    return !!formData.value.username && !!formData.value.password
   }
 
-  return true;
-});
+  return true
+})
 
 // GraphStudio: Load graphmarts from server
 async function loadGraphmartsFromServer() {
-  if (!canLoadGraphmarts.value) return;
+  if (!canLoadGraphmarts.value) return
 
-  const credentials = formData.value.authType === 'basic'
-    ? { username: formData.value.username, password: formData.value.password }
-    : undefined;
+  const credentials =
+    formData.value.authType === 'basic'
+      ? { username: formData.value.username, password: formData.value.password }
+      : undefined
 
-  await graphstudioAPI.loadGraphmarts(formData.value.endpoint, credentials, false, formData.value.allowInsecure);
+  await graphstudioAPI.loadGraphmarts(
+    formData.value.endpoint,
+    credentials,
+    false,
+    formData.value.allowInsecure
+  )
 }
 
 // GraphStudio: Refresh graphmarts
 async function refreshGraphmarts() {
-  if (!canLoadGraphmarts.value) return;
+  if (!canLoadGraphmarts.value) return
 
-  const credentials = formData.value.authType === 'basic'
-    ? { username: formData.value.username, password: formData.value.password }
-    : undefined;
+  const credentials =
+    formData.value.authType === 'basic'
+      ? { username: formData.value.username, password: formData.value.password }
+      : undefined
 
-  await graphstudioAPI.refreshGraphmarts(formData.value.endpoint, credentials, formData.value.allowInsecure);
+  await graphstudioAPI.refreshGraphmarts(
+    formData.value.endpoint,
+    credentials,
+    formData.value.allowInsecure
+  )
 }
 
 // GraphStudio: Get status icon for graphmart
 function getGraphmartStatusIcon(status: 'active' | 'inactive' | 'error'): string {
   switch (status) {
     case 'active':
-      return '●';
+      return '●'
     case 'inactive':
-      return '○';
+      return '○'
     case 'error':
-      return '⚠';
+      return '⚠'
     default:
-      return '○';
+      return '○'
   }
 }
 
 // GraphStudio: When graphmart is selected
 function onGraphmartSelected() {
   const graphmart = graphstudioAPI.graphmarts.value.find(
-    gm => gm.uri === formData.value.graphmartUri
-  );
+    (gm) => gm.uri === formData.value.graphmartUri
+  )
 
   if (graphmart) {
-    selectedGraphmart.value = graphmart;
-    formData.value.graphmartName = graphmart.name;
+    selectedGraphmart.value = graphmart
+    formData.value.graphmartName = graphmart.name
 
     // Reset layer selection
-    useAllLayers.value = true;
-    formData.value.selectedLayers = ['ALL_LAYERS'];
+    useAllLayers.value = true
+    formData.value.selectedLayers = ['ALL_LAYERS']
   } else {
-    selectedGraphmart.value = null;
-    formData.value.graphmartName = '';
+    selectedGraphmart.value = null
+    formData.value.graphmartName = ''
   }
 }
 
 // GraphStudio: Toggle all layers checkbox
 function onAllLayersToggle() {
   if (useAllLayers.value) {
-    formData.value.selectedLayers = ['ALL_LAYERS'];
+    formData.value.selectedLayers = ['ALL_LAYERS']
   } else {
-    formData.value.selectedLayers = [];
+    formData.value.selectedLayers = []
   }
 }
 
 // Load existing credentials when editing
 async function loadExistingCredentials() {
-  if (!isEditing || !props.backend) return;
+  if (!isEditing || !props.backend) return
 
   try {
-    const credentials = await window.electronAPI.backends.getCredentials(props.backend.id);
+    const credentials = await window.electronAPI.backends.getCredentials(props.backend.id)
 
     if (credentials) {
       // Populate form with existing credentials
-      if (credentials.username) formData.value.username = credentials.username;
-      if (credentials.password) formData.value.password = credentials.password;
-      if (credentials.token) formData.value.token = credentials.token;
+      if (credentials.username) formData.value.username = credentials.username
+      if (credentials.password) formData.value.password = credentials.password
+      if (credentials.token) formData.value.token = credentials.token
       if (credentials.headers) {
         formData.value.customHeaders = Object.entries(credentials.headers).map(([key, value]) => ({
           key,
           value,
-        }));
+        }))
       }
     }
   } catch (error) {
-    console.error('Failed to load credentials:', error);
+    console.error('Failed to load credentials:', error)
   }
 }
 
 // Auto-load credentials and graphmarts when editing
 onMounted(async () => {
   // Load credentials first
-  await loadExistingCredentials();
+  await loadExistingCredentials()
 
   // Then load graphmarts for GraphStudio backends
   if (isEditing && formData.value.type === 'graphstudio' && formData.value.endpoint) {
-    const credentials = formData.value.authType === 'basic'
-      ? { username: formData.value.username, password: formData.value.password }
-      : undefined;
+    const credentials =
+      formData.value.authType === 'basic'
+        ? { username: formData.value.username, password: formData.value.password }
+        : undefined
 
-    await graphstudioAPI.loadGraphmarts(formData.value.endpoint, credentials, false, formData.value.allowInsecure);
+    await graphstudioAPI.loadGraphmarts(
+      formData.value.endpoint,
+      credentials,
+      false,
+      formData.value.allowInsecure
+    )
 
     // Restore selected graphmart if it exists in the list
     if (formData.value.graphmartUri) {
       const graphmart = graphstudioAPI.graphmarts.value.find(
-        gm => gm.uri === formData.value.graphmartUri
-      );
+        (gm) => gm.uri === formData.value.graphmartUri
+      )
       if (graphmart) {
-        selectedGraphmart.value = graphmart;
+        selectedGraphmart.value = graphmart
       }
     }
   }
-});
+})
 
 function addHeader() {
-  formData.value.customHeaders = formData.value.customHeaders || [];
-  formData.value.customHeaders.push({ key: '', value: '' });
+  formData.value.customHeaders = formData.value.customHeaders || []
+  formData.value.customHeaders.push({ key: '', value: '' })
 }
 
 function removeHeader(index: number) {
-  formData.value.customHeaders?.splice(index, 1);
+  formData.value.customHeaders?.splice(index, 1)
 }
 
 function handleSubmit() {
   if (!validateForm(formData.value)) {
-    return;
+    return
   }
 
-  isSaving.value = true;
-  emit('save', formData.value);
+  isSaving.value = true
+  emit('save', formData.value)
 }
 </script>
 
@@ -521,9 +524,9 @@ label {
   color: var(--color-text-primary);
 }
 
-input[type="text"],
-input[type="url"],
-input[type="password"],
+input[type='text'],
+input[type='url'],
+input[type='password'],
 textarea,
 select {
   width: 100%;
@@ -706,7 +709,7 @@ textarea.error {
   user-select: none;
 }
 
-.checkbox-label input[type="checkbox"] {
+.checkbox-label input[type='checkbox'] {
   width: auto;
   cursor: pointer;
 }

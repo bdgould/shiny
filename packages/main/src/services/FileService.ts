@@ -1,15 +1,15 @@
-import { dialog } from 'electron';
-import { promises as fs } from 'fs';
+import { dialog } from 'electron'
+import { promises as fs } from 'fs'
 
 interface BackendMetadata {
-  id: string;
-  name: string;
+  id: string
+  name: string
 }
 
 interface QueryFileData {
-  content: string;
-  metadata: BackendMetadata | null;
-  filePath: string;
+  content: string
+  metadata: BackendMetadata | null
+  filePath: string
 }
 
 export class FileService {
@@ -27,32 +27,32 @@ export class FileService {
         defaultPath: currentFilePath || 'query.rq',
         filters: [
           { name: 'SPARQL Query', extensions: ['rq', 'sparql'] },
-          { name: 'All Files', extensions: ['*'] }
+          { name: 'All Files', extensions: ['*'] },
         ],
-        properties: ['createDirectory', 'showOverwriteConfirmation']
-      });
+        properties: ['createDirectory', 'showOverwriteConfirmation'],
+      })
 
       if (canceled || !filePath) {
-        return { success: false };
+        return { success: false }
       }
 
       // Build file content with metadata comment
-      let fileContent = '';
+      let fileContent = ''
       if (backendMetadata) {
-        const metadataJson = JSON.stringify(backendMetadata);
-        fileContent = `# Shiny Backend: ${metadataJson}\n`;
+        const metadataJson = JSON.stringify(backendMetadata)
+        fileContent = `# Shiny Backend: ${metadataJson}\n`
       }
-      fileContent += query;
+      fileContent += query
 
-      await fs.writeFile(filePath, fileContent, 'utf-8');
+      await fs.writeFile(filePath, fileContent, 'utf-8')
 
-      return { success: true, filePath };
+      return { success: true, filePath }
     } catch (error) {
-      console.error('Error saving query:', error);
+      console.error('Error saving query:', error)
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error'
-      };
+        error: error instanceof Error ? error.message : 'Unknown error',
+      }
     }
   }
 
@@ -65,22 +65,22 @@ export class FileService {
         title: 'Open SPARQL Query',
         filters: [
           { name: 'SPARQL Query', extensions: ['rq', 'sparql'] },
-          { name: 'All Files', extensions: ['*'] }
+          { name: 'All Files', extensions: ['*'] },
         ],
-        properties: ['openFile']
-      });
+        properties: ['openFile'],
+      })
 
       if (canceled || filePaths.length === 0) {
-        return { error: 'No file selected' };
+        return { error: 'No file selected' }
       }
 
-      const filePath = filePaths[0];
-      return await this.readQueryFile(filePath);
+      const filePath = filePaths[0]
+      return await this.readQueryFile(filePath)
     } catch (error) {
-      console.error('Error opening query:', error);
+      console.error('Error opening query:', error)
       return {
-        error: error instanceof Error ? error.message : 'Unknown error'
-      };
+        error: error instanceof Error ? error.message : 'Unknown error',
+      }
     }
   }
 
@@ -89,19 +89,19 @@ export class FileService {
    */
   async readQueryFile(filePath: string): Promise<QueryFileData | { error: string }> {
     try {
-      const fileContent = await fs.readFile(filePath, 'utf-8');
-      const { content, metadata } = this.parseQueryFile(fileContent);
+      const fileContent = await fs.readFile(filePath, 'utf-8')
+      const { content, metadata } = this.parseQueryFile(fileContent)
 
       return {
         content,
         metadata,
-        filePath
-      };
+        filePath,
+      }
     } catch (error) {
-      console.error('Error reading query file:', error);
+      console.error('Error reading query file:', error)
       return {
-        error: error instanceof Error ? error.message : 'Unknown error'
-      };
+        error: error instanceof Error ? error.message : 'Unknown error',
+      }
     }
   }
 
@@ -116,54 +116,54 @@ export class FileService {
     try {
       // Determine file extension based on format
       const extensionMap: Record<string, string> = {
-        'csv': 'csv',
-        'json': 'json',
-        'turtle': 'ttl',
-        'trig': 'trig',
-        'ntriples': 'nt',
-        'nquads': 'nq',
-        'jsonld': 'jsonld',
-      };
+        csv: 'csv',
+        json: 'json',
+        turtle: 'ttl',
+        trig: 'trig',
+        ntriples: 'nt',
+        nquads: 'nq',
+        jsonld: 'jsonld',
+      }
 
-      const extension = extensionMap[format] || 'txt';
-      const defaultFileName = `results.${extension}`;
+      const extension = extensionMap[format] || 'txt'
+      const defaultFileName = `results.${extension}`
 
       // Determine filter name based on format
       const filterNames: Record<string, string> = {
-        'csv': 'CSV',
-        'json': 'JSON',
-        'turtle': 'Turtle',
-        'trig': 'TriG',
-        'ntriples': 'N-Triples',
-        'nquads': 'N-Quads',
-        'jsonld': 'JSON-LD',
-      };
+        csv: 'CSV',
+        json: 'JSON',
+        turtle: 'Turtle',
+        trig: 'TriG',
+        ntriples: 'N-Triples',
+        nquads: 'N-Quads',
+        jsonld: 'JSON-LD',
+      }
 
-      const filterName = filterNames[format] || 'Text';
+      const filterName = filterNames[format] || 'Text'
 
       const { filePath, canceled } = await dialog.showSaveDialog({
         title: 'Save Query Results',
         defaultPath: defaultFileName,
         filters: [
           { name: filterName, extensions: [extension] },
-          { name: 'All Files', extensions: ['*'] }
+          { name: 'All Files', extensions: ['*'] },
         ],
-        properties: ['createDirectory', 'showOverwriteConfirmation']
-      });
+        properties: ['createDirectory', 'showOverwriteConfirmation'],
+      })
 
       if (canceled || !filePath) {
-        return { success: false };
+        return { success: false }
       }
 
-      await fs.writeFile(filePath, content, 'utf-8');
+      await fs.writeFile(filePath, content, 'utf-8')
 
-      return { success: true, filePath };
+      return { success: true, filePath }
     } catch (error) {
-      console.error('Error saving results:', error);
+      console.error('Error saving results:', error)
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error'
-      };
+        error: error instanceof Error ? error.message : 'Unknown error',
+      }
     }
   }
 
@@ -171,34 +171,34 @@ export class FileService {
    * Parse query file content and extract metadata
    */
   private parseQueryFile(fileContent: string): {
-    content: string;
-    metadata: BackendMetadata | null;
+    content: string
+    metadata: BackendMetadata | null
   } {
-    const lines = fileContent.split('\n');
-    let metadata: BackendMetadata | null = null;
-    let contentStartIndex = 0;
+    const lines = fileContent.split('\n')
+    let metadata: BackendMetadata | null = null
+    let contentStartIndex = 0
 
     // Check first line for metadata comment
     if (lines.length > 0 && lines[0].trim().startsWith('# Shiny Backend:')) {
       try {
-        const metadataLine = lines[0].trim();
-        const jsonStart = metadataLine.indexOf('{');
+        const metadataLine = lines[0].trim()
+        const jsonStart = metadataLine.indexOf('{')
         if (jsonStart !== -1) {
-          const jsonStr = metadataLine.substring(jsonStart);
-          metadata = JSON.parse(jsonStr);
+          const jsonStr = metadataLine.substring(jsonStart)
+          metadata = JSON.parse(jsonStr)
         }
-        contentStartIndex = 1;
+        contentStartIndex = 1
       } catch (error) {
-        console.warn('Failed to parse backend metadata:', error);
+        console.warn('Failed to parse backend metadata:', error)
       }
     }
 
     // Extract query content (everything after metadata line)
-    const content = lines.slice(contentStartIndex).join('\n').trim();
+    const content = lines.slice(contentStartIndex).join('\n').trim()
 
-    return { content, metadata };
+    return { content, metadata }
   }
 }
 
 // Singleton instance
-export const fileService = new FileService();
+export const fileService = new FileService()

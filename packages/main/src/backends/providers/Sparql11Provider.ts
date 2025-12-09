@@ -3,15 +3,15 @@
  * Supports standard SPARQL protocol with multiple authentication methods
  */
 
-import axios from 'axios';
-import { Parser } from 'sparqljs';
-import { BaseProvider } from './BaseProvider.js';
-import { BackendConfig, BackendCredentials, ValidationResult, QueryResult } from '../types.js';
+import axios from 'axios'
+import { Parser } from 'sparqljs'
+import { BaseProvider } from './BaseProvider.js'
+import { BackendConfig, BackendCredentials, ValidationResult, QueryResult } from '../types.js'
 
-const parser = new Parser();
+const parser = new Parser()
 
 export class Sparql11Provider extends BaseProvider {
-  readonly type = 'sparql-1.1' as const;
+  readonly type = 'sparql-1.1' as const
 
   /**
    * Execute SPARQL query
@@ -23,17 +23,17 @@ export class Sparql11Provider extends BaseProvider {
   ): Promise<QueryResult> {
     // Validate query size
     if (query.length > 100000) {
-      throw new Error('Query too large (max 100KB)');
+      throw new Error('Query too large (max 100KB)')
     }
 
     try {
       // Detect query type and set appropriate headers
-      const queryType = this.detectQueryType(query);
-      const acceptHeader = this.getAcceptHeader(queryType);
-      const isRdfResponse = queryType === 'CONSTRUCT' || queryType === 'DESCRIBE';
+      const queryType = this.detectQueryType(query)
+      const acceptHeader = this.getAcceptHeader(queryType)
+      const isRdfResponse = queryType === 'CONSTRUCT' || queryType === 'DESCRIBE'
 
       // Get authentication headers
-      const authHeaders = this.getAuthHeaders(config, credentials);
+      const authHeaders = this.getAuthHeaders(config, credentials)
 
       // Execute query using SPARQL protocol
       const response = await axios({
@@ -41,7 +41,7 @@ export class Sparql11Provider extends BaseProvider {
         url: config.endpoint,
         headers: {
           'Content-Type': 'application/sparql-query',
-          'Accept': acceptHeader,
+          Accept: acceptHeader,
           ...authHeaders,
         },
         data: query,
@@ -49,83 +49,84 @@ export class Sparql11Provider extends BaseProvider {
         // For RDF responses, get as text; for JSON responses, parse automatically
         responseType: isRdfResponse ? 'text' : 'json',
         httpsAgent: this.createHttpsAgent(config),
-      });
+      })
 
       // Return structured response with metadata
       return {
         data: response.data,
         queryType,
         contentType: response.headers['content-type'] || 'unknown',
-      };
+      }
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
-        const statusCode = error.response?.status;
-        const message = error.response?.data?.message || error.message;
+        const statusCode = error.response?.status
+        const message = error.response?.data?.message || error.message
 
-        throw new Error(
-          `SPARQL query failed (${statusCode || 'network error'}): ${message}`
-        );
+        throw new Error(`SPARQL query failed (${statusCode || 'network error'}): ${message}`)
       }
 
       if (error instanceof Error) {
-        throw new Error(`Query execution failed: ${error.message}`);
+        throw new Error(`Query execution failed: ${error.message}`)
       }
 
-      throw new Error('Query execution failed: Unknown error');
+      throw new Error('Query execution failed: Unknown error')
     }
   }
 
   /**
    * Validate backend configuration (test connection)
    */
-  async validate(config: BackendConfig, credentials?: BackendCredentials): Promise<ValidationResult> {
+  async validate(
+    config: BackendConfig,
+    credentials?: BackendCredentials
+  ): Promise<ValidationResult> {
     // Validate URL format
     if (!this.validateUrl(config.endpoint)) {
-      return { valid: false, error: 'Invalid endpoint URL' };
+      return { valid: false, error: 'Invalid endpoint URL' }
     }
 
     // Test connection with a simple ASK query
-    const testQuery = 'SELECT (COUNT(?s) as ?subjects) WHERE { ?s ?p ?o . } LIMIT 1';
+    const testQuery = 'SELECT (COUNT(?s) as ?subjects) WHERE { ?s ?p ?o . } LIMIT 1'
 
     try {
       // Get authentication headers
-      const authHeaders = this.getAuthHeaders(config, credentials);
+      const authHeaders = this.getAuthHeaders(config, credentials)
 
       const response = await axios({
         method: 'POST',
         url: config.endpoint,
         headers: {
           'Content-Type': 'application/sparql-query',
-          'Accept': 'application/sparql-results+json, application/json',
+          Accept: 'application/sparql-results+json, application/json',
           ...authHeaders,
         },
         data: testQuery,
         timeout: 10000, // 10 second timeout for validation
         responseType: 'json',
         httpsAgent: this.createHttpsAgent(config),
-      });
+      })
 
       // Check if response is valid
       if (response.status === 200) {
-        return { valid: true };
+        return { valid: true }
       }
 
-      return { valid: false, error: `Unexpected status code: ${response.status}` };
+      return { valid: false, error: `Unexpected status code: ${response.status}` }
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
-        const statusCode = error.response?.status;
-        const message = error.response?.data?.message || error.message;
+        const statusCode = error.response?.status
+        const message = error.response?.data?.message || error.message
         return {
           valid: false,
           error: `Connection failed (${statusCode || 'network error'}): ${message}`,
-        };
+        }
       }
 
       if (error instanceof Error) {
-        return { valid: false, error: `Connection failed: ${error.message}` };
+        return { valid: false, error: `Connection failed: ${error.message}` }
       }
 
-      return { valid: false, error: 'Connection failed: Unknown error' };
+      return { valid: false, error: 'Connection failed: Unknown error' }
     }
   }
 
@@ -134,18 +135,18 @@ export class Sparql11Provider extends BaseProvider {
    */
   private detectQueryType(query: string): 'SELECT' | 'CONSTRUCT' | 'DESCRIBE' | 'ASK' {
     try {
-      const parsed = parser.parse(query);
+      const parsed = parser.parse(query)
       // Check if it's a Query (not an Update)
       if ('queryType' in parsed) {
-        const type = parsed.queryType.toUpperCase();
+        const type = parsed.queryType.toUpperCase()
         if (type === 'SELECT' || type === 'CONSTRUCT' || type === 'DESCRIBE' || type === 'ASK') {
-          return type;
+          return type
         }
       }
       // If it's an Update or unknown, default to SELECT
-      return 'SELECT';
+      return 'SELECT'
     } catch {
-      return 'SELECT';
+      return 'SELECT'
     }
   }
 
@@ -156,13 +157,13 @@ export class Sparql11Provider extends BaseProvider {
     switch (queryType) {
       case 'SELECT':
       case 'ASK':
-        return 'application/sparql-results+json, application/json';
+        return 'application/sparql-results+json, application/json'
       case 'CONSTRUCT':
       case 'DESCRIBE':
         // Request Turtle (most readable and parseable RDF format)
-        return 'text/turtle';
+        return 'text/turtle'
       default:
-        return 'application/sparql-results+json, application/json';
+        return 'application/sparql-results+json, application/json'
     }
   }
 }

@@ -2,15 +2,15 @@
  * IPC handlers for GraphStudio-specific operations
  */
 
-import { ipcMain } from 'electron';
-import axios from 'axios';
-import https from 'https';
-import type { Graphmart, Layer } from '../backends/providers/graphstudio-types.js';
+import { ipcMain } from 'electron'
+import axios from 'axios'
+import https from 'https'
+import type { Graphmart, Layer } from '../backends/providers/graphstudio-types.js'
 
 // Validate sender is authorized
 function isAuthorizedSender(frame: Electron.WebFrameMain): boolean {
-  const url = frame.url;
-  return url.startsWith('file://') || url.startsWith('http://localhost:5173');
+  const url = frame.url
+  return url.startsWith('file://') || url.startsWith('http://localhost:5173')
 }
 
 /**
@@ -22,21 +22,24 @@ function createAxiosInstance(allowInsecure: boolean = false) {
       rejectUnauthorized: !allowInsecure,
     }),
     timeout: 15000, // 15 second timeout
-  });
+  })
 }
 
 /**
  * Build authorization headers for GraphStudio API
  */
-function getAuthHeaders(credentials?: { username?: string; password?: string }): Record<string, string> {
+function getAuthHeaders(credentials?: {
+  username?: string
+  password?: string
+}): Record<string, string> {
   if (!credentials || !credentials.username || !credentials.password) {
-    return {};
+    return {}
   }
 
-  const encoded = Buffer.from(`${credentials.username}:${credentials.password}`).toString('base64');
+  const encoded = Buffer.from(`${credentials.username}:${credentials.password}`).toString('base64')
   return {
-    'Authorization': `Basic ${encoded}`,
-  };
+    Authorization: `Basic ${encoded}`,
+  }
 }
 
 /**
@@ -46,19 +49,19 @@ function getAuthHeaders(credentials?: { username?: string; password?: string }):
 function parseGraphmartResponse(data: any): Graphmart[] {
   // Try different response structures
   if (Array.isArray(data)) {
-    return data.map(item => normalizeGraphmart(item));
+    return data.map((item) => normalizeGraphmart(item))
   }
 
   if (data.graphmarts && Array.isArray(data.graphmarts)) {
-    return data.graphmarts.map((item: any) => normalizeGraphmart(item));
+    return data.graphmarts.map((item: any) => normalizeGraphmart(item))
   }
 
   if (data.result && Array.isArray(data.result)) {
-    return data.result.map((item: any) => normalizeGraphmart(item));
+    return data.result.map((item: any) => normalizeGraphmart(item))
   }
 
   // If we can't parse it, return empty array
-  return [];
+  return []
 }
 
 /**
@@ -66,23 +69,29 @@ function parseGraphmartResponse(data: any): Graphmart[] {
  */
 function normalizeGraphmart(item: any): Graphmart {
   // Try multiple possible field names for each property
-  const uri = item.uri || item.id || item.graphmartUri || item['@id'] || '';
-  const name = item.name || item.label || item.title || item.displayName ||
-               item.graphmartName || uri.split('/').pop() || 'Unnamed Graphmart';
-  const status = normalizeStatus(item.status || item.state || item.graphmartStatus);
-  const description = item.description || item.desc || item.comment || '';
+  const uri = item.uri || item.id || item.graphmartUri || item['@id'] || ''
+  const name =
+    item.name ||
+    item.label ||
+    item.title ||
+    item.displayName ||
+    item.graphmartName ||
+    uri.split('/').pop() ||
+    'Unnamed Graphmart'
+  const status = normalizeStatus(item.status || item.state || item.graphmartStatus)
+  const description = item.description || item.desc || item.comment || ''
 
   // Try to find layers in various structures
-  let layers: any[] = [];
+  let layers: any[] = []
   if (Array.isArray(item.layers)) {
-    layers = item.layers;
+    layers = item.layers
   } else if (Array.isArray(item.datasets)) {
-    layers = item.datasets;
+    layers = item.datasets
   } else if (Array.isArray(item.dataSets)) {
-    layers = item.dataSets;
+    layers = item.dataSets
   } else if (item.layerUris && Array.isArray(item.layerUris)) {
     // If we just have URIs, create minimal layer objects
-    layers = item.layerUris.map((uri: string) => ({ uri, name: uri.split('/').pop() || uri }));
+    layers = item.layerUris.map((uri: string) => ({ uri, name: uri.split('/').pop() || uri }))
   }
 
   return {
@@ -91,7 +100,7 @@ function normalizeGraphmart(item: any): Graphmart {
     status,
     description,
     layers: layers.map((layer: any) => normalizeLayer(layer)),
-  };
+  }
 }
 
 /**
@@ -102,7 +111,7 @@ function normalizeLayer(item: any): Layer {
     uri: item.uri || item.id || '',
     name: item.name || item.label || 'Unnamed Layer',
     type: item.type || 'dataset',
-  };
+  }
 }
 
 /**
@@ -110,167 +119,183 @@ function normalizeLayer(item: any): Layer {
  */
 function normalizeStatus(status: any): 'active' | 'inactive' | 'error' {
   if (typeof status !== 'string') {
-    return 'inactive';
+    return 'inactive'
   }
 
-  const statusLower = status.toLowerCase();
+  const statusLower = status.toLowerCase()
 
-  if (statusLower.includes('active') || statusLower.includes('online') || statusLower.includes('running')) {
-    return 'active';
+  if (
+    statusLower.includes('active') ||
+    statusLower.includes('online') ||
+    statusLower.includes('running')
+  ) {
+    return 'active'
   }
 
-  if (statusLower.includes('error') || statusLower.includes('failed') || statusLower.includes('fault')) {
-    return 'error';
+  if (
+    statusLower.includes('error') ||
+    statusLower.includes('failed') ||
+    statusLower.includes('fault')
+  ) {
+    return 'error'
   }
 
-  return 'inactive';
+  return 'inactive'
 }
 
 /**
  * List all graphmarts from GraphStudio server
  */
-ipcMain.handle('graphstudio:listGraphmarts', async (event, { baseUrl, credentials, allowInsecure }) => {
-  if (!isAuthorizedSender(event.senderFrame)) {
-    throw new Error('Unauthorized IPC sender');
-  }
+ipcMain.handle(
+  'graphstudio:listGraphmarts',
+  async (event, { baseUrl, credentials, allowInsecure }) => {
+    if (!isAuthorizedSender(event.senderFrame)) {
+      throw new Error('Unauthorized IPC sender')
+    }
 
-  // Validate input
-  if (typeof baseUrl !== 'string' || !baseUrl) {
-    throw new Error('Base URL is required');
-  }
+    // Validate input
+    if (typeof baseUrl !== 'string' || !baseUrl) {
+      throw new Error('Base URL is required')
+    }
 
-  try {
-    const axiosInstance = createAxiosInstance(allowInsecure);
-    const authHeaders = getAuthHeaders(credentials);
-
-    // Try API v2 first (newer versions)
-    let response;
     try {
-      response = await axiosInstance.get(`${baseUrl}/api/graphmarts`, {
-        headers: {
-          'Accept': 'application/json',
-          ...authHeaders,
-        },
-      });
-    } catch (error) {
-      // Fallback to API v1 (older versions)
-      response = await axiosInstance.get(`${baseUrl}/api/v1/graphmarts`, {
-        headers: {
-          'Accept': 'application/json',
-          ...authHeaders,
-        },
-      });
-    }
+      const axiosInstance = createAxiosInstance(allowInsecure)
+      const authHeaders = getAuthHeaders(credentials)
 
-    // Log raw response for debugging
-    console.log('[GraphStudio] Raw API response:', JSON.stringify(response.data, null, 2));
-
-    // Parse response
-    const graphmarts = parseGraphmartResponse(response.data);
-
-    console.log('[GraphStudio] Parsed graphmarts:', graphmarts.length, 'graphmarts');
-    if (graphmarts.length > 0) {
-      console.log('[GraphStudio] First graphmart sample:', JSON.stringify(graphmarts[0], null, 2));
-    }
-
-    // Sort: active first, then inactive, then error
-    graphmarts.sort((a, b) => {
-      const statusOrder = { active: 0, inactive: 1, error: 2 };
-      return statusOrder[a.status] - statusOrder[b.status];
-    });
-
-    return graphmarts;
-  } catch (error: unknown) {
-    if (axios.isAxiosError(error)) {
-      const statusCode = error.response?.status;
-      const message = error.response?.data?.message || error.message;
-
-      if (statusCode === 401 || statusCode === 403) {
-        throw new Error('Authentication failed. Please check your credentials.');
+      // Try API v2 first (newer versions)
+      let response
+      try {
+        response = await axiosInstance.get(`${baseUrl}/api/graphmarts`, {
+          headers: {
+            Accept: 'application/json',
+            ...authHeaders,
+          },
+        })
+      } catch (error) {
+        // Fallback to API v1 (older versions)
+        response = await axiosInstance.get(`${baseUrl}/api/v1/graphmarts`, {
+          headers: {
+            Accept: 'application/json',
+            ...authHeaders,
+          },
+        })
       }
 
-      if (statusCode === 404) {
-        throw new Error('GraphStudio API not found. Please check the base URL.');
+      // Log raw response for debugging
+      console.log('[GraphStudio] Raw API response:', JSON.stringify(response.data, null, 2))
+
+      // Parse response
+      const graphmarts = parseGraphmartResponse(response.data)
+
+      console.log('[GraphStudio] Parsed graphmarts:', graphmarts.length, 'graphmarts')
+      if (graphmarts.length > 0) {
+        console.log('[GraphStudio] First graphmart sample:', JSON.stringify(graphmarts[0], null, 2))
       }
 
-      throw new Error(`Failed to fetch graphmarts (${statusCode || 'network error'}): ${message}`);
-    }
+      // Sort: active first, then inactive, then error
+      graphmarts.sort((a, b) => {
+        const statusOrder = { active: 0, inactive: 1, error: 2 }
+        return statusOrder[a.status] - statusOrder[b.status]
+      })
 
-    if (error instanceof Error) {
-      throw new Error(`Failed to fetch graphmarts: ${error.message}`);
-    }
+      return graphmarts
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        const statusCode = error.response?.status
+        const message = error.response?.data?.message || error.message
 
-    throw new Error('Failed to fetch graphmarts: Unknown error');
+        if (statusCode === 401 || statusCode === 403) {
+          throw new Error('Authentication failed. Please check your credentials.')
+        }
+
+        if (statusCode === 404) {
+          throw new Error('GraphStudio API not found. Please check the base URL.')
+        }
+
+        throw new Error(`Failed to fetch graphmarts (${statusCode || 'network error'}): ${message}`)
+      }
+
+      if (error instanceof Error) {
+        throw new Error(`Failed to fetch graphmarts: ${error.message}`)
+      }
+
+      throw new Error('Failed to fetch graphmarts: Unknown error')
+    }
   }
-});
+)
 
 /**
  * Get details for a specific graphmart (including layers)
  */
-ipcMain.handle('graphstudio:getGraphmartDetails', async (event, { baseUrl, graphmartUri, credentials, allowInsecure }) => {
-  if (!isAuthorizedSender(event.senderFrame)) {
-    throw new Error('Unauthorized IPC sender');
-  }
+ipcMain.handle(
+  'graphstudio:getGraphmartDetails',
+  async (event, { baseUrl, graphmartUri, credentials, allowInsecure }) => {
+    if (!isAuthorizedSender(event.senderFrame)) {
+      throw new Error('Unauthorized IPC sender')
+    }
 
-  // Validate input
-  if (typeof baseUrl !== 'string' || !baseUrl) {
-    throw new Error('Base URL is required');
-  }
+    // Validate input
+    if (typeof baseUrl !== 'string' || !baseUrl) {
+      throw new Error('Base URL is required')
+    }
 
-  if (typeof graphmartUri !== 'string' || !graphmartUri) {
-    throw new Error('Graphmart URI is required');
-  }
+    if (typeof graphmartUri !== 'string' || !graphmartUri) {
+      throw new Error('Graphmart URI is required')
+    }
 
-  try {
-    const axiosInstance = createAxiosInstance(allowInsecure);
-    const authHeaders = getAuthHeaders(credentials);
-
-    // Encode graphmart URI for URL
-    const encodedUri = encodeURIComponent(graphmartUri);
-
-    // Try API v2 first (newer versions)
-    let response;
     try {
-      response = await axiosInstance.get(`${baseUrl}/api/graphmarts/${encodedUri}`, {
-        headers: {
-          'Accept': 'application/json',
-          ...authHeaders,
-        },
-      });
-    } catch (error) {
-      // Fallback to API v1 (older versions)
-      response = await axiosInstance.get(`${baseUrl}/api/v1/graphmarts/${encodedUri}`, {
-        headers: {
-          'Accept': 'application/json',
-          ...authHeaders,
-        },
-      });
-    }
+      const axiosInstance = createAxiosInstance(allowInsecure)
+      const authHeaders = getAuthHeaders(credentials)
 
-    // Parse response
-    const graphmart = normalizeGraphmart(response.data.graphmart || response.data);
+      // Encode graphmart URI for URL
+      const encodedUri = encodeURIComponent(graphmartUri)
 
-    return graphmart;
-  } catch (error: unknown) {
-    if (axios.isAxiosError(error)) {
-      const statusCode = error.response?.status;
-      const message = error.response?.data?.message || error.message;
-
-      if (statusCode === 401 || statusCode === 403) {
-        throw new Error('Authentication failed. Please check your credentials.');
+      // Try API v2 first (newer versions)
+      let response
+      try {
+        response = await axiosInstance.get(`${baseUrl}/api/graphmarts/${encodedUri}`, {
+          headers: {
+            Accept: 'application/json',
+            ...authHeaders,
+          },
+        })
+      } catch (error) {
+        // Fallback to API v1 (older versions)
+        response = await axiosInstance.get(`${baseUrl}/api/v1/graphmarts/${encodedUri}`, {
+          headers: {
+            Accept: 'application/json',
+            ...authHeaders,
+          },
+        })
       }
 
-      if (statusCode === 404) {
-        throw new Error('Graphmart not found.');
+      // Parse response
+      const graphmart = normalizeGraphmart(response.data.graphmart || response.data)
+
+      return graphmart
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        const statusCode = error.response?.status
+        const message = error.response?.data?.message || error.message
+
+        if (statusCode === 401 || statusCode === 403) {
+          throw new Error('Authentication failed. Please check your credentials.')
+        }
+
+        if (statusCode === 404) {
+          throw new Error('Graphmart not found.')
+        }
+
+        throw new Error(
+          `Failed to fetch graphmart details (${statusCode || 'network error'}): ${message}`
+        )
       }
 
-      throw new Error(`Failed to fetch graphmart details (${statusCode || 'network error'}): ${message}`);
-    }
+      if (error instanceof Error) {
+        throw new Error(`Failed to fetch graphmart details: ${error.message}`)
+      }
 
-    if (error instanceof Error) {
-      throw new Error(`Failed to fetch graphmart details: ${error.message}`);
+      throw new Error('Failed to fetch graphmart details: Unknown error')
     }
-
-    throw new Error('Failed to fetch graphmart details: Unknown error');
   }
-});
+)

@@ -7,6 +7,7 @@ A modern, secure Electron-based SPARQL client built with Vue 3 and TypeScript. F
 ### Core Capabilities ✅
 
 **Multi-Backend Management**
+
 - Create and manage multiple SPARQL endpoint configurations
 - Switch between backends with a dropdown selector
 - Extensible provider system supporting multiple backend types:
@@ -16,12 +17,14 @@ A modern, secure Electron-based SPARQL client built with Vue 3 and TypeScript. F
   - Stardog (stub for future implementation)
 
 **Comprehensive Authentication**
+
 - **None** - Public endpoints without authentication
 - **Basic Auth** - Username/password with Base64 encoding
 - **Bearer Token** - JWT or API token authentication
 - **Custom Headers** - Dynamic key-value header pairs for custom auth schemes
 
 **Secure Credential Storage**
+
 - OS-level encryption using Electron's `safeStorage` API
   - macOS: Keychain
   - Windows: DPAPI (Data Protection API)
@@ -30,6 +33,7 @@ A modern, secure Electron-based SPARQL client built with Vue 3 and TypeScript. F
 - Decryption only occurs in main process during query execution
 
 **Modern UI**
+
 - VS Code-style icon sidebar with sliding drawer
 - Resizable panels (200-600px) with smooth animations
 - Monaco editor for SPARQL query editing
@@ -37,6 +41,7 @@ A modern, secure Electron-based SPARQL client built with Vue 3 and TypeScript. F
 - Automatic dark mode support
 
 ### Planned Features
+
 - SPARQL editor enhancements (autocomplete, syntax validation, query templates)
 - Results visualization (tables, charts, network graphs, RDF graph viewer)
 - Query history with search and replay
@@ -47,7 +52,7 @@ A modern, secure Electron-based SPARQL client built with Vue 3 and TypeScript. F
 
 ## Screenshots
 
-*Coming soon*
+_Coming soon_
 
 ## Project Structure
 
@@ -108,18 +113,21 @@ shiny/
 ## Getting Started
 
 ### Prerequisites
+
 - Node.js >= 18.0.0
 - npm >= 9.0.0
 
 ### Installation
 
 1. Clone the repository:
+
 ```bash
 git clone https://github.com/yourusername/shiny.git
 cd shiny
 ```
 
 2. Install dependencies:
+
 ```bash
 npm install
 ```
@@ -129,11 +137,13 @@ This will install dependencies for all workspace packages (main, preload, render
 ### Development
 
 Start the development server with hot-reload:
+
 ```bash
 npm run dev
 ```
 
 This will:
+
 1. Compile TypeScript for main and preload processes in watch mode
 2. Start Vite dev server for the renderer process
 3. Launch Electron with automatic reloading
@@ -143,6 +153,7 @@ The app will automatically create a default DBpedia backend on first run.
 ### Building for Production
 
 Build the application for your platform:
+
 ```bash
 npm run build
 ```
@@ -162,11 +173,13 @@ npm run clean       # Remove all build artifacts
 ### Security Model
 
 **Process Isolation**
+
 - Main process (Node.js): Full system access, runs backend logic and IPC handlers
 - Preload process: Security bridge, exposes limited API to renderer
 - Renderer process: Sandboxed, runs Vue application with no Node.js access
 
 **Security Features**
+
 - Context isolation enabled
 - Node integration disabled in renderer
 - `contextBridge` API for secure IPC
@@ -181,14 +194,21 @@ The provider pattern enables extensible backend support:
 ```typescript
 // All providers implement this interface
 interface BackendProvider {
-  type: BackendType;
-  execute(config: BackendConfig, query: string, credentials?: BackendCredentials): Promise<QueryResult>;
-  validate(config: BackendConfig): Promise<ValidationResult>;
+  type: BackendType
+  execute(
+    config: BackendConfig,
+    query: string,
+    credentials?: BackendCredentials
+  ): Promise<QueryResult>
+  validate(config: BackendConfig): Promise<ValidationResult>
 }
 
 // Base class handles common logic (auth headers, error handling)
 abstract class BaseProvider implements BackendProvider {
-  protected getAuthHeaders(config: BackendConfig, credentials?: BackendCredentials): Record<string, string> {
+  protected getAuthHeaders(
+    config: BackendConfig,
+    credentials?: BackendCredentials
+  ): Record<string, string> {
     // Unified auth header generation for all providers
   }
 }
@@ -202,6 +222,7 @@ class Sparql11Provider extends BaseProvider {
 ```
 
 Adding a new backend type:
+
 1. Implement provider class extending `BaseProvider`
 2. Register in `BackendFactory`
 3. Add UI options in ConnectionForm
@@ -228,6 +249,7 @@ Results returned to renderer and displayed
 ### Data Storage
 
 **electron-store Structure:**
+
 ```json
 {
   "backends": [
@@ -257,6 +279,7 @@ Results returned to renderer and displayed
 ### Technology Stack
 
 **Core Technologies**
+
 - **Runtime**: Electron 29 (Chromium 122, Node.js 20)
 - **Frontend Framework**: Vue 3 (Composition API + `<script setup>`)
 - **Language**: TypeScript 5.3
@@ -264,6 +287,7 @@ Results returned to renderer and displayed
 - **Build Tool**: Vite 5 (fast HMR, native ESM)
 
 **Key Libraries**
+
 - **Code Editor**: Monaco Editor (VS Code's editor)
 - **HTTP Client**: Axios (with auth interceptors)
 - **SPARQL Parser**: sparqljs (query type detection)
@@ -271,6 +295,7 @@ Results returned to renderer and displayed
 - **Encryption**: Electron safeStorage (OS keychain/DPAPI)
 
 **Development Tools**
+
 - **Type Checking**: TypeScript strict mode
 - **Linting**: ESLint + @typescript-eslint
 - **Build**: electron-builder (packaging and distribution)
@@ -279,12 +304,14 @@ Results returned to renderer and displayed
 ## Development Roadmap
 
 ### ✅ Phase 1: Foundation (Complete)
+
 - Electron + Vue 3 + TypeScript monorepo structure
 - Basic SPARQL query execution
 - Monaco editor integration
 - UI layout foundation
 
 ### ✅ Phase 2: Multi-Backend System (Complete)
+
 - Backend provider architecture with factory pattern
 - CRUD operations for backend configurations
 - Generic SPARQL 1.1 provider with full auth support
@@ -293,6 +320,7 @@ Results returned to renderer and displayed
 - Migration system for seamless upgrades
 
 ### ✅ Phase 3: UI/UX Improvements (Complete)
+
 - VS Code-style icon sidebar with resizable drawer
 - Backend management UI (list, create, edit, delete, test)
 - Form validation and error handling
@@ -300,6 +328,7 @@ Results returned to renderer and displayed
 - Backend selection dropdown in query interface
 
 ### 🚧 Phase 4: Editor Enhancements (In Progress)
+
 - SPARQL syntax highlighting and validation
 - Auto-completion for keywords and prefixes
 - Query formatting and beautification
@@ -307,6 +336,7 @@ Results returned to renderer and displayed
 - Query snippets library
 
 ### 📋 Phase 5: Results & Visualization (Planned)
+
 - Tabular results view with sorting and filtering
 - Chart visualizations (bar, line, pie)
 - RDF graph network visualization
@@ -314,6 +344,7 @@ Results returned to renderer and displayed
 - Result pagination for large datasets
 
 ### 📋 Phase 6: Advanced Features (Planned)
+
 - Query history with search and replay
 - AI-assisted query generation (OpenAI/Anthropic integration)
 - Query profiling and performance metrics
@@ -322,6 +353,7 @@ Results returned to renderer and displayed
 - Plugin system for extensibility
 
 ### 📋 Phase 7: Polish & Distribution (Planned)
+
 - Comprehensive documentation
 - User guides and tutorials
 - Automated testing (unit, integration, e2e)
@@ -334,6 +366,7 @@ Results returned to renderer and displayed
 ### First Run
 
 On first launch, Shiny automatically creates a default backend pointing to DBpedia's public SPARQL endpoint. You can:
+
 1. Click the connection icon in the left sidebar
 2. Add, edit, or delete backends
 3. Test connections before saving
@@ -342,6 +375,7 @@ On first launch, Shiny automatically creates a default backend pointing to DBped
 ### Managing Backends
 
 **Create a new backend:**
+
 1. Open the Connections panel (left sidebar icon)
 2. Click "Add Backend"
 3. Fill in the form:
@@ -353,10 +387,12 @@ On first launch, Shiny automatically creates a default backend pointing to DBped
 4. Click "Create"
 
 **Test a connection:**
+
 - Click the 🔌 icon on any backend card
 - Results display for 5 seconds (success/error)
 
 **Edit or delete:**
+
 - Click ✏️ to edit backend configuration
 - Click 🗑️ to delete (with confirmation prompt)
 
@@ -386,14 +422,18 @@ Contributions are welcome! Please follow these guidelines:
 ## Troubleshooting
 
 ### Port Already in Use
+
 If Vite fails to start due to port 5173 being in use:
+
 ```bash
 # Find and kill the process
 lsof -ti:5173 | xargs kill -9
 ```
 
 ### Encryption Not Available
+
 On Linux, if safeStorage is not available:
+
 ```bash
 # Install libsecret
 sudo apt-get install libsecret-1-dev  # Debian/Ubuntu
@@ -401,7 +441,9 @@ sudo dnf install libsecret-devel      # Fedora
 ```
 
 ### TypeScript Errors
+
 If you encounter TypeScript errors after pulling:
+
 ```bash
 npm run clean
 npm install

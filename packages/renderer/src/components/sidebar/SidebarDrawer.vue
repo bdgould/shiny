@@ -15,12 +15,12 @@
 </template>
 
 <script setup lang="ts">
-import { useSidebarStore } from '@/stores/sidebar';
-import ConnectionPanel from './panels/ConnectionPanel.vue';
-import AIPanel from './panels/AIPanel.vue';
-import HistoryPanel from './panels/HistoryPanel.vue';
+import { useSidebarStore } from '@/stores/sidebar'
+import ConnectionPanel from './panels/ConnectionPanel.vue'
+import AIPanel from './panels/AIPanel.vue'
+import HistoryPanel from './panels/HistoryPanel.vue'
 
-const sidebarStore = useSidebarStore();
+const sidebarStore = useSidebarStore()
 </script>
 
 <style scoped>
@@ -43,12 +43,12 @@ const sidebarStore = useSidebarStore();
 
 /* Slide-in/out animation - width-based for smoother transition */
 .drawer-slide-enter-active {
-  transition: width 0.25s cubic-bezier(0.4, 0.0, 0.2, 1);
+  transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   overflow: hidden;
 }
 
 .drawer-slide-leave-active {
-  transition: width 0.2s cubic-bezier(0.4, 0.0, 0.2, 1);
+  transition: width 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   overflow: hidden;
 }
 

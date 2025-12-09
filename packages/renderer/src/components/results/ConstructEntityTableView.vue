@@ -11,17 +11,13 @@
         <div class="entity-header" @click="toggleEntity(index)">
           <button class="collapse-button" :class="{ collapsed: collapsedEntities.has(index) }">
             <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-              <path d="M8 11L3 6h10l-5 5z"/>
+              <path d="M8 11L3 6h10l-5 5z" />
             </svg>
           </button>
-          <CellValue
-            :value="entity.subject"
-            :type="entity.subjectType"
-            class="entity-subject"
-          />
-          <span class="triple-count">{{ entity.triples.length }} triple{{
-            entity.triples.length !== 1 ? 's' : ''
-          }}</span>
+          <CellValue :value="entity.subject" :type="entity.subjectType" class="entity-subject" />
+          <span class="triple-count"
+            >{{ entity.triples.length }} triple{{ entity.triples.length !== 1 ? 's' : '' }}</span
+          >
         </div>
         <table v-show="!collapsedEntities.has(index)" class="entity-table">
           <tbody>
@@ -42,9 +38,7 @@
         </table>
       </div>
     </div>
-    <div v-else class="empty">
-      No RDF triples found
-    </div>
+    <div v-else class="empty">No RDF triples found</div>
     <div v-if="entities.length > 0" class="footer">
       <span>{{ entities.length }} entit{{ entities.length !== 1 ? 'ies' : 'y' }}</span>
       <span class="separator">•</span>
@@ -54,61 +48,61 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue';
-import { rdfProcessor, type EntityGroup } from '@/services/rdf/rdfProcessor';
-import CellValue from './CellValue.vue';
+import { ref, computed, onMounted, watch } from 'vue'
+import { rdfProcessor, type EntityGroup } from '@/services/rdf/rdfProcessor'
+import CellValue from './CellValue.vue'
 
 const props = defineProps<{
-  turtleData: string;
-}>();
+  turtleData: string
+}>()
 
-const isLoading = ref(false);
-const entities = ref<EntityGroup[]>([]);
-const error = ref<string | null>(null);
-const collapsedEntities = ref<Set<number>>(new Set());
+const isLoading = ref(false)
+const entities = ref<EntityGroup[]>([])
+const error = ref<string | null>(null)
+const collapsedEntities = ref<Set<number>>(new Set())
 
 const totalTriples = computed(() => {
-  return entities.value.reduce((sum, entity) => sum + entity.triples.length, 0);
-});
+  return entities.value.reduce((sum, entity) => sum + entity.triples.length, 0)
+})
 
 function toggleEntity(index: number) {
   if (collapsedEntities.value.has(index)) {
-    collapsedEntities.value.delete(index);
+    collapsedEntities.value.delete(index)
   } else {
-    collapsedEntities.value.add(index);
+    collapsedEntities.value.add(index)
   }
   // Trigger reactivity by creating a new Set
-  collapsedEntities.value = new Set(collapsedEntities.value);
+  collapsedEntities.value = new Set(collapsedEntities.value)
 }
 
 async function parseAndGroup() {
   if (!props.turtleData) {
-    entities.value = [];
-    error.value = null;
-    return;
+    entities.value = []
+    error.value = null
+    return
   }
 
-  isLoading.value = true;
-  error.value = null;
-  entities.value = [];
+  isLoading.value = true
+  error.value = null
+  entities.value = []
 
   try {
     // Parse Turtle data
-    const dataset = await rdfProcessor.parseTurtle(props.turtleData);
+    const dataset = await rdfProcessor.parseTurtle(props.turtleData)
 
     // Group by entity
-    entities.value = rdfProcessor.groupByEntity(dataset);
+    entities.value = rdfProcessor.groupByEntity(dataset)
   } catch (err: any) {
-    error.value = `Failed to parse RDF data: ${err.message}`;
-    console.error('RDF parsing error:', err);
+    error.value = `Failed to parse RDF data: ${err.message}`
+    console.error('RDF parsing error:', err)
   } finally {
-    isLoading.value = false;
+    isLoading.value = false
   }
 }
 
 // Parse when component mounts or when data changes
-onMounted(() => parseAndGroup());
-watch(() => props.turtleData, parseAndGroup);
+onMounted(() => parseAndGroup())
+watch(() => props.turtleData, parseAndGroup)
 </script>
 
 <style scoped>
@@ -176,7 +170,9 @@ watch(() => props.turtleData, parseAndGroup);
   border: none;
   color: var(--color-text-secondary);
   cursor: pointer;
-  transition: transform 0.2s, color 0.2s;
+  transition:
+    transform 0.2s,
+    color 0.2s;
   flex-shrink: 0;
 }
 

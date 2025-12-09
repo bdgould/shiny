@@ -7,12 +7,12 @@
 </template>
 
 <script setup lang="ts">
-import { useSidebarStore } from '@/stores/sidebar';
-import SidebarIconBar from './SidebarIconBar.vue';
-import SidebarDrawer from './SidebarDrawer.vue';
-import DrawerResizer from './DrawerResizer.vue';
+import { useSidebarStore } from '@/stores/sidebar'
+import SidebarIconBar from './SidebarIconBar.vue'
+import SidebarDrawer from './SidebarDrawer.vue'
+import DrawerResizer from './DrawerResizer.vue'
 
-const sidebarStore = useSidebarStore();
+const sidebarStore = useSidebarStore()
 </script>
 
 <style scoped>

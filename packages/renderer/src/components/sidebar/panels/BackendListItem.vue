@@ -8,26 +8,14 @@
       <div class="backend-actions">
         <button
           class="btn-icon"
-          @click="$emit('test')"
           title="Test connection"
           :disabled="isTesting"
+          @click="$emit('test')"
         >
           {{ isTesting ? '⏳' : '🔌' }}
         </button>
-        <button
-          class="btn-icon"
-          @click="$emit('edit')"
-          title="Edit"
-        >
-          ✏️
-        </button>
-        <button
-          class="btn-icon btn-danger"
-          @click="$emit('delete')"
-          title="Delete"
-        >
-          🗑️
-        </button>
+        <button class="btn-icon" title="Edit" @click="$emit('edit')">✏️</button>
+        <button class="btn-icon btn-danger" title="Delete" @click="$emit('delete')">🗑️</button>
       </div>
     </div>
 
@@ -49,36 +37,42 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
-import type { BackendConfig } from '@/types/backends';
-import { BACKEND_TYPE_LABELS, AUTH_TYPE_LABELS } from '@/types/backends';
+import { computed } from 'vue'
+import type { BackendConfig } from '@/types/backends'
+import { BACKEND_TYPE_LABELS, AUTH_TYPE_LABELS } from '@/types/backends'
 
 interface Props {
-  backend: BackendConfig;
-  isSelected?: boolean;
-  isTesting?: boolean;
-  testResult?: { valid: boolean; error?: string } | null;
+  backend: BackendConfig
+  isSelected?: boolean
+  isTesting?: boolean
+  testResult?: { valid: boolean; error?: string } | null
 }
 
 const props = withDefaults(defineProps<Props>(), {
   isSelected: false,
   isTesting: false,
   testResult: null,
-});
+})
 
 defineEmits<{
-  test: [];
-  edit: [];
-  delete: [];
-}>();
+  test: []
+  edit: []
+  delete: []
+}>()
 
 const backendTypeLabel = computed(() => {
-  return BACKEND_TYPE_LABELS[props.backend.type as keyof typeof BACKEND_TYPE_LABELS] || props.backend.type;
-});
+  return (
+    BACKEND_TYPE_LABELS[props.backend.type as keyof typeof BACKEND_TYPE_LABELS] ||
+    props.backend.type
+  )
+})
 
 const authTypeLabel = computed(() => {
-  return AUTH_TYPE_LABELS[props.backend.authType as keyof typeof AUTH_TYPE_LABELS] || props.backend.authType;
-});
+  return (
+    AUTH_TYPE_LABELS[props.backend.authType as keyof typeof AUTH_TYPE_LABELS] ||
+    props.backend.authType
+  )
+})
 </script>
 
 <style scoped>

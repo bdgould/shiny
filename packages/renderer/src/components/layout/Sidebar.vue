@@ -2,7 +2,11 @@
   <aside class="sidebar" :class="{ collapsed: isCollapsed }">
     <div class="sidebar-header">
       <h2 v-if="!isCollapsed">Connection</h2>
-      <button class="toggle-btn" @click="toggleSidebar" :title="isCollapsed ? 'Expand' : 'Collapse'">
+      <button
+        class="toggle-btn"
+        :title="isCollapsed ? 'Expand' : 'Collapse'"
+        @click="toggleSidebar"
+      >
         {{ isCollapsed ? '›' : '‹' }}
       </button>
     </div>
@@ -42,15 +46,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref } from 'vue'
 
-const isCollapsed = ref(false);
-const endpoint = ref('https://dbpedia.org/sparql');
-const backendType = ref('generic');
-const authType = ref('none');
+const isCollapsed = ref(false)
+const endpoint = ref('https://dbpedia.org/sparql')
+const backendType = ref('generic')
+const authType = ref('none')
 
 function toggleSidebar() {
-  isCollapsed.value = !isCollapsed.value;
+  isCollapsed.value = !isCollapsed.value
 }
 </script>
 

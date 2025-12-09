@@ -13,7 +13,7 @@ const COMMON_PREFIXES: Record<string, string> = {
   'http://www.w3.org/ns/prov#': 'prov:',
   'http://www.w3.org/2006/time#': 'time:',
   'http://www.w3.org/ns/dcat#': 'dcat:',
-};
+}
 
 /**
  * Shorten a URI by replacing common namespaces with prefixes
@@ -24,21 +24,21 @@ export function shortenURI(uri: string): string {
   // Try to replace with known prefix
   for (const [namespace, prefix] of Object.entries(COMMON_PREFIXES)) {
     if (uri.startsWith(namespace)) {
-      return uri.replace(namespace, prefix);
+      return uri.replace(namespace, prefix)
     }
   }
 
   // If no prefix match, try to extract local name
-  const hashIndex = uri.lastIndexOf('#');
-  const slashIndex = uri.lastIndexOf('/');
-  const splitIndex = Math.max(hashIndex, slashIndex);
+  const hashIndex = uri.lastIndexOf('#')
+  const slashIndex = uri.lastIndexOf('/')
+  const splitIndex = Math.max(hashIndex, slashIndex)
 
   if (splitIndex > 0 && splitIndex < uri.length - 1) {
-    return '...' + uri.substring(splitIndex);
+    return '...' + uri.substring(splitIndex)
   }
 
   // Return original if no shortening possible
-  return uri;
+  return uri
 }
 
 /**
@@ -52,5 +52,5 @@ export function isURI(value: string): boolean {
     value.startsWith('https://') ||
     value.startsWith('urn:') ||
     value.startsWith('ftp://')
-  );
+  )
 }

@@ -5,19 +5,19 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed } from 'vue'
 
 const props = defineProps<{
-  data: any;
-}>();
+  data: any
+}>()
 
 const formattedData = computed(() => {
   try {
-    return JSON.stringify(props.data, null, 2);
+    return JSON.stringify(props.data, null, 2)
   } catch (error) {
-    return String(props.data);
+    return String(props.data)
   }
-});
+})
 </script>
 
 <style scoped>

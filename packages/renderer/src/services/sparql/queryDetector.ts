@@ -1,8 +1,8 @@
-import { Parser } from 'sparqljs';
+import { Parser } from 'sparqljs'
 
-export type QueryType = 'SELECT' | 'CONSTRUCT' | 'DESCRIBE' | 'ASK';
+export type QueryType = 'SELECT' | 'CONSTRUCT' | 'DESCRIBE' | 'ASK'
 
-const parser = new Parser();
+const parser = new Parser()
 
 /**
  * Detects the SPARQL query type by parsing the query string
@@ -11,16 +11,16 @@ const parser = new Parser();
  */
 export function detectQueryType(query: string): QueryType | null {
   try {
-    const parsed = parser.parse(query);
-    const type = parsed.queryType?.toUpperCase();
+    const parsed = parser.parse(query)
+    const type = parsed.queryType?.toUpperCase()
 
     if (type === 'SELECT' || type === 'CONSTRUCT' || type === 'DESCRIBE' || type === 'ASK') {
-      return type as QueryType;
+      return type as QueryType
     }
 
-    return null;
+    return null
   } catch {
-    return null;
+    return null
   }
 }
 
@@ -28,20 +28,20 @@ export function detectQueryType(query: string): QueryType | null {
  * Check if query is a SELECT query
  */
 export function isSelectQuery(query: string): boolean {
-  return detectQueryType(query) === 'SELECT';
+  return detectQueryType(query) === 'SELECT'
 }
 
 /**
  * Check if query is a CONSTRUCT or DESCRIBE query (both return RDF graphs)
  */
 export function isConstructQuery(query: string): boolean {
-  const type = detectQueryType(query);
-  return type === 'CONSTRUCT' || type === 'DESCRIBE';
+  const type = detectQueryType(query)
+  return type === 'CONSTRUCT' || type === 'DESCRIBE'
 }
 
 /**
  * Check if query is an ASK query
  */
 export function isAskQuery(query: string): boolean {
-  return detectQueryType(query) === 'ASK';
+  return detectQueryType(query) === 'ASK'
 }

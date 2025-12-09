@@ -3,28 +3,28 @@
  * Creates singleton instances of services for use across the main process
  */
 
-import { CredentialService } from './CredentialService.js';
-import { BackendService } from './BackendService.js';
+import { CredentialService } from './CredentialService.js'
+import { BackendService } from './BackendService.js'
 
 // Singleton instances
-let credentialService: CredentialService | null = null;
-let backendService: BackendService | null = null;
+let credentialService: CredentialService | null = null
+let backendService: BackendService | null = null
 
 /**
  * Initialize all services
  * Should be called once on app startup
  */
 export function initializeServices(): void {
-  console.log('Initializing services...');
+  console.log('Initializing services...')
 
   // Create credential service
-  credentialService = new CredentialService();
-  console.log(`Encryption available: ${credentialService.isEncryptionAvailable()}`);
+  credentialService = new CredentialService()
+  console.log(`Encryption available: ${credentialService.isEncryptionAvailable()}`)
 
   // Create backend service
-  backendService = new BackendService(credentialService);
+  backendService = new BackendService(credentialService)
 
-  console.log('Services initialized successfully');
+  console.log('Services initialized successfully')
 }
 
 /**
@@ -32,9 +32,9 @@ export function initializeServices(): void {
  */
 export function getCredentialService(): CredentialService {
   if (!credentialService) {
-    throw new Error('Services not initialized. Call initializeServices() first.');
+    throw new Error('Services not initialized. Call initializeServices() first.')
   }
-  return credentialService;
+  return credentialService
 }
 
 /**
@@ -42,7 +42,7 @@ export function getCredentialService(): CredentialService {
  */
 export function getBackendService(): BackendService {
   if (!backendService) {
-    throw new Error('Services not initialized. Call initializeServices() first.');
+    throw new Error('Services not initialized. Call initializeServices() first.')
   }
-  return backendService;
+  return backendService
 }
