@@ -1,14 +1,35 @@
-import { Menu, BrowserWindow, app, shell } from 'electron';
+import { Menu, BrowserWindow, app, shell, dialog } from 'electron';
 
 export function createApplicationMenu(mainWindow: BrowserWindow) {
   const isMac = process.platform === 'darwin';
+
+  // Custom About handler
+  const showAboutDialog = async () => {
+    const response = await dialog.showMessageBox(mainWindow, {
+      type: 'info',
+      title: 'About Shiny',
+      message: `Shiny ${app.getVersion()}`,
+      detail: 'An extensible SPARQL client built with Electron and Vue 3',
+      buttons: ['GitHub Wiki', 'OK'],
+      defaultId: 1,
+      cancelId: 1
+    });
+
+    // If "GitHub Wiki" button (index 0) was clicked
+    if (response.response === 0) {
+      await shell.openExternal('https://github.com/bdgould/shiny/wiki');
+    }
+  };
 
   const template: Electron.MenuItemConstructorOptions[] = [
     // App menu (macOS only)
     ...(isMac ? [{
       label: app.name,
       submenu: [
-        { role: 'about' as const },
+        {
+          label: 'About Shiny',
+          click: showAboutDialog
+        },
         { type: 'separator' as const },
         { role: 'services' as const },
         { type: 'separator' as const },
@@ -120,9 +141,16 @@ export function createApplicationMenu(mainWindow: BrowserWindow) {
         {
           label: 'Learn More',
           click: async () => {
-            await shell.openExternal('https://github.com/yourusername/shiny');
+            await shell.openExternal('https://github.com/bdgould/shiny');
           }
-        }
+        },
+        ...(isMac ? [] : [
+          { type: 'separator' as const },
+          {
+            label: 'About Shiny',
+            click: showAboutDialog
+          }
+        ])
       ]
     }
   ];

@@ -14,7 +14,8 @@
     "build": "node scripts/build.js",
     "lint": "eslint . --ext .ts,.vue",
     "type-check": "tsc --noEmit",
-    "clean": "rimraf dist packages/*/dist"
+    "clean": "rimraf dist packages/*/dist",
+    "bump-version": "node scripts/bump-version.js"
   },
   "devDependencies": {
     "@types/node": "^20.11.0",
@@ -48,11 +49,21 @@
       "package.json"
     ],
     "mac": {
-      "target": "dmg",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": ["x64", "arm64"]
+        }
+      ],
       "icon": "icons/shiny.icns"
     },
     "win": {
-      "target": "nsis",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64", "arm64"]
+        }
+      ],
       "icon": "icons/shiny.ico"
     },
     "linux": {
