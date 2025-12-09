@@ -61,6 +61,12 @@ export interface SaveQueryResult {
 
 export type OpenQueryResult = QueryFileData | { error: string };
 
+export interface SaveResultsResult {
+  success: boolean;
+  filePath?: string;
+  error?: string;
+}
+
 export interface ElectronAPI {
   query: {
     execute: (query: string, backendId: string) => Promise<QueryResult>;
@@ -83,10 +89,12 @@ export interface ElectronAPI {
     saveQuery: (query: string, backendMetadata: BackendMetadata | null, currentFilePath?: string) => Promise<SaveQueryResult>;
     openQuery: () => Promise<OpenQueryResult>;
     onFileOpened: (callback: (data: QueryFileData) => void) => () => void;
+    saveResults: (content: string, queryType: string, format: string) => Promise<SaveResultsResult>;
   };
   menu: {
     onSaveQuery: (callback: () => void) => () => void;
     onOpenQuery: (callback: () => void) => () => void;
+    onSaveResults: (callback: () => void) => () => void;
   };
 }
 

@@ -38,6 +38,13 @@ export function createApplicationMenu(mainWindow: BrowserWindow) {
             mainWindow.webContents.send('menu:saveQuery');
           }
         },
+        {
+          label: 'Save Results...',
+          accelerator: 'CmdOrCtrl+Shift+S',
+          click: () => {
+            mainWindow.webContents.send('menu:saveResults');
+          }
+        },
         { type: 'separator' as const },
         isMac ? { role: 'close' as const } : { role: 'quit' as const }
       ]

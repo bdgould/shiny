@@ -17,13 +17,17 @@
             <circle cx="12" cy="12" r="10" />
           </svg>
         </span>
-        <button
+        <span
           @click.stop="handleCloseTab(tab.id)"
           class="tab-close"
           :title="`Close ${tab.name}`"
+          role="button"
+          tabindex="0"
+          @keydown.enter.stop="handleCloseTab(tab.id)"
+          @keydown.space.stop="handleCloseTab(tab.id)"
         >
           ×
-        </button>
+        </span>
       </button>
     </div>
     <button

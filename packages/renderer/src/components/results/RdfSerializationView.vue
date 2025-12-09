@@ -50,15 +50,20 @@ async function serialize() {
   serializedData.value = null;
 
   try {
-    // Parse Turtle data
+    // If the requested format is Turtle, just use the original data
+    // This avoids unnecessary parse/serialize round-trip and potential issues
+    if (props.format === 'turtle') {
+      serializedData.value = props.turtleData;
+      isLoading.value = false;
+      return;
+    }
+
+    // Parse Turtle data for other formats
     const dataset = await rdfProcessor.parseTurtle(props.turtleData);
 
     // Serialize to requested format
     let result: string;
     switch (props.format) {
-      case 'turtle':
-        result = await rdfProcessor.serializeToTurtle(dataset);
-        break;
       case 'ntriples':
         result = await rdfProcessor.serializeToNTriples(dataset);
         break;

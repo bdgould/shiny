@@ -31,4 +31,15 @@ ipcMain.handle('files:openQuery', async (event) => {
   return await fileService.openQuery();
 });
 
+/**
+ * Handle saving query results to file system
+ */
+ipcMain.handle('files:saveResults', async (event, content: string, queryType: string, format: string) => {
+  if (!isAuthorizedSender(event.sender)) {
+    throw new Error('Unauthorized');
+  }
+
+  return await fileService.saveResults(content, queryType, format);
+});
+
 console.log('Files IPC handlers registered');

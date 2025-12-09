@@ -106,6 +106,68 @@ export class FileService {
   }
 
   /**
+   * Show save dialog and save query results to file
+   */
+  async saveResults(
+    content: string,
+    _queryType: string,
+    format: string
+  ): Promise<{ success: boolean; filePath?: string; error?: string }> {
+    try {
+      // Determine file extension based on format
+      const extensionMap: Record<string, string> = {
+        'csv': 'csv',
+        'json': 'json',
+        'turtle': 'ttl',
+        'trig': 'trig',
+        'ntriples': 'nt',
+        'nquads': 'nq',
+        'jsonld': 'jsonld',
+      };
+
+      const extension = extensionMap[format] || 'txt';
+      const defaultFileName = `results.${extension}`;
+
+      // Determine filter name based on format
+      const filterNames: Record<string, string> = {
+        'csv': 'CSV',
+        'json': 'JSON',
+        'turtle': 'Turtle',
+        'trig': 'TriG',
+        'ntriples': 'N-Triples',
+        'nquads': 'N-Quads',
+        'jsonld': 'JSON-LD',
+      };
+
+      const filterName = filterNames[format] || 'Text';
+
+      const { filePath, canceled } = await dialog.showSaveDialog({
+        title: 'Save Query Results',
+        defaultPath: defaultFileName,
+        filters: [
+          { name: filterName, extensions: [extension] },
+          { name: 'All Files', extensions: ['*'] }
+        ],
+        properties: ['createDirectory', 'showOverwriteConfirmation']
+      });
+
+      if (canceled || !filePath) {
+        return { success: false };
+      }
+
+      await fs.writeFile(filePath, content, 'utf-8');
+
+      return { success: true, filePath };
+    } catch (error) {
+      console.error('Error saving results:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  }
+
+  /**
    * Parse query file content and extract metadata
    */
   private parseQueryFile(fileContent: string): {

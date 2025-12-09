@@ -16,8 +16,9 @@ const ALLOWED_CHANNELS = {
     'graphstudio:getGraphmartDetails',
     'files:saveQuery',
     'files:openQuery',
+    'files:saveResults',
   ],
-  on: ['query:result', 'query:error', 'file:opened', 'menu:saveQuery', 'menu:openQuery'],
+  on: ['query:result', 'query:error', 'file:opened', 'menu:saveQuery', 'menu:openQuery', 'menu:saveResults'],
 };
 
 function validateChannel(channel: string, type: keyof typeof ALLOWED_CHANNELS): boolean {
@@ -93,6 +94,12 @@ export interface SaveQueryResult {
 
 export type OpenQueryResult = QueryFileData | { error: string };
 
+export interface SaveResultsResult {
+  success: boolean;
+  filePath?: string;
+  error?: string;
+}
+
 // Define the API that will be exposed to the renderer process
 export interface ElectronAPI {
   query: {
@@ -116,10 +123,12 @@ export interface ElectronAPI {
     saveQuery: (query: string, backendMetadata: BackendMetadata | null, currentFilePath?: string) => Promise<SaveQueryResult>;
     openQuery: () => Promise<OpenQueryResult>;
     onFileOpened: (callback: (data: QueryFileData) => void) => () => void;
+    saveResults: (content: string, queryType: string, format: string) => Promise<SaveResultsResult>;
   };
   menu: {
     onSaveQuery: (callback: () => void) => () => void;
     onOpenQuery: (callback: () => void) => () => void;
+    onSaveResults: (callback: () => void) => () => void;
   };
 }
 
@@ -221,6 +230,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
         ipcRenderer.removeListener('file:opened', listener);
       };
     },
+    saveResults: (content: string, queryType: string, format: string) => {
+      if (!validateChannel('files:saveResults', 'invoke')) {
+        throw new Error('Unauthorized IPC channel');
+      }
+      return ipcRenderer.invoke('files:saveResults', content, queryType, format);
+    },
   },
   menu: {
     onSaveQuery: (callback: () => void) => {
@@ -241,6 +256,16 @@ contextBridge.exposeInMainWorld('electronAPI', {
       ipcRenderer.on('menu:openQuery', listener);
       return () => {
         ipcRenderer.removeListener('menu:openQuery', listener);
+      };
+    },
+    onSaveResults: (callback: () => void) => {
+      if (!validateChannel('menu:saveResults', 'on')) {
+        throw new Error('Unauthorized IPC channel');
+      }
+      const listener = () => callback();
+      ipcRenderer.on('menu:saveResults', listener);
+      return () => {
+        ipcRenderer.removeListener('menu:saveResults', listener);
       };
     },
   },

@@ -5,20 +5,37 @@
       <IconSidebar />
       <MainPane />
     </div>
+    <FormatSelectorDialog
+      ref="formatDialogRef"
+      :formats="exportFormats"
+      @select="handleFormatSelected"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted, onUnmounted } from 'vue';
+import { onMounted, onUnmounted, ref } from 'vue';
 import TopBar from './components/layout/TopBar.vue';
 import IconSidebar from './components/sidebar/IconSidebar.vue';
 import MainPane from './components/layout/MainPane.vue';
+import FormatSelectorDialog from './components/dialogs/FormatSelectorDialog.vue';
 import { useConnectionStore } from './stores/connection';
 import { useTabsStore } from './stores/tabs';
 import type { QueryFileData } from './types/electron';
 
 const connectionStore = useConnectionStore();
 const tabsStore = useTabsStore();
+const formatDialogRef = ref<InstanceType<typeof FormatSelectorDialog> | null>(null);
+const exportFormats = ref<Array<{value: string, label: string}>>([]);
+
+// Will be set in onMounted
+let saveResultsFunction: ((format: string) => Promise<void>) | null = null;
+
+async function handleFormatSelected(format: string) {
+  if (saveResultsFunction) {
+    await saveResultsFunction(format);
+  }
+}
 
 // Load backends and restore tabs on app startup
 onMounted(async () => {
@@ -37,11 +54,14 @@ onMounted(async () => {
 let removeFileOpenedListener: (() => void) | null = null;
 let removeMenuSaveListener: (() => void) | null = null;
 let removeMenuOpenListener: (() => void) | null = null;
+let removeMenuSaveResultsListener: (() => void) | null = null;
 
 onMounted(async () => {
   // Import file operations composable
   const { useFileOperations } = await import('./composables/useFileOperations');
+  const { useResultsSave } = await import('./composables/useResultsSave');
   const { saveQuery, openQuery } = useFileOperations();
+  const { canSaveResults, getExportFormats, saveResults } = useResultsSave();
 
   // Listen for native menu events
   removeMenuSaveListener = window.electronAPI.menu.onSaveQuery(async () => {
@@ -51,6 +71,31 @@ onMounted(async () => {
   removeMenuOpenListener = window.electronAPI.menu.onOpenQuery(async () => {
     await openQuery();
   });
+
+  // Store saveResults function for use by handleFormatSelected
+  saveResultsFunction = saveResults;
+
+  removeMenuSaveResultsListener = window.electronAPI.menu.onSaveResults(async () => {
+    await handleSaveResultsMenu();
+  });
+
+  async function handleSaveResultsMenu() {
+    if (!canSaveResults()) {
+      alert('No results to save. Please execute a query first.');
+      return;
+    }
+
+    const formats = getExportFormats();
+
+    // If only one format available (ASK queries), save directly
+    if (formats.length === 1) {
+      await saveResults(formats[0].value);
+    } else {
+      // Show format selection dialog
+      exportFormats.value = formats;
+      formatDialogRef.value?.open();
+    }
+  }
 
   // Listen for files opened via OS (double-click .rq file)
   removeFileOpenedListener = window.electronAPI.files.onFileOpened(async (data: QueryFileData) => {
@@ -98,6 +143,9 @@ onUnmounted(() => {
   }
   if (removeMenuOpenListener) {
     removeMenuOpenListener();
+  }
+  if (removeMenuSaveResultsListener) {
+    removeMenuSaveResultsListener();
   }
 });
 </script>

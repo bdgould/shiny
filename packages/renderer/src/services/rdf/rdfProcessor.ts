@@ -34,9 +34,29 @@ export class RDFProcessor {
    * Serialize RDF dataset to Turtle format
    */
   async serializeToTurtle(dataset: DatasetCore): Promise<string> {
-    const serializer = new SerializerTurtle();
-    const stream = serializer.import(dataset.toStream());
-    return this.streamToString(stream);
+    try {
+      // Validate all quads have proper term structures before serializing
+      for (const quad of dataset) {
+        if (!quad.subject || !quad.subject.termType) {
+          throw new Error('Invalid quad: subject missing or malformed');
+        }
+        if (!quad.predicate || !quad.predicate.termType) {
+          throw new Error('Invalid quad: predicate missing or malformed');
+        }
+        if (!quad.object || !quad.object.termType) {
+          throw new Error('Invalid quad: object missing or malformed');
+        }
+      }
+
+      const serializer = new SerializerTurtle();
+      const stream = serializer.import(dataset.toStream());
+      return this.streamToString(stream);
+    } catch (error: any) {
+      // Provide more context for debugging
+      console.error('Turtle serialization error:', error);
+      console.error('Dataset size:', dataset.size);
+      throw new Error(`Turtle serialization failed: ${error.message}`);
+    }
   }
 
   /**
@@ -159,6 +179,7 @@ export class RDFProcessor {
         literal += `@${term.language}`;
       } else if (
         term.datatype &&
+        term.datatype.value &&
         term.datatype.value !== 'http://www.w3.org/2001/XMLSchema#string'
       ) {
         literal += `^^<${term.datatype.value}>`;
