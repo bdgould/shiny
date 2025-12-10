@@ -2,7 +2,7 @@
  * Backend type definitions for main process
  */
 
-export type BackendType = 'sparql-1.1' | 'graphstudio' | 'neptune' | 'stardog'
+export type BackendType = 'sparql-1.1' | 'graphstudio' | 'neptune' | 'stardog' | 'mobi'
 export type AuthType = 'none' | 'basic' | 'bearer' | 'custom'
 
 /**

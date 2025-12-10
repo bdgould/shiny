@@ -22,6 +22,19 @@ export interface BackendFormData {
   graphmartUri?: string
   graphmartName?: string
   selectedLayers?: string[] // Array of layer URIs or ['ALL_LAYERS']
+
+  // Mobi-specific fields
+  queryMode?: 'repository' | 'record'
+  repositoryId?: string
+  repositoryTitle?: string
+  catalogId?: string
+  catalogTitle?: string
+  recordId?: string
+  recordTitle?: string
+  recordType?: string
+  branchId?: string
+  branchTitle?: string
+  includeImports?: boolean
 }
 
 export interface ValidationErrors {
@@ -33,6 +46,9 @@ export interface ValidationErrors {
   customHeaders?: string
   graphmart?: string
   layers?: string
+  repository?: string
+  catalog?: string
+  record?: string
 }
 
 export function useBackendValidation() {
@@ -120,6 +136,36 @@ export function useBackendValidation() {
     return errors
   }
 
+  function validateMobi(formData: BackendFormData): {
+    repository?: string
+    catalog?: string
+    record?: string
+  } {
+    const errors: { repository?: string; catalog?: string; record?: string } = {}
+
+    const queryMode = formData.queryMode || 'record'
+
+    if (queryMode === 'repository') {
+      // Repository mode requires a repository to be selected
+      if (!formData.repositoryId || formData.repositoryId.trim().length === 0) {
+        errors.repository = 'Please select a repository'
+      }
+    } else {
+      // Record mode requires a catalog and record to be selected
+      if (!formData.catalogId || formData.catalogId.trim().length === 0) {
+        errors.catalog = 'Please select a catalog'
+      }
+
+      if (!formData.recordId || formData.recordId.trim().length === 0) {
+        errors.record = 'Please select a record'
+      }
+    }
+
+    // Note: branch is optional for flexible scoping
+
+    return errors
+  }
+
   function validateForm(formData: BackendFormData): boolean {
     errors.value = {}
 
@@ -148,6 +194,14 @@ export function useBackendValidation() {
       const graphstudioErrors = validateGraphStudio(formData)
       if (graphstudioErrors.graphmart) errors.value.graphmart = graphstudioErrors.graphmart
       if (graphstudioErrors.layers) errors.value.layers = graphstudioErrors.layers
+    }
+
+    // Validate Mobi-specific fields
+    if (formData.type === 'mobi') {
+      const mobiErrors = validateMobi(formData)
+      if (mobiErrors.repository) errors.value.repository = mobiErrors.repository
+      if (mobiErrors.catalog) errors.value.catalog = mobiErrors.catalog
+      if (mobiErrors.record) errors.value.record = mobiErrors.record
     }
 
     // Return true if no errors

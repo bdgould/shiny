@@ -42,6 +42,35 @@ export interface Graphmart {
   layers: GraphmartLayer[]
 }
 
+export interface MobiCatalog {
+  id: string
+  iri: string
+  title: string
+  description?: string
+  type?: 'local' | 'distributed'
+}
+
+export interface MobiRecord {
+  id: string
+  iri: string
+  title: string
+  type: string
+  description?: string
+  modified?: string
+  keywords?: string[]
+}
+
+export interface MobiBranch {
+  id: string
+  iri: string
+  title: string
+  createdDate?: string
+}
+
+export interface MobiAuthResponse {
+  username: string
+}
+
 export interface BackendMetadata {
   id: string
   name: string
@@ -100,6 +129,33 @@ export interface ElectronAPI {
       credentials?: { username?: string; password?: string },
       allowInsecure?: boolean
     ) => Promise<Graphmart>
+  }
+  mobi: {
+    authenticate: (
+      baseUrl: string,
+      username: string,
+      password: string,
+      allowInsecure?: boolean
+    ) => Promise<MobiAuthResponse>
+    listCatalogs: (
+      baseUrl: string,
+      credentials?: { username?: string; password?: string },
+      allowInsecure?: boolean
+    ) => Promise<MobiCatalog[]>
+    listRecords: (
+      baseUrl: string,
+      catalogId: string,
+      recordTypes?: string[],
+      credentials?: { username?: string; password?: string },
+      allowInsecure?: boolean
+    ) => Promise<MobiRecord[]>
+    listBranches: (
+      baseUrl: string,
+      catalogId: string,
+      recordId: string,
+      credentials?: { username?: string; password?: string },
+      allowInsecure?: boolean
+    ) => Promise<MobiBranch[]>
   }
   files: {
     saveQuery: (

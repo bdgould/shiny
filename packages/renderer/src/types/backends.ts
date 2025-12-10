@@ -3,7 +3,7 @@
  * These mirror the main process types but are used in Vue components
  */
 
-export type BackendType = 'sparql-1.1' | 'graphstudio' | 'neptune' | 'stardog'
+export type BackendType = 'sparql-1.1' | 'graphstudio' | 'neptune' | 'stardog' | 'mobi'
 export type AuthType = 'none' | 'basic' | 'bearer' | 'custom'
 
 /**
@@ -58,6 +58,7 @@ export const BACKEND_TYPE_LABELS: Record<BackendType, string> = {
   graphstudio: 'Altair Graph Studio',
   neptune: 'AWS Neptune',
   stardog: 'Stardog',
+  mobi: 'Mobi',
 }
 
 /**

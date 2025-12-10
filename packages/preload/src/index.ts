@@ -14,6 +14,11 @@ const ALLOWED_CHANNELS = {
     'backends:setSelected',
     'graphstudio:listGraphmarts',
     'graphstudio:getGraphmartDetails',
+    'mobi:authenticate',
+    'mobi:listCatalogs',
+    'mobi:listRepositories',
+    'mobi:listRecords',
+    'mobi:listBranches',
     'files:saveQuery',
     'files:openQuery',
     'files:saveResults',
@@ -81,6 +86,43 @@ export interface Graphmart {
   layers: GraphmartLayer[]
 }
 
+// Mobi types
+export interface MobiCatalog {
+  id: string
+  iri: string
+  title: string
+  description?: string
+  type?: 'local' | 'distributed'
+}
+
+export interface MobiRecord {
+  id: string
+  iri: string
+  title: string
+  type: string
+  description?: string
+  modified?: string
+  keywords?: string[]
+}
+
+export interface MobiBranch {
+  id: string
+  iri: string
+  title: string
+  createdDate?: string
+}
+
+export interface MobiRepository {
+  id: string
+  iri: string
+  title: string
+  description?: string
+}
+
+export interface MobiAuthResponse {
+  username: string
+}
+
 // File operations types
 export interface BackendMetadata {
   id: string
@@ -141,6 +183,38 @@ export interface ElectronAPI {
       credentials?: { username?: string; password?: string },
       allowInsecure?: boolean
     ) => Promise<Graphmart>
+  }
+  mobi: {
+    authenticate: (
+      baseUrl: string,
+      username: string,
+      password: string,
+      allowInsecure?: boolean
+    ) => Promise<MobiAuthResponse>
+    listCatalogs: (
+      baseUrl: string,
+      credentials?: { username?: string; password?: string },
+      allowInsecure?: boolean
+    ) => Promise<MobiCatalog[]>
+    listRepositories: (
+      baseUrl: string,
+      credentials?: { username?: string; password?: string },
+      allowInsecure?: boolean
+    ) => Promise<MobiRepository[]>
+    listRecords: (
+      baseUrl: string,
+      catalogId: string,
+      recordTypes?: string[],
+      credentials?: { username?: string; password?: string },
+      allowInsecure?: boolean
+    ) => Promise<MobiRecord[]>
+    listBranches: (
+      baseUrl: string,
+      catalogId: string,
+      recordId: string,
+      credentials?: { username?: string; password?: string },
+      allowInsecure?: boolean
+    ) => Promise<MobiBranch[]>
   }
   files: {
     saveQuery: (
@@ -246,6 +320,88 @@ contextBridge.exposeInMainWorld('electronAPI', {
       return ipcRenderer.invoke('graphstudio:getGraphmartDetails', {
         baseUrl,
         graphmartUri,
+        credentials,
+        allowInsecure,
+      })
+    },
+  },
+  mobi: {
+    authenticate: (
+      baseUrl: string,
+      username: string,
+      password: string,
+      allowInsecure?: boolean
+    ) => {
+      if (!validateChannel('mobi:authenticate', 'invoke')) {
+        throw new Error('Unauthorized IPC channel')
+      }
+      return ipcRenderer.invoke('mobi:authenticate', {
+        baseUrl,
+        username,
+        password,
+        allowInsecure,
+      })
+    },
+    listCatalogs: (
+      baseUrl: string,
+      credentials?: { username?: string; password?: string },
+      allowInsecure?: boolean
+    ) => {
+      if (!validateChannel('mobi:listCatalogs', 'invoke')) {
+        throw new Error('Unauthorized IPC channel')
+      }
+      return ipcRenderer.invoke('mobi:listCatalogs', {
+        baseUrl,
+        credentials,
+        allowInsecure,
+      })
+    },
+    listRepositories: (
+      baseUrl: string,
+      credentials?: { username?: string; password?: string },
+      allowInsecure?: boolean
+    ) => {
+      if (!validateChannel('mobi:listRepositories', 'invoke')) {
+        throw new Error('Unauthorized IPC channel')
+      }
+      return ipcRenderer.invoke('mobi:listRepositories', {
+        baseUrl,
+        credentials,
+        allowInsecure,
+      })
+    },
+    listRecords: (
+      baseUrl: string,
+      catalogId: string,
+      recordTypes?: string[],
+      credentials?: { username?: string; password?: string },
+      allowInsecure?: boolean
+    ) => {
+      if (!validateChannel('mobi:listRecords', 'invoke')) {
+        throw new Error('Unauthorized IPC channel')
+      }
+      return ipcRenderer.invoke('mobi:listRecords', {
+        baseUrl,
+        catalogId,
+        recordTypes,
+        credentials,
+        allowInsecure,
+      })
+    },
+    listBranches: (
+      baseUrl: string,
+      catalogId: string,
+      recordId: string,
+      credentials?: { username?: string; password?: string },
+      allowInsecure?: boolean
+    ) => {
+      if (!validateChannel('mobi:listBranches', 'invoke')) {
+        throw new Error('Unauthorized IPC channel')
+      }
+      return ipcRenderer.invoke('mobi:listBranches', {
+        baseUrl,
+        catalogId,
+        recordId,
         credentials,
         allowInsecure,
       })

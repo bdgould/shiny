@@ -22,7 +22,6 @@
         v-for="backend in connectionStore.backends"
         :key="backend.id"
         :backend="backend"
-        :is-selected="backend.id === connectionStore.selectedBackendId"
         :is-testing="testingBackendId === backend.id"
         :test-result="testResults[backend.id]"
         @test="handleTest(backend.id)"

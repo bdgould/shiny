@@ -7,6 +7,7 @@ import { BackendType } from './types.js'
 import { BaseProvider } from './providers/BaseProvider.js'
 import { Sparql11Provider } from './providers/Sparql11Provider.js'
 import { GraphStudioProvider } from './providers/GraphStudioProvider.js'
+import { MobiProvider } from './providers/MobiProvider.js'
 import { NeptuneProvider } from './providers/NeptuneProvider.js'
 import { StardogProvider } from './providers/StardogProvider.js'
 
@@ -27,6 +28,7 @@ function initializeProviders(): void {
   // Register all providers
   providers.set('sparql-1.1', new Sparql11Provider())
   providers.set('graphstudio', new GraphStudioProvider())
+  providers.set('mobi', new MobiProvider())
   providers.set('neptune', new NeptuneProvider())
   providers.set('stardog', new StardogProvider())
 }

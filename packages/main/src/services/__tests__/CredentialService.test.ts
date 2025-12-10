@@ -174,7 +174,10 @@ describe('CredentialService', () => {
       const config: BackendConfig = {
         id: 'backend-1',
         name: 'Test Backend',
-        type: 'sparql-1.1', authType: 'none', createdAt: Date.now(), updatedAt: Date.now(),
+        type: 'sparql-1.1',
+        authType: 'none',
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
         endpoint: 'http://localhost:3030/dataset/query',
       }
 
@@ -187,7 +190,10 @@ describe('CredentialService', () => {
       const originalConfig: BackendConfig = {
         id: 'backend-1',
         name: 'Original Name',
-        type: 'sparql-1.1', authType: 'none', createdAt: Date.now(), updatedAt: Date.now(),
+        type: 'sparql-1.1',
+        authType: 'none',
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
         endpoint: 'http://localhost:3030/dataset/query',
       }
 
@@ -218,12 +224,14 @@ describe('CredentialService', () => {
       const config: BackendConfig = {
         id: 'backend-1',
         name: 'Test Backend',
-        type: 'sparql-1.1', authType: 'none', createdAt: Date.now(), updatedAt: Date.now(),
+        type: 'sparql-1.1',
+        authType: 'none',
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
         endpoint: 'http://localhost:3030/dataset/query',
       }
 
       await service.saveBackendConfig(config)
-
       ;(service['store'].get as any).mockReturnValue([config])
 
       const retrieved = await service.getBackendConfig('backend-1')
@@ -246,13 +254,19 @@ describe('CredentialService', () => {
         {
           id: 'backend-1',
           name: 'Backend 1',
-          type: 'sparql-1.1', authType: 'none', createdAt: Date.now(), updatedAt: Date.now(),
+          type: 'sparql-1.1',
+          authType: 'none',
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
           endpoint: 'http://localhost:3030/dataset1/query',
         },
         {
           id: 'backend-2',
           name: 'Backend 2',
-          type: 'graphstudio', authType: 'none', createdAt: Date.now(), updatedAt: Date.now(),
+          type: 'graphstudio',
+          authType: 'none',
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
           endpoint: 'http://localhost:7200',
         },
       ]
@@ -279,7 +293,10 @@ describe('CredentialService', () => {
       const config: BackendConfig = {
         id: 'backend-1',
         name: 'Test Backend',
-        type: 'sparql-1.1', authType: 'none', createdAt: Date.now(), updatedAt: Date.now(),
+        type: 'sparql-1.1',
+        authType: 'none',
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
         endpoint: 'http://localhost:3030/dataset/query',
       }
 

@@ -38,6 +38,14 @@ ipcMain.handle('query:execute', async (event, { query, backendId }) => {
       throw new Error(`Backend not found: ${backendId}`)
     }
 
+    console.log('[Query] Executing query against backend:', {
+      id: config.id,
+      name: config.name,
+      type: config.type,
+      endpoint: config.endpoint,
+      providerConfig: config.providerConfig,
+    })
+
     // 5. Load credentials (if any)
     const credentials = await backendService.getCredentials(backendId)
 
@@ -50,6 +58,7 @@ ipcMain.handle('query:execute', async (event, { query, backendId }) => {
     // Return structured response
     return result
   } catch (error: unknown) {
+    console.error('[Query] Query execution error:', error)
     if (error instanceof Error) {
       throw new Error(`Query execution failed: ${error.message}`)
     }

@@ -24,6 +24,7 @@
         <select id="type" v-model="formData.type">
           <option value="sparql-1.1">Generic SPARQL 1.1</option>
           <option value="graphstudio">Altair Graph Studio</option>
+          <option value="mobi">Mobi</option>
           <option value="neptune">AWS Neptune</option>
           <option value="stardog">Stardog</option>
         </select>
@@ -209,6 +210,226 @@
         </div>
       </template>
 
+      <!-- Mobi-specific configuration -->
+      <template v-if="formData.type === 'mobi'">
+        <div class="form-section-divider"></div>
+
+        <!-- Query Mode Selection -->
+        <div class="form-group">
+          <label>Query Mode *</label>
+          <div class="query-mode-selection">
+            <label class="radio-label">
+              <input
+                v-model="mobiQueryMode"
+                type="radio"
+                value="repository"
+                @change="onQueryModeChanged"
+              />
+              <span>Repository-wide queries</span>
+            </label>
+            <label class="radio-label">
+              <input
+                v-model="mobiQueryMode"
+                type="radio"
+                value="record"
+                @change="onQueryModeChanged"
+              />
+              <span>Record-specific queries</span>
+            </label>
+          </div>
+          <p class="hint-text">
+            Repository-wide queries search across all data in a repository. Record-specific queries
+            are scoped to a single catalog record.
+          </p>
+        </div>
+
+        <!-- Repository Selection (shown when mode = 'repository') -->
+        <div v-if="mobiQueryMode === 'repository'" class="form-group">
+          <label>Repository *</label>
+          <div class="mobi-selector">
+            <button
+              type="button"
+              class="btn-secondary btn-sm"
+              :disabled="!canLoadMobiResources || mobiAPI.isLoadingRepositories.value"
+              @click="loadRepositoriesFromServer"
+            >
+              {{ mobiAPI.isLoadingRepositories.value ? 'Loading...' : 'Load Repositories' }}
+            </button>
+
+            <button
+              v-if="mobiAPI.hasRepositories.value"
+              type="button"
+              class="btn-icon-sm"
+              title="Refresh repository list"
+              @click="refreshRepositories"
+            >
+              🔄
+            </button>
+          </div>
+
+          <select
+            v-if="mobiAPI.hasRepositories.value"
+            v-model="formData.repositoryId"
+            :class="{ error: errors.repository }"
+            class="mobi-dropdown"
+            @change="onRepositorySelected"
+          >
+            <option value="">Select a repository...</option>
+            <option v-for="repo in mobiAPI.repositories.value" :key="repo.id" :value="repo.id">
+              {{ repo.title }}
+            </option>
+          </select>
+
+          <span v-if="errors.repository" class="error-message">{{ errors.repository }}</span>
+          <span v-if="mobiAPI.error.value" class="error-message">
+            {{ mobiAPI.error.value }}
+          </span>
+        </div>
+
+        <!-- Catalog Selection (shown when mode = 'record') -->
+        <div v-if="mobiQueryMode === 'record'" class="form-group">
+          <label>Catalog *</label>
+          <div class="mobi-selector">
+            <button
+              type="button"
+              class="btn-secondary btn-sm"
+              :disabled="!canLoadMobiResources || mobiAPI.isLoadingCatalogs.value"
+              @click="loadCatalogsFromServer"
+            >
+              {{ mobiAPI.isLoadingCatalogs.value ? 'Loading...' : 'Load Catalogs' }}
+            </button>
+
+            <button
+              v-if="mobiAPI.hasCatalogs.value"
+              type="button"
+              class="btn-icon-sm"
+              title="Refresh catalog list"
+              @click="refreshCatalogs"
+            >
+              🔄
+            </button>
+          </div>
+
+          <select
+            v-if="mobiAPI.hasCatalogs.value"
+            v-model="formData.catalogId"
+            :class="{ error: errors.catalog }"
+            class="mobi-dropdown"
+            @change="onCatalogSelected"
+          >
+            <option value="">Select a catalog...</option>
+            <option v-for="cat in mobiAPI.catalogs.value" :key="cat.id" :value="cat.id">
+              {{ cat.title }}
+            </option>
+          </select>
+
+          <span v-if="errors.catalog" class="error-message">{{ errors.catalog }}</span>
+          <span v-if="mobiAPI.error.value" class="error-message">
+            {{ mobiAPI.error.value }}
+          </span>
+        </div>
+
+        <!-- Record Type Filter -->
+        <div v-if="mobiQueryMode === 'record' && formData.catalogId" class="form-group">
+          <label>Record Type Filter (optional)</label>
+          <div class="record-type-selection">
+            <label v-for="type in availableRecordTypes" :key="type.iri" class="checkbox-label">
+              <input
+                v-model="selectedRecordTypes"
+                type="checkbox"
+                :value="type.iri"
+                @change="onRecordTypeChanged"
+              />
+              <span>{{ type.label }}</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Record Selection -->
+        <div v-if="mobiQueryMode === 'record' && formData.catalogId" class="form-group">
+          <label>Record *</label>
+          <div class="mobi-selector">
+            <button
+              type="button"
+              class="btn-secondary btn-sm"
+              :disabled="!formData.catalogId || mobiAPI.isLoadingRecords.value"
+              @click="loadRecordsFromServer"
+            >
+              {{ mobiAPI.isLoadingRecords.value ? 'Loading...' : 'Load Records' }}
+            </button>
+
+            <button
+              v-if="mobiAPI.hasRecords.value"
+              type="button"
+              class="btn-icon-sm"
+              title="Refresh record list"
+              @click="refreshRecords"
+            >
+              🔄
+            </button>
+          </div>
+
+          <select
+            v-if="mobiAPI.hasRecords.value"
+            v-model="formData.recordId"
+            :class="{ error: errors.record }"
+            class="mobi-dropdown"
+            @change="onRecordSelected"
+          >
+            <option value="">Select a record...</option>
+            <option v-for="rec in mobiAPI.records.value" :key="rec.id" :value="rec.id">
+              {{ rec.title }}
+            </option>
+          </select>
+
+          <span v-if="errors.record" class="error-message">{{ errors.record }}</span>
+        </div>
+
+        <!-- Branch Selection -->
+        <div v-if="mobiQueryMode === 'record' && formData.recordId" class="form-group">
+          <label>Branch (optional for flexible scoping)</label>
+          <div class="mobi-selector">
+            <button
+              type="button"
+              class="btn-secondary btn-sm"
+              :disabled="!formData.recordId || mobiAPI.isLoadingBranches.value"
+              @click="loadBranchesFromServer"
+            >
+              {{ mobiAPI.isLoadingBranches.value ? 'Loading...' : 'Load Branches' }}
+            </button>
+
+            <button
+              v-if="mobiAPI.hasBranches.value"
+              type="button"
+              class="btn-icon-sm"
+              title="Refresh branch list"
+              @click="refreshBranches"
+            >
+              🔄
+            </button>
+          </div>
+
+          <select
+            v-if="mobiAPI.hasBranches.value"
+            v-model="formData.branchId"
+            class="mobi-dropdown"
+          >
+            <option value="">All branches (no scoping)</option>
+            <option v-for="branch in mobiAPI.branches.value" :key="branch.id" :value="branch.id">
+              {{ branch.title }}
+            </option>
+          </select>
+        </div>
+
+        <!-- Include Imports -->
+        <div v-if="formData.recordId" class="form-group">
+          <label class="checkbox-label">
+            <input v-model="formData.includeImports" type="checkbox" />
+            <span>Include imports in queries</span>
+          </label>
+        </div>
+      </template>
+
       <div class="form-actions">
         <button type="button" class="btn-secondary" @click="$emit('cancel')">Cancel</button>
         <button type="submit" class="btn-primary" :disabled="isSaving">
@@ -222,9 +443,16 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
 import type { BackendConfig } from '@/types/backends'
-import type { Graphmart } from '@/types/electron'
+import type {
+  Graphmart,
+  MobiCatalog,
+  MobiRecord,
+  MobiRepository,
+} from '@/types/electron'
 import { useBackendValidation, type BackendFormData } from '@/composables/useBackendValidation'
 import { useGraphStudioAPI } from '@/composables/useGraphStudioAPI'
+import { useMobiAPI } from '@/composables/useMobiAPI'
+import { MOBI_RECORD_TYPE_IRIS } from '@/../../main/src/backends/providers/mobi-types'
 
 interface Props {
   backend?: BackendConfig
@@ -247,6 +475,24 @@ const graphstudioAPI = useGraphStudioAPI()
 const useAllLayers = ref(true)
 const selectedGraphmart = ref<Graphmart | null>(null)
 
+// Mobi API composable
+const mobiAPI = useMobiAPI()
+
+// Mobi state
+const mobiQueryMode = ref<'repository' | 'record'>('record')
+const selectedRecordTypes = ref<string[]>([])
+const selectedCatalog = ref<MobiCatalog | null>(null)
+const selectedRecord = ref<MobiRecord | null>(null)
+const selectedRepository = ref<MobiRepository | null>(null)
+
+// Available record types for filtering
+const availableRecordTypes = [
+  { iri: MOBI_RECORD_TYPE_IRIS['ontology-record'], label: 'Ontology' },
+  { iri: MOBI_RECORD_TYPE_IRIS['dataset-record'], label: 'Dataset' },
+  { iri: MOBI_RECORD_TYPE_IRIS['mapping-record'], label: 'Mapping' },
+  { iri: MOBI_RECORD_TYPE_IRIS['shapes-graph-record'], label: 'Shapes Graph' },
+]
+
 // Parse existing provider config if editing GraphStudio backend
 let initialGraphmartUri = ''
 let initialGraphmartName = ''
@@ -265,6 +511,41 @@ if (props.backend && props.backend.type === 'graphstudio' && props.backend.provi
   }
 }
 
+// Parse existing provider config if editing Mobi backend
+let initialQueryMode: 'repository' | 'record' = 'record'
+let initialRepositoryId = ''
+let initialRepositoryTitle = ''
+let initialCatalogId = ''
+let initialCatalogTitle = ''
+let initialRecordId = ''
+let initialRecordTitle = ''
+let initialRecordType = ''
+let initialBranchId = ''
+let initialBranchTitle = ''
+let initialIncludeImports = false
+
+if (props.backend && props.backend.type === 'mobi' && props.backend.providerConfig) {
+  try {
+    const providerConfig = JSON.parse(props.backend.providerConfig)
+    initialQueryMode = providerConfig.queryMode || 'record'
+    initialRepositoryId = providerConfig.repositoryId || ''
+    initialRepositoryTitle = providerConfig.repositoryTitle || ''
+    initialCatalogId = providerConfig.catalogId || ''
+    initialCatalogTitle = providerConfig.catalogTitle || ''
+    initialRecordId = providerConfig.recordId || ''
+    initialRecordTitle = providerConfig.recordTitle || ''
+    initialRecordType = providerConfig.recordType || ''
+    initialBranchId = providerConfig.branchId || ''
+    initialBranchTitle = providerConfig.branchTitle || ''
+    initialIncludeImports = providerConfig.includeImports || false
+  } catch (e) {
+    console.error('Failed to parse Mobi provider config:', e)
+  }
+}
+
+// Set initial query mode
+mobiQueryMode.value = initialQueryMode
+
 // Initialize form data
 const formData = ref<BackendFormData>({
   name: props.backend?.name || '',
@@ -279,6 +560,18 @@ const formData = ref<BackendFormData>({
   graphmartUri: initialGraphmartUri,
   graphmartName: initialGraphmartName,
   selectedLayers: useAllLayers.value ? ['ALL_LAYERS'] : initialSelectedLayers,
+  // Mobi fields
+  queryMode: initialQueryMode,
+  repositoryId: initialRepositoryId,
+  repositoryTitle: initialRepositoryTitle,
+  catalogId: initialCatalogId,
+  catalogTitle: initialCatalogTitle,
+  recordId: initialRecordId,
+  recordTitle: initialRecordTitle,
+  recordType: initialRecordType,
+  branchId: initialBranchId,
+  branchTitle: initialBranchTitle,
+  includeImports: initialIncludeImports,
 })
 
 const { errors, validateForm, clearErrors } = useBackendValidation()
@@ -305,6 +598,25 @@ watch(
       formData.value.graphmartName = ''
       formData.value.selectedLayers = []
       selectedGraphmart.value = null
+    }
+
+    // Clear Mobi-specific fields when switching away
+    if (newType !== 'mobi') {
+      formData.value.queryMode = 'record'
+      formData.value.repositoryId = ''
+      formData.value.repositoryTitle = ''
+      formData.value.catalogId = ''
+      formData.value.catalogTitle = ''
+      formData.value.recordId = ''
+      formData.value.recordTitle = ''
+      formData.value.recordType = ''
+      formData.value.branchId = ''
+      formData.value.branchTitle = ''
+      formData.value.includeImports = false
+      selectedRepository.value = null
+      selectedCatalog.value = null
+      selectedRecord.value = null
+      selectedRecordTypes.value = []
     }
   }
 )
@@ -396,6 +708,266 @@ function onAllLayersToggle() {
   }
 }
 
+// Computed: Can load Mobi resources (need endpoint and credentials)
+const canLoadMobiResources = computed(() => {
+  if (!formData.value.endpoint) return false
+
+  // Mobi always requires credentials (JWT authentication)
+  if (formData.value.authType === 'basic') {
+    return !!formData.value.username && !!formData.value.password
+  }
+
+  return true
+})
+
+// Mobi: Load catalogs from server
+async function loadCatalogsFromServer() {
+  if (!canLoadMobiResources.value) return
+
+  const credentials =
+    formData.value.authType === 'basic'
+      ? { username: formData.value.username, password: formData.value.password }
+      : undefined
+
+  await mobiAPI.loadCatalogs(
+    formData.value.endpoint,
+    credentials,
+    false,
+    formData.value.allowInsecure
+  )
+}
+
+// Mobi: Refresh catalogs
+async function refreshCatalogs() {
+  if (!canLoadMobiResources.value) return
+
+  const credentials =
+    formData.value.authType === 'basic'
+      ? { username: formData.value.username, password: formData.value.password }
+      : undefined
+
+  mobiAPI.clearCache()
+  await mobiAPI.loadCatalogs(
+    formData.value.endpoint,
+    credentials,
+    true,
+    formData.value.allowInsecure
+  )
+}
+
+// Mobi: When catalog is selected
+function onCatalogSelected() {
+  const catalog = mobiAPI.catalogs.value.find((cat) => cat.id === formData.value.catalogId)
+
+  if (catalog) {
+    selectedCatalog.value = catalog
+    formData.value.catalogTitle = catalog.title
+
+    // Reset dependent selections
+    formData.value.recordId = ''
+    formData.value.recordTitle = ''
+    formData.value.recordType = ''
+    formData.value.branchId = ''
+    formData.value.branchTitle = ''
+    selectedRecord.value = null
+    mobiAPI.records.value = []
+    mobiAPI.branches.value = []
+  } else {
+    selectedCatalog.value = null
+    formData.value.catalogTitle = ''
+  }
+}
+
+// Mobi: When record type filter changes
+function onRecordTypeChanged() {
+  // Clear records when filter changes
+  mobiAPI.records.value = []
+  formData.value.recordId = ''
+  formData.value.recordTitle = ''
+  formData.value.recordType = ''
+}
+
+// Mobi: Load records from server
+async function loadRecordsFromServer() {
+  if (!formData.value.catalogId) return
+
+  const credentials =
+    formData.value.authType === 'basic'
+      ? { username: formData.value.username, password: formData.value.password }
+      : undefined
+
+  await mobiAPI.loadRecords(
+    formData.value.endpoint,
+    formData.value.catalogId,
+    selectedRecordTypes.value.length > 0 ? selectedRecordTypes.value : undefined,
+    credentials,
+    false,
+    formData.value.allowInsecure
+  )
+}
+
+// Mobi: Refresh records
+async function refreshRecords() {
+  if (!formData.value.catalogId) return
+
+  const credentials =
+    formData.value.authType === 'basic'
+      ? { username: formData.value.username, password: formData.value.password }
+      : undefined
+
+  await mobiAPI.loadRecords(
+    formData.value.endpoint,
+    formData.value.catalogId,
+    selectedRecordTypes.value.length > 0 ? selectedRecordTypes.value : undefined,
+    credentials,
+    true,
+    formData.value.allowInsecure
+  )
+}
+
+// Mobi: When record is selected
+function onRecordSelected() {
+  const record = mobiAPI.records.value.find((rec) => rec.id === formData.value.recordId)
+
+  if (record) {
+    selectedRecord.value = record
+    formData.value.recordTitle = record.title
+    formData.value.recordType = record.type
+
+    // Reset branch selection
+    formData.value.branchId = ''
+    formData.value.branchTitle = ''
+    mobiAPI.branches.value = []
+  } else {
+    selectedRecord.value = null
+    formData.value.recordTitle = ''
+    formData.value.recordType = ''
+  }
+}
+
+// Mobi: Load branches from server
+async function loadBranchesFromServer() {
+  if (!formData.value.catalogId || !formData.value.recordId) return
+
+  const credentials =
+    formData.value.authType === 'basic'
+      ? { username: formData.value.username, password: formData.value.password }
+      : undefined
+
+  await mobiAPI.loadBranches(
+    formData.value.endpoint,
+    formData.value.catalogId,
+    formData.value.recordId,
+    credentials,
+    false,
+    formData.value.allowInsecure
+  )
+}
+
+// Mobi: Refresh branches
+async function refreshBranches() {
+  if (!formData.value.catalogId || !formData.value.recordId) return
+
+  const credentials =
+    formData.value.authType === 'basic'
+      ? { username: formData.value.username, password: formData.value.password }
+      : undefined
+
+  await mobiAPI.loadBranches(
+    formData.value.endpoint,
+    formData.value.catalogId,
+    formData.value.recordId,
+    credentials,
+    true,
+    formData.value.allowInsecure
+  )
+}
+
+// Mobi: When query mode changes
+function onQueryModeChanged() {
+  // Clear selections when switching modes
+  if (mobiQueryMode.value === 'repository') {
+    // Switched to repository mode - clear record selections
+    formData.value.catalogId = ''
+    formData.value.catalogTitle = ''
+    formData.value.recordId = ''
+    formData.value.recordTitle = ''
+    formData.value.recordType = ''
+    formData.value.branchId = ''
+    formData.value.branchTitle = ''
+    selectedCatalog.value = null
+    selectedRecord.value = null
+    selectedRecordTypes.value = []
+    mobiAPI.records.value = []
+    mobiAPI.branches.value = []
+  } else {
+    // Switched to record mode - clear repository selection
+    formData.value.repositoryId = ''
+    formData.value.repositoryTitle = ''
+    selectedRepository.value = null
+  }
+
+  // Update form data query mode
+  formData.value.queryMode = mobiQueryMode.value
+}
+
+// Mobi: Load repositories from server
+async function loadRepositoriesFromServer() {
+  if (!canLoadMobiResources.value) return
+
+  const credentials =
+    formData.value.authType === 'basic'
+      ? { username: formData.value.username, password: formData.value.password }
+      : undefined
+
+  await mobiAPI.loadRepositories(
+    formData.value.endpoint,
+    credentials,
+    false,
+    formData.value.allowInsecure
+  )
+}
+
+// Mobi: Refresh repositories
+async function refreshRepositories() {
+  const credentials =
+    formData.value.authType === 'basic'
+      ? { username: formData.value.username, password: formData.value.password }
+      : undefined
+
+  await mobiAPI.loadRepositories(
+    formData.value.endpoint,
+    credentials,
+    true,
+    formData.value.allowInsecure
+  )
+}
+
+// Mobi: When repository is selected
+function onRepositorySelected() {
+  console.log('[ConnectionForm] Repository selected:', formData.value.repositoryId)
+  console.log('[ConnectionForm] Available repositories:', mobiAPI.repositories.value)
+
+  const repository = mobiAPI.repositories.value.find(
+    (repo) => repo.id === formData.value.repositoryId
+  )
+
+  console.log('[ConnectionForm] Found repository:', repository)
+
+  if (repository) {
+    selectedRepository.value = repository
+    formData.value.repositoryTitle = repository.title
+    console.log('[ConnectionForm] Updated formData with repository:', {
+      repositoryId: formData.value.repositoryId,
+      repositoryTitle: formData.value.repositoryTitle,
+    })
+  } else {
+    selectedRepository.value = null
+    formData.value.repositoryTitle = ''
+    console.warn('[ConnectionForm] Repository not found in list')
+  }
+}
+
 // Load existing credentials when editing
 async function loadExistingCredentials() {
   if (!isEditing || !props.backend) return
@@ -449,6 +1021,82 @@ onMounted(async () => {
       }
     }
   }
+
+  // Load Mobi resources when editing Mobi backend
+  if (isEditing && formData.value.type === 'mobi' && formData.value.endpoint) {
+    const credentials =
+      formData.value.authType === 'basic'
+        ? { username: formData.value.username, password: formData.value.password }
+        : undefined
+
+    if (canLoadMobiResources.value) {
+      // Handle repository mode
+      if (mobiQueryMode.value === 'repository') {
+        // Load repositories
+        await mobiAPI.loadRepositories(
+          formData.value.endpoint,
+          credentials,
+          false,
+          formData.value.allowInsecure
+        )
+
+        // Restore selected repository
+        if (formData.value.repositoryId) {
+          const repository = mobiAPI.repositories.value.find(
+            (repo) => repo.id === formData.value.repositoryId
+          )
+          if (repository) {
+            selectedRepository.value = repository
+          }
+        }
+      } else {
+        // Handle record mode (default)
+        // Load catalogs
+        await mobiAPI.loadCatalogs(
+          formData.value.endpoint,
+          credentials,
+          false,
+          formData.value.allowInsecure
+        )
+
+        // Restore selected catalog
+        if (formData.value.catalogId) {
+          const catalog = mobiAPI.catalogs.value.find((cat) => cat.id === formData.value.catalogId)
+          if (catalog) {
+            selectedCatalog.value = catalog
+
+            // Load records
+            await mobiAPI.loadRecords(
+              formData.value.endpoint,
+              formData.value.catalogId,
+              undefined, // No type filter on initial load
+              credentials,
+              false,
+              formData.value.allowInsecure
+            )
+
+            // Restore selected record
+            if (formData.value.recordId) {
+              const record = mobiAPI.records.value.find((rec) => rec.id === formData.value.recordId)
+              if (record) {
+                selectedRecord.value = record
+
+                // Load branches
+                await mobiAPI.loadBranches(
+                  formData.value.endpoint,
+                  formData.value.catalogId,
+                  formData.value.recordId,
+                  credentials,
+                  false,
+                  formData.value.allowInsecure
+                )
+              }
+            }
+          }
+        }
+      }
+    }
+  }
 })
 
 function addHeader() {
@@ -461,10 +1109,21 @@ function removeHeader(index: number) {
 }
 
 function handleSubmit() {
+  console.log('[ConnectionForm] Submitting form with data:', {
+    type: formData.value.type,
+    queryMode: formData.value.queryMode,
+    repositoryId: formData.value.repositoryId,
+    repositoryTitle: formData.value.repositoryTitle,
+    recordId: formData.value.recordId,
+    fullFormData: formData.value,
+  })
+
   if (!validateForm(formData.value)) {
+    console.error('[ConnectionForm] Validation failed, errors:', errors.value)
     return
   }
 
+  console.log('[ConnectionForm] Validation passed, emitting save event')
   isSaving.value = true
   emit('save', formData.value)
 }
@@ -723,5 +1382,47 @@ textarea.error {
   font-size: 12px;
   color: var(--color-text-secondary);
   font-style: italic;
+}
+
+/* Mobi-specific styles */
+.query-mode-selection {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px 0;
+}
+
+.radio-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--color-text-primary);
+  cursor: pointer;
+  user-select: none;
+}
+
+.radio-label input[type='radio'] {
+  width: auto;
+  cursor: pointer;
+}
+
+.radio-label:hover {
+  color: var(--color-primary);
+}
+
+.mobi-selector {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.mobi-dropdown {
+  margin-top: 8px;
+}
+
+select.error {
+  border-color: var(--color-error);
 }
 </style>

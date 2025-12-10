@@ -1,5 +1,5 @@
 <template>
-  <div class="backend-item" :class="{ selected: isSelected }">
+  <div class="backend-item">
     <div class="backend-header">
       <div class="backend-info">
         <h3 class="backend-name">{{ backend.name }}</h3>
@@ -43,13 +43,11 @@ import { BACKEND_TYPE_LABELS, AUTH_TYPE_LABELS } from '@/types/backends'
 
 interface Props {
   backend: BackendConfig
-  isSelected?: boolean
   isTesting?: boolean
   testResult?: { valid: boolean; error?: string } | null
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  isSelected: false,
   isTesting: false,
   testResult: null,
 })
@@ -88,11 +86,6 @@ const authTypeLabel = computed(() => {
 .backend-item:hover {
   border-color: var(--color-primary-alpha);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-}
-
-.backend-item.selected {
-  border-color: var(--color-primary);
-  background: var(--color-primary-alpha);
 }
 
 .backend-header {

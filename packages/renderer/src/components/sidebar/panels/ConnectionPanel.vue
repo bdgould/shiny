@@ -75,6 +75,47 @@ async function handleSave(formData: BackendFormData) {
       })
     }
 
+    // Build provider config for Mobi
+    if (formData.type === 'mobi') {
+      const queryMode = formData.queryMode || 'record'
+
+      console.log('[ConnectionPanel] Building Mobi config:', {
+        queryMode,
+        repositoryId: formData.repositoryId,
+        recordId: formData.recordId,
+        formData,
+      })
+
+      if (queryMode === 'repository' && formData.repositoryId) {
+        // Repository mode configuration
+        providerConfig = JSON.stringify({
+          queryMode: 'repository',
+          repositoryId: formData.repositoryId,
+          repositoryTitle: formData.repositoryTitle || '',
+          branchId: formData.branchId || '',
+          branchTitle: formData.branchTitle || '',
+          includeImports: formData.includeImports || false,
+        })
+        console.log('[ConnectionPanel] Created repository config:', providerConfig)
+      } else if (queryMode === 'record' && formData.recordId) {
+        // Record mode configuration
+        providerConfig = JSON.stringify({
+          queryMode: 'record',
+          catalogId: formData.catalogId,
+          catalogTitle: formData.catalogTitle || '',
+          recordId: formData.recordId,
+          recordTitle: formData.recordTitle || '',
+          recordType: formData.recordType || '',
+          branchId: formData.branchId || '',
+          branchTitle: formData.branchTitle || '',
+          includeImports: formData.includeImports || false,
+        })
+        console.log('[ConnectionPanel] Created record config:', providerConfig)
+      } else {
+        console.warn('[ConnectionPanel] No valid Mobi configuration - missing required fields')
+      }
+    }
+
     if (editingBackend.value) {
       // Update existing backend
       await connectionStore.updateBackend(
