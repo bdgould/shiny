@@ -52,8 +52,10 @@
   "dependencies": {
     "aws4": "^1.12.0",
     "axios": "^1.6.7",
+    "axios-cookiejar-support": "^6.0.5",
     "electron-store": "^8.2.0",
-    "sparqljs": "^3.7.3"
+    "sparqljs": "^3.7.3",
+    "tough-cookie": "^6.0.0"
   },
   "build": {
     "appId": "gould.one.shiny",

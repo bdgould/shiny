@@ -796,10 +796,14 @@ async function loadRecordsFromServer() {
       ? { username: formData.value.username, password: formData.value.password }
       : undefined
 
+  // Convert reactive array to plain array for IPC
+  const recordTypes =
+    selectedRecordTypes.value.length > 0 ? [...selectedRecordTypes.value] : undefined
+
   await mobiAPI.loadRecords(
     formData.value.endpoint,
     formData.value.catalogId,
-    selectedRecordTypes.value.length > 0 ? selectedRecordTypes.value : undefined,
+    recordTypes,
     credentials,
     false,
     formData.value.allowInsecure
@@ -815,10 +819,14 @@ async function refreshRecords() {
       ? { username: formData.value.username, password: formData.value.password }
       : undefined
 
+  // Convert reactive array to plain array for IPC
+  const recordTypes =
+    selectedRecordTypes.value.length > 0 ? [...selectedRecordTypes.value] : undefined
+
   await mobiAPI.loadRecords(
     formData.value.endpoint,
     formData.value.catalogId,
-    selectedRecordTypes.value.length > 0 ? selectedRecordTypes.value : undefined,
+    recordTypes,
     credentials,
     true,
     formData.value.allowInsecure

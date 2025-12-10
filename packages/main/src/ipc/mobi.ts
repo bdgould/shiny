@@ -366,14 +366,21 @@ ipcMain.handle(
       // Add type filter if specified
       if (recordTypes && Array.isArray(recordTypes) && recordTypes.length > 0) {
         params.type = recordTypes
+        console.log('[Mobi] Filtering records by types:', recordTypes)
+      } else {
+        console.log('[Mobi] No record type filter applied')
       }
 
       // Fetch records (encode catalogId since it's an IRI)
       const encodedCatalogId = encodeURIComponent(catalogId)
+      console.log('[Mobi] Fetching records with params:', params)
       const response = await client.get(
         `${baseUrl}/mobirest/catalogs/${encodedCatalogId}/records`,
         {
           params,
+          paramsSerializer: {
+            indexes: null, // Format array params as: type=X&type=Y instead of type[0]=X&type[1]=Y
+          },
           headers: {
             Accept: 'application/json',
           },
