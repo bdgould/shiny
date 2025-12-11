@@ -5,21 +5,35 @@
       :href="value"
       target="_blank"
       rel="noopener noreferrer"
-      class="uri-link"
+      class="uri-link clickable"
       :class="{ 'copied': showCopied }"
       :title="showCopied ? 'Copied!' : value"
       @click="handleUriClick"
     >
       {{ showCopied ? '✓ Copied!' : displayValue }}
     </a>
-    <span v-else-if="type === 'literal'" class="literal">
-      {{ value }}
-      <span v-if="language" class="annotation">@{{ language }}</span>
-      <span v-else-if="datatype && !isDefaultDatatype" class="annotation" :title="datatype">
+    <span
+      v-else-if="type === 'literal'"
+      class="literal clickable"
+      :class="{ 'copied': showCopied }"
+      :title="showCopied ? 'Copied!' : value"
+      @click="handleCopyClick"
+    >
+      {{ showCopied ? '✓ Copied!' : value }}
+      <span v-if="!showCopied && language" class="annotation">@{{ language }}</span>
+      <span v-else-if="!showCopied && datatype && !isDefaultDatatype" class="annotation" :title="datatype">
         ^^{{ shortenURI(datatype) }}
       </span>
     </span>
-    <span v-else-if="type === 'bnode'" class="bnode">_:{{ value }}</span>
+    <span
+      v-else-if="type === 'bnode'"
+      class="bnode clickable"
+      :class="{ 'copied': showCopied }"
+      :title="showCopied ? 'Copied!' : `_:${value}`"
+      @click="handleBnodeClick"
+    >
+      {{ showCopied ? '✓ Copied!' : `_:${value}` }}
+    </span>
     <span v-else-if="!value || value === ''" class="empty">-</span>
     <span v-else class="unknown">{{ value }}</span>
   </span>
@@ -52,17 +66,9 @@ const isDefaultDatatype = computed(() => {
   )
 })
 
-const handleUriClick = async (event: MouseEvent) => {
-  // Allow Ctrl/Cmd+Click to open link in new tab
-  if (event.ctrlKey || event.metaKey) {
-    return
-  }
-
-  // Prevent default link behavior for regular clicks
-  event.preventDefault()
-
+const copyToClipboard = async (text: string) => {
   try {
-    await navigator.clipboard.writeText(props.value)
+    await navigator.clipboard.writeText(text)
     showCopied.value = true
 
     // Reset the copied state after 2 seconds
@@ -73,6 +79,25 @@ const handleUriClick = async (event: MouseEvent) => {
     console.error('Failed to copy to clipboard:', err)
   }
 }
+
+const handleUriClick = async (event: MouseEvent) => {
+  // Allow Ctrl/Cmd+Click to open link in new tab
+  if (event.ctrlKey || event.metaKey) {
+    return
+  }
+
+  // Prevent default link behavior for regular clicks
+  event.preventDefault()
+  await copyToClipboard(props.value)
+}
+
+const handleCopyClick = async () => {
+  await copyToClipboard(props.value)
+}
+
+const handleBnodeClick = async () => {
+  await copyToClipboard(`_:${props.value}`)
+}
 </script>
 
 <style scoped>
@@ -81,11 +106,23 @@ const handleUriClick = async (event: MouseEvent) => {
   word-break: break-word;
 }
 
+.clickable {
+  cursor: pointer;
+  transition: color 0.2s, background-color 0.2s, opacity 0.2s;
+}
+
+.clickable:hover {
+  opacity: 0.8;
+}
+
+.clickable.copied {
+  color: #10b981 !important;
+  font-weight: 500;
+}
+
 .uri-link {
   color: var(--color-primary);
   text-decoration: none;
-  transition: color 0.2s, background-color 0.2s;
-  cursor: pointer;
 }
 
 .uri-link:hover {
@@ -93,13 +130,13 @@ const handleUriClick = async (event: MouseEvent) => {
   text-decoration: underline;
 }
 
-.uri-link.copied {
-  color: #10b981;
+.literal {
+  color: #8b5cf6;
   font-weight: 500;
 }
 
-.literal {
-  color: var(--color-text-primary);
+.literal:hover {
+  text-decoration: underline;
 }
 
 .annotation {
@@ -112,7 +149,12 @@ const handleUriClick = async (event: MouseEvent) => {
   font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
   font-size: 0.875rem;
   font-style: italic;
-  color: var(--color-text-secondary);
+  color: #f59e0b;
+  font-weight: 500;
+}
+
+.bnode:hover {
+  text-decoration: underline;
 }
 
 .empty {
