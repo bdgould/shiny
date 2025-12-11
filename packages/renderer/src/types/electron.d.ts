@@ -32,6 +32,7 @@ export interface GraphmartLayer {
   uri: string
   name: string
   type?: string
+  enabled: boolean
 }
 
 export interface Graphmart {
