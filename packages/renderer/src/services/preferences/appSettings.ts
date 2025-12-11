@@ -93,15 +93,64 @@ export function saveAISettings(settings: AIConnectionSettings): void {
 }
 
 /**
+ * Fetch available models from the AI endpoint
+ */
+export async function fetchAIModels(
+  endpoint: string,
+  apiKey: string
+): Promise<{
+  success: boolean
+  models?: string[]
+  error?: string
+}> {
+  try {
+    // Convert chat completions endpoint to models endpoint
+    const baseUrl = endpoint.replace(/\/chat\/completions$/, '').replace(/\/v1\/chat\/completions$/, '')
+    const modelsUrl = `${baseUrl}/v1/models`
+
+    const response = await fetch(modelsUrl, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${apiKey}`,
+      },
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ error: { message: response.statusText } }))
+      return {
+        success: false,
+        error: `Failed to fetch models from ${modelsUrl}: ${errorData.error?.message || `HTTP ${response.status}: ${response.statusText}`}`,
+      }
+    }
+
+    const data = await response.json()
+    const models = data.data?.map((model: any) => model.id) || []
+
+    return {
+      success: true,
+      models,
+    }
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error occurred',
+    }
+  }
+}
+
+/**
  * Test AI endpoint connection
  */
 export async function testAIConnection(settings: AIConnectionSettings): Promise<{
   success: boolean
   response?: string
   error?: string
+  url?: string
 }> {
+  const url = settings.endpoint
   try {
-    const response = await fetch(settings.endpoint, {
+    const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -124,7 +173,8 @@ export async function testAIConnection(settings: AIConnectionSettings): Promise<
       const errorData = await response.json().catch(() => ({ error: { message: response.statusText } }))
       return {
         success: false,
-        error: errorData.error?.message || `HTTP ${response.status}: ${response.statusText}`,
+        error: `${errorData.error?.message || `HTTP ${response.status}: ${response.statusText}`}`,
+        url,
       }
     }
 
@@ -134,11 +184,13 @@ export async function testAIConnection(settings: AIConnectionSettings): Promise<
     return {
       success: true,
       response: message,
+      url,
     }
   } catch (error) {
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error occurred',
+      url,
     }
   }
 }

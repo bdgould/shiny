@@ -24,8 +24,31 @@
 
         <div class="form-group">
           <label for="ai-model">Model</label>
-          <input id="ai-model" v-model="settings.model" type="text" placeholder="gpt-3.5-turbo" />
-          <span class="help-text">Model identifier (e.g., gpt-3.5-turbo, gpt-4, etc.)</span>
+          <div class="model-input-group">
+            <input
+              id="ai-model"
+              v-model="settings.model"
+              type="text"
+              placeholder="gpt-3.5-turbo"
+              list="available-models"
+              @input="checkModelInList"
+            />
+            <button
+              type="button"
+              class="btn-fetch-models"
+              :disabled="isFetchingModels || !settings.endpoint || !settings.apiKey"
+              @click="fetchModels"
+            >
+              {{ isFetchingModels ? 'Fetching...' : 'Fetch Models' }}
+            </button>
+          </div>
+          <datalist id="available-models">
+            <option v-for="model in availableModels" :key="model" :value="model">{{ model }}</option>
+          </datalist>
+          <span v-if="modelWarning" class="help-text warning">⚠️ {{ modelWarning }}</span>
+          <span v-else class="help-text"
+            >Model identifier - use the "Fetch Models" button to load available models, or type your own</span
+          >
         </div>
 
         <div class="form-group">
@@ -91,6 +114,10 @@
           <div class="test-result-header">
             {{ testResult.success ? '✅ Connection successful!' : '❌ Connection failed' }}
           </div>
+          <div v-if="testResult.url" class="test-result-content">
+            <strong>URL:</strong>
+            <p class="url-text">{{ testResult.url }}</p>
+          </div>
           <div v-if="testResult.response" class="test-result-content">
             <strong>Response:</strong>
             <p>{{ testResult.response }}</p>
@@ -120,6 +147,7 @@ import {
   getAISettings,
   saveAISettings,
   testAIConnection,
+  fetchAIModels,
   type AIConnectionSettings,
 } from '@/services/preferences/appSettings'
 
@@ -135,7 +163,10 @@ const saveMessage = ref('')
 const saveMessageType = ref<'success' | 'error'>('success')
 const showApiKey = ref(false)
 const isTesting = ref(false)
-const testResult = ref<{ success: boolean; response?: string; error?: string } | null>(null)
+const isFetchingModels = ref(false)
+const availableModels = ref<string[]>([])
+const modelWarning = ref('')
+const testResult = ref<{ success: boolean; response?: string; error?: string; url?: string } | null>(null)
 
 onMounted(() => {
   loadSettings()
@@ -171,11 +202,57 @@ function resetToDefaults() {
     maxTokens: 1000,
   }
   testResult.value = null
+  availableModels.value = []
+  modelWarning.value = ''
   saveMessage.value = 'Reset to default values. Click Save to apply.'
   saveMessageType.value = 'success'
   setTimeout(() => {
     saveMessage.value = ''
   }, 3000)
+}
+
+async function fetchModels() {
+  if (!settings.value.endpoint || !settings.value.apiKey) {
+    return
+  }
+
+  isFetchingModels.value = true
+  modelWarning.value = ''
+
+  try {
+    const result = await fetchAIModels(settings.value.endpoint, settings.value.apiKey)
+    if (result.success && result.models) {
+      availableModels.value = result.models
+      checkModelInList()
+      if (result.models.length === 0) {
+        modelWarning.value = 'No models returned from the endpoint'
+      }
+    } else {
+      modelWarning.value = result.error || 'Failed to fetch models'
+    }
+  } catch (error) {
+    modelWarning.value = error instanceof Error ? error.message : 'Failed to fetch models'
+  } finally {
+    isFetchingModels.value = false
+  }
+}
+
+function checkModelInList() {
+  if (availableModels.value.length === 0) {
+    modelWarning.value = ''
+    return
+  }
+
+  if (!settings.value.model) {
+    modelWarning.value = ''
+    return
+  }
+
+  if (!availableModels.value.includes(settings.value.model)) {
+    modelWarning.value = `Model "${settings.value.model}" not found in available models list`
+  } else {
+    modelWarning.value = ''
+  }
 }
 
 async function testConnection() {
@@ -334,6 +411,44 @@ async function testConnection() {
   line-height: 1.4;
 }
 
+.help-text.warning {
+  color: var(--color-warning);
+}
+
+.model-input-group {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.model-input-group input {
+  flex: 1;
+}
+
+.btn-fetch-models {
+  padding: 8px 16px;
+  background: var(--color-bg-hover);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.btn-fetch-models:hover:not(:disabled) {
+  background: var(--color-bg-input);
+  border-color: var(--color-primary);
+}
+
+.btn-fetch-models:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .btn-test {
   padding: 10px 20px;
   background: var(--color-primary);
@@ -395,6 +510,15 @@ async function testConnection() {
   line-height: 1.5;
   white-space: pre-wrap;
   word-wrap: break-word;
+}
+
+.url-text {
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 12px;
+  background: var(--color-bg-input);
+  padding: 4px 8px;
+  border-radius: 3px;
+  word-break: break-all;
 }
 
 .settings-actions {
