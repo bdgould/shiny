@@ -29,11 +29,29 @@ const DEFAULT_QUERY_SETTINGS: QueryConnectionSettings = {
 }
 
 const DEFAULT_AI_SETTINGS: AIConnectionSettings = {
-  endpoint: 'https://api.openai.com/v1/chat/completions',
+  endpoint: 'https://api.openai.com/v1',
   model: 'gpt-3.5-turbo',
   apiKey: '',
   temperature: 0.7,
   maxTokens: 1000,
+}
+
+/**
+ * Normalize base URL - ensure it ends with /v1 and doesn't have trailing slash
+ */
+function normalizeBaseUrl(url: string): string {
+  // Remove trailing slash
+  let normalized = url.replace(/\/$/, '')
+
+  // Remove /chat/completions if present
+  normalized = normalized.replace(/\/chat\/completions$/, '')
+
+  // Ensure it ends with /v1
+  if (!normalized.endsWith('/v1')) {
+    normalized = `${normalized}/v1`
+  }
+
+  return normalized
 }
 
 /**
@@ -96,7 +114,7 @@ export function saveAISettings(settings: AIConnectionSettings): void {
  * Fetch available models from the AI endpoint
  */
 export async function fetchAIModels(
-  endpoint: string,
+  baseUrl: string,
   apiKey: string
 ): Promise<{
   success: boolean
@@ -104,9 +122,8 @@ export async function fetchAIModels(
   error?: string
 }> {
   try {
-    // Convert chat completions endpoint to models endpoint
-    const baseUrl = endpoint.replace(/\/chat\/completions$/, '').replace(/\/v1\/chat\/completions$/, '')
-    const modelsUrl = `${baseUrl}/v1/models`
+    const normalized = normalizeBaseUrl(baseUrl)
+    const modelsUrl = `${normalized}/models`
 
     const response = await fetch(modelsUrl, {
       method: 'GET',
@@ -148,7 +165,9 @@ export async function testAIConnection(settings: AIConnectionSettings): Promise<
   error?: string
   url?: string
 }> {
-  const url = settings.endpoint
+  const baseUrl = normalizeBaseUrl(settings.endpoint)
+  const url = `${baseUrl}/chat/completions`
+
   try {
     const response = await fetch(url, {
       method: 'POST',

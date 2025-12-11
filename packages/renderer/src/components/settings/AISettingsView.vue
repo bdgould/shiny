@@ -12,43 +12,54 @@
         <h3>Endpoint Configuration</h3>
 
         <div class="form-group">
-          <label for="ai-endpoint">API Endpoint</label>
+          <label for="ai-endpoint">API Base URL</label>
           <input
             id="ai-endpoint"
             v-model="settings.endpoint"
             type="url"
-            placeholder="https://api.openai.com/v1/chat/completions"
+            placeholder="https://api.openai.com/v1"
           />
-          <span class="help-text">OpenAI-compatible chat completion endpoint</span>
+          <span class="help-text">Base URL for OpenAI-compatible API (without /chat/completions)</span>
         </div>
 
         <div class="form-group">
           <label for="ai-model">Model</label>
-          <div class="model-input-group">
-            <input
-              id="ai-model"
-              v-model="settings.model"
-              type="text"
-              placeholder="gpt-3.5-turbo"
-              list="available-models"
-              @input="checkModelInList"
-            />
-            <button
-              type="button"
-              class="btn-fetch-models"
-              :disabled="isFetchingModels || !settings.endpoint || !settings.apiKey"
-              @click="fetchModels"
-            >
-              {{ isFetchingModels ? 'Fetching...' : 'Fetch Models' }}
-            </button>
+          <div class="model-input-container">
+            <div class="model-input-group">
+              <select
+                v-if="!useCustomModel && availableModels.length > 0"
+                id="ai-model"
+                v-model="settings.model"
+                class="model-select"
+              >
+                <option value="" disabled>Select a model...</option>
+                <option v-for="model in availableModels" :key="model" :value="model">{{ model }}</option>
+              </select>
+              <input
+                v-else
+                id="ai-model"
+                v-model="settings.model"
+                type="text"
+                placeholder="gpt-3.5-turbo"
+              />
+              <button
+                type="button"
+                class="btn-fetch-models"
+                :disabled="isFetchingModels || !settings.endpoint || !settings.apiKey"
+                @click="fetchModels"
+              >
+                {{ isFetchingModels ? 'Fetching...' : 'Fetch Models' }}
+              </button>
+            </div>
+            <label v-if="availableModels.length > 0" class="checkbox-label">
+              <input v-model="useCustomModel" type="checkbox" />
+              <span>Use custom model name</span>
+            </label>
           </div>
-          <datalist id="available-models">
-            <option v-for="model in availableModels" :key="model" :value="model">{{ model }}</option>
-          </datalist>
           <span v-if="modelWarning" class="help-text warning">⚠️ {{ modelWarning }}</span>
-          <span v-else class="help-text"
-            >Model identifier - use the "Fetch Models" button to load available models, or type your own</span
-          >
+          <span v-else class="help-text">
+            {{ availableModels.length > 0 ? 'Select a model or enter a custom one' : 'Click "Fetch Models" to load available models, or type your own' }}
+          </span>
         </div>
 
         <div class="form-group">
@@ -152,7 +163,7 @@ import {
 } from '@/services/preferences/appSettings'
 
 const settings = ref<AIConnectionSettings>({
-  endpoint: 'https://api.openai.com/v1/chat/completions',
+  endpoint: 'https://api.openai.com/v1',
   model: 'gpt-3.5-turbo',
   apiKey: '',
   temperature: 0.7,
@@ -165,6 +176,7 @@ const showApiKey = ref(false)
 const isTesting = ref(false)
 const isFetchingModels = ref(false)
 const availableModels = ref<string[]>([])
+const useCustomModel = ref(false)
 const modelWarning = ref('')
 const testResult = ref<{ success: boolean; response?: string; error?: string; url?: string } | null>(null)
 
@@ -195,7 +207,7 @@ function saveSettings() {
 
 function resetToDefaults() {
   settings.value = {
-    endpoint: 'https://api.openai.com/v1/chat/completions',
+    endpoint: 'https://api.openai.com/v1',
     model: 'gpt-3.5-turbo',
     apiKey: '',
     temperature: 0.7,
@@ -203,6 +215,7 @@ function resetToDefaults() {
   }
   testResult.value = null
   availableModels.value = []
+  useCustomModel.value = false
   modelWarning.value = ''
   saveMessage.value = 'Reset to default values. Click Save to apply.'
   saveMessageType.value = 'success'
@@ -223,6 +236,7 @@ async function fetchModels() {
     const result = await fetchAIModels(settings.value.endpoint, settings.value.apiKey)
     if (result.success && result.models) {
       availableModels.value = result.models
+      useCustomModel.value = false // Switch to select mode when models are fetched
       checkModelInList()
       if (result.models.length === 0) {
         modelWarning.value = 'No models returned from the endpoint'
@@ -415,14 +429,57 @@ async function testConnection() {
   color: var(--color-warning);
 }
 
+.model-input-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
 .model-input-group {
   display: flex;
   gap: 8px;
   align-items: stretch;
 }
 
-.model-input-group input {
+.model-input-group input,
+.model-input-group select {
   flex: 1;
+}
+
+.model-select {
+  padding: 8px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  background: var(--color-bg-input);
+  color: var(--color-text-primary);
+  font-size: 14px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+
+.model-select:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  user-select: none;
+}
+
+.checkbox-label input[type='checkbox'] {
+  width: auto;
+  cursor: pointer;
+}
+
+.checkbox-label span {
+  cursor: pointer;
 }
 
 .btn-fetch-models {
