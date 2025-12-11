@@ -143,12 +143,14 @@ function resetToDefaults() {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  background: var(--color-bg-main);
 }
 
 .settings-header {
   padding: 24px;
   border-bottom: 1px solid var(--color-border);
   background: var(--color-bg-header);
+  flex-shrink: 0;
 }
 
 .settings-header h2 {
@@ -169,6 +171,7 @@ function resetToDefaults() {
   flex: 1;
   overflow-y: auto;
   padding: 24px;
+  background: var(--color-bg-main);
 }
 
 .settings-section {

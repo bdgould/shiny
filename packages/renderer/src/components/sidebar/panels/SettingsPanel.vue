@@ -40,8 +40,7 @@ function openQuerySettings() {
       settingsType: 'query',
     })
   }
-  // Close the drawer after opening settings
-  sidebarStore.closeDrawer()
+  // Keep the drawer open so user can navigate between settings
 }
 
 function openAISettings() {
@@ -55,8 +54,7 @@ function openAISettings() {
       settingsType: 'ai',
     })
   }
-  // Close the drawer after opening settings
-  sidebarStore.closeDrawer()
+  // Keep the drawer open so user can navigate between settings
 }
 </script>
 
