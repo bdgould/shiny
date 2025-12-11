@@ -6,7 +6,28 @@
     <div v-else-if="error" class="error">
       <p>{{ error }}</p>
     </div>
-    <div v-else-if="entities.length > 0" class="entities-container">
+    <div v-else-if="entities.length > 0" class="content-wrapper">
+      <div class="metrics-header">
+        <div class="metrics">
+          <div class="metric">
+            <span class="metric-value">{{ entities.length }}</span>
+            <span class="metric-label">entit{{ entities.length !== 1 ? 'ies' : 'y' }}</span>
+          </div>
+          <div class="metric">
+            <span class="metric-value">{{ totalTriples }}</span>
+            <span class="metric-label">statement{{ totalTriples !== 1 ? 's' : '' }}</span>
+          </div>
+        </div>
+        <div class="collapse-controls">
+          <button @click="expandAll" class="control-button" title="Expand all entities">
+            Expand All
+          </button>
+          <button @click="collapseAll" class="control-button" title="Collapse all entities">
+            Collapse All
+          </button>
+        </div>
+      </div>
+      <div class="entities-container">
       <div v-for="(entity, index) in entities" :key="index" class="entity-card">
         <div class="entity-header" @click="toggleEntity(index)">
           <button class="collapse-button" :class="{ collapsed: collapsedEntities.has(index) }">
@@ -37,13 +58,9 @@
           </tbody>
         </table>
       </div>
+      </div>
     </div>
     <div v-else class="empty">No RDF triples found</div>
-    <div v-if="entities.length > 0" class="footer">
-      <span>{{ entities.length }} entit{{ entities.length !== 1 ? 'ies' : 'y' }}</span>
-      <span class="separator">•</span>
-      <span>{{ totalTriples }} triple{{ totalTriples !== 1 ? 's' : '' }}</span>
-    </div>
   </div>
 </template>
 
@@ -73,6 +90,14 @@ function toggleEntity(index: number) {
   }
   // Trigger reactivity by creating a new Set
   collapsedEntities.value = new Set(collapsedEntities.value)
+}
+
+function collapseAll() {
+  collapsedEntities.value = new Set(entities.value.map((_, index) => index))
+}
+
+function expandAll() {
+  collapsedEntities.value = new Set()
 }
 
 async function parseAndGroup() {
@@ -127,6 +152,72 @@ watch(() => props.turtleData, parseAndGroup)
 
 .error {
   color: var(--color-error);
+}
+
+.content-wrapper {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+}
+
+.metrics-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  background: var(--color-bg-header);
+  border-bottom: 1px solid var(--color-border);
+  flex-shrink: 0;
+}
+
+.metrics {
+  display: flex;
+  gap: 2rem;
+}
+
+.metric {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.metric-value {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  line-height: 1.2;
+}
+
+.metric-label {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: 0.125rem;
+}
+
+.collapse-controls {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.control-button {
+  padding: 0.5rem 0.875rem;
+  background: var(--color-bg-main);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  color: var(--color-text-primary);
+  font-size: 0.8125rem;
+  cursor: pointer;
+  transition:
+    background 0.2s,
+    border-color 0.2s;
+}
+
+.control-button:hover {
+  background: var(--color-bg-hover);
+  border-color: var(--color-text-secondary);
 }
 
 .entities-container {
@@ -225,18 +316,5 @@ watch(() => props.turtleData, parseAndGroup)
 
 .entity-table tr:hover {
   background: var(--color-bg-hover);
-}
-
-.footer {
-  padding: 0.75rem 1rem;
-  background: var(--color-bg-header);
-  border-top: 1px solid var(--color-border);
-  font-size: 0.875rem;
-  color: var(--color-text-secondary);
-  text-align: right;
-}
-
-.separator {
-  margin: 0 0.5rem;
 }
 </style>

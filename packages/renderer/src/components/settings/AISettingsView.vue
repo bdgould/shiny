@@ -23,6 +23,23 @@
         </div>
 
         <div class="form-group">
+          <label for="ai-api-key">API Key</label>
+          <div class="password-input">
+            <input
+              id="ai-api-key"
+              v-model="settings.apiKey"
+              :type="showApiKey ? 'text' : 'password'"
+              placeholder="sk-..."
+              autocomplete="off"
+            />
+            <button type="button" class="btn-toggle-visibility" @click="showApiKey = !showApiKey">
+              {{ showApiKey ? '🙈' : '👁️' }}
+            </button>
+          </div>
+          <span class="help-text">Your API key will be stored in browser local storage</span>
+        </div>
+
+        <div class="form-group">
           <label for="ai-model">Model</label>
           <div class="model-input-container">
             <div class="model-input-group">
@@ -60,23 +77,6 @@
           <span v-else class="help-text">
             {{ availableModels.length > 0 ? 'Select a model or enter a custom one' : 'Click "Fetch Models" to load available models, or type your own' }}
           </span>
-        </div>
-
-        <div class="form-group">
-          <label for="ai-api-key">API Key</label>
-          <div class="password-input">
-            <input
-              id="ai-api-key"
-              v-model="settings.apiKey"
-              :type="showApiKey ? 'text' : 'password'"
-              placeholder="sk-..."
-              autocomplete="off"
-            />
-            <button type="button" class="btn-toggle-visibility" @click="showApiKey = !showApiKey">
-              {{ showApiKey ? '🙈' : '👁️' }}
-            </button>
-          </div>
-          <span class="help-text">Your API key will be stored in browser local storage</span>
         </div>
       </div>
 
