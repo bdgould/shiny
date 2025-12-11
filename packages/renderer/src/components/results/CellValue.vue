@@ -6,9 +6,11 @@
       target="_blank"
       rel="noopener noreferrer"
       class="uri-link"
-      :title="value"
+      :class="{ 'copied': showCopied }"
+      :title="showCopied ? 'Copied!' : value"
+      @click="handleUriClick"
     >
-      {{ displayValue }}
+      {{ showCopied ? '✓ Copied!' : displayValue }}
     </a>
     <span v-else-if="type === 'literal'" class="literal">
       {{ value }}
@@ -24,7 +26,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { shortenURI, isURI } from '@/utils/uriShortener'
 
 const props = defineProps<{
@@ -33,6 +35,8 @@ const props = defineProps<{
   datatype?: string
   language?: string
 }>()
+
+const showCopied = ref(false)
 
 const displayValue = computed(() => {
   if (props.type === 'uri' && isURI(props.value)) {
@@ -47,6 +51,28 @@ const isDefaultDatatype = computed(() => {
     props.datatype === 'http://www.w3.org/1999/02/22-rdf-syntax-ns#langString'
   )
 })
+
+const handleUriClick = async (event: MouseEvent) => {
+  // Allow Ctrl/Cmd+Click to open link in new tab
+  if (event.ctrlKey || event.metaKey) {
+    return
+  }
+
+  // Prevent default link behavior for regular clicks
+  event.preventDefault()
+
+  try {
+    await navigator.clipboard.writeText(props.value)
+    showCopied.value = true
+
+    // Reset the copied state after 2 seconds
+    setTimeout(() => {
+      showCopied.value = false
+    }, 2000)
+  } catch (err) {
+    console.error('Failed to copy to clipboard:', err)
+  }
+}
 </script>
 
 <style scoped>
@@ -58,12 +84,18 @@ const isDefaultDatatype = computed(() => {
 .uri-link {
   color: var(--color-primary);
   text-decoration: none;
-  transition: color 0.2s;
+  transition: color 0.2s, background-color 0.2s;
+  cursor: pointer;
 }
 
 .uri-link:hover {
   color: var(--color-primary-hover);
   text-decoration: underline;
+}
+
+.uri-link.copied {
+  color: #10b981;
+  font-weight: 500;
 }
 
 .literal {
