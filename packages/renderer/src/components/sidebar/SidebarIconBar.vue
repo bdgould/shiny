@@ -26,6 +26,17 @@
     >
       <HistoryIcon />
     </button>
+
+    <div class="spacer"></div>
+
+    <button
+      class="icon-button"
+      :class="{ active: sidebarStore.activePanel === 'settings' }"
+      title="Settings"
+      @click="sidebarStore.togglePanel('settings')"
+    >
+      <SettingsIcon />
+    </button>
   </div>
 </template>
 
@@ -34,6 +45,7 @@ import { useSidebarStore } from '@/stores/sidebar'
 import ConnectionIcon from './icons/ConnectionIcon.vue'
 import AIIcon from './icons/AIIcon.vue'
 import HistoryIcon from './icons/HistoryIcon.vue'
+import SettingsIcon from './icons/SettingsIcon.vue'
 
 const sidebarStore = useSidebarStore()
 </script>
@@ -85,5 +97,9 @@ const sidebarStore = useSidebarStore()
   width: 3px;
   background: var(--color-primary);
   border-radius: 0 2px 2px 0;
+}
+
+.spacer {
+  flex: 1;
 }
 </style>

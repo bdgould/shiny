@@ -6,7 +6,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 
-export type SidebarPanel = 'connection' | 'ai' | 'history' | null
+export type SidebarPanel = 'connection' | 'ai' | 'history' | 'settings' | null
 
 const STORAGE_KEY_DRAWER_WIDTH = 'shiny:sidebar:drawerWidth'
 const STORAGE_KEY_ACTIVE_PANEL = 'shiny:sidebar:activePanel'
@@ -79,7 +79,7 @@ export const useSidebarStore = defineStore('sidebar', () => {
   function loadActivePanel(): SidebarPanel {
     try {
       const saved = localStorage.getItem(STORAGE_KEY_ACTIVE_PANEL)
-      if (saved === 'connection' || saved === 'ai' || saved === 'history') {
+      if (saved === 'connection' || saved === 'ai' || saved === 'history' || saved === 'settings') {
         return saved
       }
     } catch (error) {
