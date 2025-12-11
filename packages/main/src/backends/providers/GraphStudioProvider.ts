@@ -15,8 +15,9 @@ export class GraphStudioProvider extends BaseProvider {
   readonly type = 'graphstudio' as const
 
   /**
-   * Build SPARQL endpoint URL with graphmart and layer parameters
-   * Format: {baseUrl}/sparql/graphmart/{encoded-graphmart-uri}?default-graph-uri={layer-uri}
+   * Build SPARQL endpoint URL with graphmart
+   * Format: {baseUrl}/sparql/graphmart/{encoded-graphmart-uri}
+   * Note: Layer filtering is now done via form body parameters, not query params
    */
   protected buildEndpointUrl(config: BackendConfig): string {
     // Parse provider config
@@ -36,23 +37,33 @@ export class GraphStudioProvider extends BaseProvider {
     // Encode graphmart URI with uppercase hex (as per Cambridge Semantics docs)
     const encodedGraphmart = this.encodeGraphmartUri(providerConfig.graphmartUri)
 
-    // Build base SPARQL endpoint
-    let endpoint = `${config.endpoint}/sparql/graphmart/${encodedGraphmart}`
+    // Build base SPARQL endpoint (without layer query params)
+    return `${config.endpoint}/sparql/graphmart/${encodedGraphmart}`
+  }
 
-    // Add layer parameters if specific layers selected
-    if (
-      providerConfig.selectedLayers &&
-      Array.isArray(providerConfig.selectedLayers) &&
-      providerConfig.selectedLayers.length > 0 &&
-      !providerConfig.selectedLayers.includes('ALL_LAYERS')
-    ) {
-      const layerParams = providerConfig.selectedLayers
-        .map((uri) => `default-graph-uri=${encodeURIComponent(uri)}`)
-        .join('&')
-      endpoint += `?${layerParams}`
+  /**
+   * Get selected layer URIs from config
+   */
+  private getSelectedLayers(config: BackendConfig): string[] | null {
+    let providerConfig: GraphStudioConfig | null = null
+    try {
+      providerConfig = config.providerConfig ? JSON.parse(config.providerConfig) : null
+    } catch {
+      return null
     }
 
-    return endpoint
+    // If no layers selected or "ALL_LAYERS" is selected, return null (query all layers)
+    if (
+      !providerConfig ||
+      !providerConfig.selectedLayers ||
+      !Array.isArray(providerConfig.selectedLayers) ||
+      providerConfig.selectedLayers.length === 0 ||
+      providerConfig.selectedLayers.includes('ALL_LAYERS')
+    ) {
+      return null
+    }
+
+    return providerConfig.selectedLayers
   }
 
   /**
@@ -99,20 +110,73 @@ export class GraphStudioProvider extends BaseProvider {
       // Get authentication headers
       const authHeaders = this.getAuthHeaders(config, credentials)
 
+      // Get selected layers for filtering
+      const selectedLayers = this.getSelectedLayers(config)
+
+      console.log('[GraphStudio Query] Endpoint:', endpoint)
+      console.log('[GraphStudio Query] Query type:', queryType)
+      console.log('[GraphStudio Query] Selected layers:', selectedLayers)
+
       // Execute query using SPARQL protocol
-      const response = await axios({
-        method: 'POST',
-        url: endpoint,
-        headers: {
+      // If layers are selected, use form-encoded body with default-graph-uri parameter(s)
+      // Otherwise, use application/sparql-query content type
+      let response
+      if (selectedLayers && selectedLayers.length > 0) {
+        // Use form-encoded format with layer filtering
+        const formData = new URLSearchParams()
+        formData.append('query', query)
+        // Add each layer URI as a separate default-graph-uri parameter
+        selectedLayers.forEach((layerUri) => {
+          formData.append('default-graph-uri', layerUri)
+        })
+
+        const requestBody = formData.toString()
+        console.log('[GraphStudio Query] Using form-encoded request')
+        console.log('[GraphStudio Query] Request headers:', {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          Accept: acceptHeader,
+        })
+        console.log('[GraphStudio Query] Request body:', requestBody)
+
+        response = await axios({
+          method: 'POST',
+          url: endpoint,
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            Accept: acceptHeader,
+            ...authHeaders,
+          },
+          data: requestBody,
+          timeout: 30000, // 30 second timeout
+          responseType: isRdfResponse ? 'text' : 'json',
+          httpsAgent: this.createHttpsAgent(config),
+        })
+      } else {
+        // No layer filtering - query all layers
+        console.log('[GraphStudio Query] Using direct SPARQL request')
+        console.log('[GraphStudio Query] Request headers:', {
           'Content-Type': 'application/sparql-query',
           Accept: acceptHeader,
-          ...authHeaders,
-        },
-        data: query,
-        timeout: 30000, // 30 second timeout
-        responseType: isRdfResponse ? 'text' : 'json',
-        httpsAgent: this.createHttpsAgent(config),
-      })
+        })
+        console.log('[GraphStudio Query] Query:', query.substring(0, 200) + '...')
+
+        response = await axios({
+          method: 'POST',
+          url: endpoint,
+          headers: {
+            'Content-Type': 'application/sparql-query',
+            Accept: acceptHeader,
+            ...authHeaders,
+          },
+          data: query,
+          timeout: 30000, // 30 second timeout
+          responseType: isRdfResponse ? 'text' : 'json',
+          httpsAgent: this.createHttpsAgent(config),
+        })
+      }
+
+      console.log('[GraphStudio Query] Response status:', response.status)
+      console.log('[GraphStudio Query] Response headers:', response.headers)
 
       // Return structured response with metadata
       return {
@@ -123,15 +187,41 @@ export class GraphStudioProvider extends BaseProvider {
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
         const statusCode = error.response?.status
+        const responseData = error.response?.data
         const message = error.response?.data?.message || error.message
 
-        throw new Error(`SPARQL query failed (${statusCode || 'network error'}): ${message}`)
+        // Log detailed error information
+        console.error('[GraphStudio Query] Request failed')
+        console.error('[GraphStudio Query] Status:', statusCode)
+        console.error('[GraphStudio Query] Response headers:', error.response?.headers)
+        console.error('[GraphStudio Query] Response data:', responseData)
+        console.error('[GraphStudio Query] Error message:', message)
+        console.error('[GraphStudio Query] Request config:', {
+          url: error.config?.url,
+          method: error.config?.method,
+          headers: error.config?.headers,
+          data: error.config?.data?.substring?.(0, 500) || error.config?.data,
+        })
+
+        // Build detailed error message
+        let errorMsg = `SPARQL query failed (${statusCode || 'network error'}): ${message}`
+
+        // Add response body if available and different from message
+        if (responseData && typeof responseData === 'string' && responseData !== message) {
+          errorMsg += `\n\nServer response: ${responseData.substring(0, 500)}`
+        } else if (responseData && typeof responseData === 'object') {
+          errorMsg += `\n\nServer response: ${JSON.stringify(responseData, null, 2).substring(0, 500)}`
+        }
+
+        throw new Error(errorMsg)
       }
 
       if (error instanceof Error) {
+        console.error('[GraphStudio Query] Error:', error)
         throw new Error(`Query execution failed: ${error.message}`)
       }
 
+      console.error('[GraphStudio Query] Unknown error:', error)
       throw new Error('Query execution failed: Unknown error')
     }
   }

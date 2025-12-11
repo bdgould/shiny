@@ -5,17 +5,24 @@
 import { ref, computed } from 'vue'
 import type { Graphmart } from '../types/electron'
 
-// Cache structure
+// Cache structure for graphmart lists
 interface CacheEntry {
   data: Graphmart[]
+  timestamp: number
+}
+
+// Cache structure for graphmart details (including layers)
+interface DetailsCacheEntry {
+  data: Graphmart
   timestamp: number
 }
 
 // Cache TTL: 5 minutes
 const CACHE_TTL = 5 * 60 * 1000
 
-// Global cache (shared across all instances)
+// Global caches (shared across all instances)
 const graphmartCache = new Map<string, CacheEntry>()
+const graphmartDetailsCache = new Map<string, DetailsCacheEntry>()
 
 export function useGraphStudioAPI() {
   // State
@@ -120,10 +127,26 @@ export function useGraphStudioAPI() {
     baseUrl: string,
     graphmartUri: string,
     credentials?: { username?: string; password?: string },
-    allowInsecure?: boolean
+    allowInsecure?: boolean,
+    forceRefresh: boolean = false
   ): Promise<Graphmart | null> {
     if (!baseUrl || !graphmartUri) {
       throw new Error('Base URL and Graphmart URI are required')
+    }
+
+    // Create cache key
+    const cacheKey = `${baseUrl}:${graphmartUri}`
+
+    // Check cache first (unless force refresh)
+    if (!forceRefresh) {
+      const cached = graphmartDetailsCache.get(cacheKey)
+      if (cached) {
+        const age = Date.now() - cached.timestamp
+        if (age < CACHE_TTL) {
+          console.log(`[GraphStudio] Using cached details for ${graphmartUri}`)
+          return cached.data
+        }
+      }
     }
 
     try {
@@ -133,6 +156,14 @@ export function useGraphStudioAPI() {
         credentials,
         allowInsecure
       )
+
+      // Cache the result
+      if (result) {
+        graphmartDetailsCache.set(cacheKey, {
+          data: result,
+          timestamp: Date.now(),
+        })
+      }
 
       return result
     } catch (err) {
@@ -146,6 +177,7 @@ export function useGraphStudioAPI() {
    */
   function clearCache(): void {
     graphmartCache.clear()
+    graphmartDetailsCache.clear()
     graphmarts.value = []
     lastFetched.value = 0
     error.value = null

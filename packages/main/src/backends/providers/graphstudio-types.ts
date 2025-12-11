@@ -8,6 +8,7 @@ export interface Layer {
   uri: string
   name: string
   type?: 'dataset' | 'inference' | 'other'
+  enabled: boolean
 }
 
 export interface Graphmart {

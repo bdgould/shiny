@@ -111,6 +111,7 @@ function normalizeLayer(item: any): Layer {
     uri: item.uri || item.id || '',
     name: item.name || item.label || 'Unnamed Layer',
     type: item.type || 'dataset',
+    enabled: item.enabled !== undefined ? item.enabled : true,
   }
 }
 
@@ -141,6 +142,46 @@ function normalizeStatus(status: any): 'active' | 'inactive' | 'error' {
   }
 
   return 'inactive'
+}
+
+/**
+ * Fetch status for a specific graphmart
+ */
+async function fetchGraphmartStatus(
+  axiosInstance: any,
+  baseUrl: string,
+  graphmartUri: string,
+  authHeaders: Record<string, string>
+): Promise<'active' | 'inactive' | 'error'> {
+  try {
+    const encodedUri = encodeURIComponent(graphmartUri)
+
+    // Try API v2 first
+    let response
+    try {
+      response = await axiosInstance.get(`${baseUrl}/api/graphmarts/${encodedUri}/status`, {
+        headers: {
+          Accept: 'application/json',
+          ...authHeaders,
+        },
+      })
+    } catch (error) {
+      // Fallback to API v1
+      response = await axiosInstance.get(`${baseUrl}/api/v1/graphmarts/${encodedUri}/status`, {
+        headers: {
+          Accept: 'application/json',
+          ...authHeaders,
+        },
+      })
+    }
+
+    // Extract status from response
+    const statusValue = response.data?.status || response.data?.state || response.data
+    return normalizeStatus(statusValue)
+  } catch (error) {
+    console.warn(`[GraphStudio] Failed to fetch status for ${graphmartUri}:`, error)
+    return 'inactive'
+  }
 }
 
 /**
@@ -188,6 +229,22 @@ ipcMain.handle(
       const graphmarts = parseGraphmartResponse(response.data)
 
       console.log('[GraphStudio] Parsed graphmarts:', graphmarts.length, 'graphmarts')
+
+      // Fetch status for each graphmart in parallel
+      console.log('[GraphStudio] Fetching status for each graphmart...')
+      await Promise.all(
+        graphmarts.map(async (graphmart) => {
+          const status = await fetchGraphmartStatus(
+            axiosInstance,
+            baseUrl,
+            graphmart.uri,
+            authHeaders
+          )
+          graphmart.status = status
+        })
+      )
+
+      console.log('[GraphStudio] Status fetch complete')
       if (graphmarts.length > 0) {
         console.log('[GraphStudio] First graphmart sample:', JSON.stringify(graphmarts[0], null, 2))
       }
@@ -250,10 +307,10 @@ ipcMain.handle(
       // Encode graphmart URI for URL
       const encodedUri = encodeURIComponent(graphmartUri)
 
-      // Try API v2 first (newer versions)
-      let response
+      // Fetch graphmart basic info
+      let graphmartResponse
       try {
-        response = await axiosInstance.get(`${baseUrl}/api/graphmarts/${encodedUri}`, {
+        graphmartResponse = await axiosInstance.get(`${baseUrl}/api/graphmarts/${encodedUri}`, {
           headers: {
             Accept: 'application/json',
             ...authHeaders,
@@ -261,7 +318,7 @@ ipcMain.handle(
         })
       } catch (error) {
         // Fallback to API v1 (older versions)
-        response = await axiosInstance.get(`${baseUrl}/api/v1/graphmarts/${encodedUri}`, {
+        graphmartResponse = await axiosInstance.get(`${baseUrl}/api/v1/graphmarts/${encodedUri}`, {
           headers: {
             Accept: 'application/json',
             ...authHeaders,
@@ -269,8 +326,47 @@ ipcMain.handle(
         })
       }
 
-      // Parse response
-      const graphmart = normalizeGraphmart(response.data.graphmart || response.data)
+      // Parse graphmart response
+      const graphmart = normalizeGraphmart(graphmartResponse.data.graphmart || graphmartResponse.data)
+
+      // Fetch layers from dedicated endpoint
+      try {
+        let layersResponse
+        try {
+          layersResponse = await axiosInstance.get(`${baseUrl}/api/graphmarts/${encodedUri}/layers`, {
+            headers: {
+              Accept: 'application/json',
+              ...authHeaders,
+            },
+          })
+        } catch (error) {
+          // Fallback to API v1
+          layersResponse = await axiosInstance.get(`${baseUrl}/api/v1/graphmarts/${encodedUri}/layers`, {
+            headers: {
+              Accept: 'application/json',
+              ...authHeaders,
+            },
+          })
+        }
+
+        // Parse layers response
+        const layersData = Array.isArray(layersResponse.data)
+          ? layersResponse.data
+          : layersResponse.data.layers || []
+
+        graphmart.layers = layersData.map((layer: any) => ({
+          uri: layer.uri || '',
+          name: layer.title || layer.name || layer.label || 'Unnamed Layer',
+          type: layer.type || 'dataset',
+          enabled: layer.enabled !== undefined ? layer.enabled : true,
+        }))
+
+        console.log(`[GraphStudio] Fetched ${graphmart.layers.length} layers for graphmart ${graphmartUri}`)
+      } catch (error) {
+        console.warn(`[GraphStudio] Failed to fetch layers for ${graphmartUri}:`, error)
+        // Keep empty layers array if fetch fails
+        graphmart.layers = []
+      }
 
       return graphmart
     } catch (error: unknown) {

@@ -185,7 +185,19 @@
 
         <!-- Layer selection (only show if graphmart selected) -->
         <div v-if="formData.graphmartUri" class="form-group">
-          <label>Layers</label>
+          <div class="label-with-button">
+            <label>Layers</label>
+            <button
+              v-if="selectedGraphmart && selectedGraphmart.layers"
+              type="button"
+              class="btn-icon-sm"
+              title="Refresh layers"
+              :disabled="isLoadingGraphmartDetails"
+              @click="refreshLayers"
+            >
+              🔄
+            </button>
+          </div>
 
           <!-- Loading state -->
           <div v-if="isLoadingGraphmartDetails" class="layer-selection">
@@ -211,7 +223,7 @@
                 class="checkbox-label"
               >
                 <input v-model="formData.selectedLayers" type="checkbox" :value="layer.uri" />
-                <span>{{ layer.name }}</span>
+                <span>{{ getLayerStatusIcon(layer.enabled) }} {{ layer.name }}</span>
               </label>
             </div>
 
@@ -680,6 +692,39 @@ async function refreshGraphmarts() {
   )
 }
 
+// GraphStudio: Refresh layers for selected graphmart
+async function refreshLayers() {
+  if (!formData.value.graphmartUri) return
+
+  graphmartDetailsError.value = null
+  isLoadingGraphmartDetails.value = true
+
+  try {
+    const credentials =
+      formData.value.authType === 'basic'
+        ? { username: formData.value.username, password: formData.value.password }
+        : undefined
+
+    const detailedGraphmart = await graphstudioAPI.getGraphmartDetails(
+      formData.value.endpoint,
+      formData.value.graphmartUri,
+      credentials,
+      formData.value.allowInsecure,
+      true // Force refresh
+    )
+
+    if (detailedGraphmart) {
+      selectedGraphmart.value = detailedGraphmart
+    }
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Failed to refresh layers'
+    graphmartDetailsError.value = message
+    console.error('Failed to refresh layers:', error)
+  } finally {
+    isLoadingGraphmartDetails.value = false
+  }
+}
+
 // GraphStudio: Get status icon for graphmart
 function getGraphmartStatusIcon(status: 'active' | 'inactive' | 'error'): string {
   switch (status) {
@@ -692,6 +737,11 @@ function getGraphmartStatusIcon(status: 'active' | 'inactive' | 'error'): string
     default:
       return '○'
   }
+}
+
+// GraphStudio: Get status icon for layer (based on enabled flag)
+function getLayerStatusIcon(enabled: boolean): string {
+  return enabled ? '●' : '○'
 }
 
 // GraphStudio: When graphmart is selected
@@ -1072,13 +1122,49 @@ onMounted(async () => {
       formData.value.allowInsecure
     )
 
-    // Restore selected graphmart if it exists in the list
+    // Restore selected graphmart and fetch its details (including layers)
     if (formData.value.graphmartUri) {
       const graphmart = graphstudioAPI.graphmarts.value.find(
         (gm) => gm.uri === formData.value.graphmartUri
       )
       if (graphmart) {
+        // Set basic info immediately
         selectedGraphmart.value = graphmart
+
+        // Fetch detailed graphmart information (including layers)
+        isLoadingGraphmartDetails.value = true
+        try {
+          const detailedGraphmart = await graphstudioAPI.getGraphmartDetails(
+            formData.value.endpoint,
+            formData.value.graphmartUri,
+            credentials,
+            formData.value.allowInsecure
+          )
+
+          if (detailedGraphmart) {
+            selectedGraphmart.value = detailedGraphmart
+
+            // Restore layer selection from saved config
+            if (
+              formData.value.selectedLayers &&
+              Array.isArray(formData.value.selectedLayers) &&
+              formData.value.selectedLayers.length > 0
+            ) {
+              if (formData.value.selectedLayers.includes('ALL_LAYERS')) {
+                useAllLayers.value = true
+              } else {
+                useAllLayers.value = false
+                // Keep the selected layers from the saved config
+              }
+            }
+          }
+        } catch (error) {
+          const message = error instanceof Error ? error.message : 'Failed to load graphmart details'
+          graphmartDetailsError.value = message
+          console.error('Failed to load graphmart details:', error)
+        } finally {
+          isLoadingGraphmartDetails.value = false
+        }
       }
     }
   }
