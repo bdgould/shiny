@@ -1,59 +1,72 @@
 <template>
   <main class="main-pane">
-    <div class="editor-section" :style="{ height: editorHeight }">
+    <div class="editor-section" :style="{ height: isSettingsTab ? '100%' : editorHeight }">
       <TabBar />
-      <div class="editor-controls">
-        <select v-model="activeTabBackend" class="backend-select" @change="handleBackendChange">
-          <option :value="null" disabled>Select backend...</option>
-          <option v-for="backend in connectionStore.backends" :key="backend.id" :value="backend.id">
-            {{ backend.name }}
-          </option>
-        </select>
-        <button class="btn-primary" :disabled="!activeTabBackend" @click="executeQuery">
-          Execute <span class="shortcut-hint">{{ shortcutHint }}</span>
-        </button>
+
+      <!-- Settings view for settings tabs -->
+      <template v-if="isSettingsTab">
+        <QuerySettingsView v-if="tabsStore.activeTab?.settingsType === 'query'" />
+        <AISettingsView v-else-if="tabsStore.activeTab?.settingsType === 'ai'" />
+      </template>
+
+      <!-- Query editor for regular tabs -->
+      <template v-else>
+        <div class="editor-controls">
+          <select v-model="activeTabBackend" class="backend-select" @change="handleBackendChange">
+            <option :value="null" disabled>Select backend...</option>
+            <option v-for="backend in connectionStore.backends" :key="backend.id" :value="backend.id">
+              {{ backend.name }}
+            </option>
+          </select>
+          <button class="btn-primary" :disabled="!activeTabBackend" @click="executeQuery">
+            Execute <span class="shortcut-hint">{{ shortcutHint }}</span>
+          </button>
+        </div>
+        <MonacoSparqlEditor />
+      </template>
+    </div>
+
+    <!-- Results section - only show for query tabs, not settings tabs -->
+    <template v-if="!isSettingsTab">
+      <div
+        v-if="!isResultsCollapsed"
+        class="resizer"
+        :class="{ resizing: isResizing }"
+        @mousedown="startResize"
+      >
+        <div class="resizer-line"></div>
       </div>
-      <MonacoSparqlEditor />
-    </div>
 
-    <div
-      v-if="!isResultsCollapsed"
-      class="resizer"
-      :class="{ resizing: isResizing }"
-      @mousedown="startResize"
-    >
-      <div class="resizer-line"></div>
-    </div>
+      <div v-if="!isResultsCollapsed" class="results-section" :style="{ height: resultsHeight }">
+        <div class="results-header">
+          <h3>Results</h3>
+          <button class="btn-icon" title="Collapse results" @click="toggleResultsCollapse">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+              <path d="M8 11L3 6h10l-5 5z" />
+            </svg>
+          </button>
+        </div>
+        <div class="results-content">
+          <div v-if="queryStore.isExecuting" class="loading">Executing query...</div>
+          <div v-else-if="queryStore.error" class="error">
+            {{ queryStore.error }}
+          </div>
+          <div v-else-if="queryStore.results" class="results">
+            <ResultsView />
+          </div>
+          <div v-else class="empty">No results yet. Write a query and click Execute.</div>
+        </div>
+      </div>
 
-    <div v-if="!isResultsCollapsed" class="results-section" :style="{ height: resultsHeight }">
-      <div class="results-header">
-        <h3>Results</h3>
-        <button class="btn-icon" title="Collapse results" @click="toggleResultsCollapse">
+      <div v-else class="results-collapsed">
+        <button class="btn-expand" title="Expand results" @click="toggleResultsCollapse">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-            <path d="M8 11L3 6h10l-5 5z" />
+            <path d="M8 5l5 5H3l5-5z" />
           </svg>
+          <span>Results</span>
         </button>
       </div>
-      <div class="results-content">
-        <div v-if="queryStore.isExecuting" class="loading">Executing query...</div>
-        <div v-else-if="queryStore.error" class="error">
-          {{ queryStore.error }}
-        </div>
-        <div v-else-if="queryStore.results" class="results">
-          <ResultsView />
-        </div>
-        <div v-else class="empty">No results yet. Write a query and click Execute.</div>
-      </div>
-    </div>
-
-    <div v-else class="results-collapsed">
-      <button class="btn-expand" title="Expand results" @click="toggleResultsCollapse">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-          <path d="M8 5l5 5H3l5-5z" />
-        </svg>
-        <span>Results</span>
-      </button>
-    </div>
+    </template>
   </main>
 </template>
 
@@ -66,10 +79,15 @@ import { useKeyboardShortcuts } from '@/composables/useKeyboardShortcuts'
 import TabBar from '@/components/tabs/TabBar.vue'
 import MonacoSparqlEditor from '@/components/editor/MonacoSparqlEditor.vue'
 import ResultsView from '@/components/results/ResultsView.vue'
+import QuerySettingsView from '@/components/settings/QuerySettingsView.vue'
+import AISettingsView from '@/components/settings/AISettingsView.vue'
 
 const queryStore = useQueryStore()
 const tabsStore = useTabsStore()
 const connectionStore = useConnectionStore()
+
+// Check if current tab is a settings tab
+const isSettingsTab = computed(() => tabsStore.activeTab?.isSettings ?? false)
 
 // Per-tab backend selection
 const activeTabBackend = computed({
