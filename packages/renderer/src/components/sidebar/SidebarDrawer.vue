@@ -9,6 +9,7 @@
         <ConnectionPanel v-if="sidebarStore.activePanel === 'connection'" />
         <AIPanel v-else-if="sidebarStore.activePanel === 'ai'" />
         <HistoryPanel v-else-if="sidebarStore.activePanel === 'history'" />
+        <SettingsPanel v-else-if="sidebarStore.activePanel === 'settings'" />
       </div>
     </div>
   </Transition>
@@ -19,6 +20,7 @@ import { useSidebarStore } from '@/stores/sidebar'
 import ConnectionPanel from './panels/ConnectionPanel.vue'
 import AIPanel from './panels/AIPanel.vue'
 import HistoryPanel from './panels/HistoryPanel.vue'
+import SettingsPanel from './panels/SettingsPanel.vue'
 
 const sidebarStore = useSidebarStore()
 </script>

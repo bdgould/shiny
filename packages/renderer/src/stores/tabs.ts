@@ -17,6 +17,8 @@ export interface Tab {
   savedContent: string | null // For dirty checking
   createdAt: number
   lastExecutedAt: number | null
+  isSettings?: boolean // True if this is a settings tab
+  settingsType?: 'query' | 'ai' // Type of settings panel to show
 }
 
 interface TabsState {
@@ -45,10 +47,23 @@ export const useTabsStore = defineStore('tabs', () => {
     filePath?: string
     backendId?: string
     savedContent?: string
+    isSettings?: boolean
+    settingsType?: 'query' | 'ai'
   }): string {
+    // Determine tab name
+    let tabName = options?.name
+    if (!tabName) {
+      if (options?.isSettings) {
+        // Settings tabs have special names
+        tabName = options.settingsType === 'query' ? 'Query Settings' : 'AI Settings'
+      } else {
+        tabName = `Untitled-${nextUntitledNumber.value}`
+      }
+    }
+
     const tab: Tab = {
       id: uuidv4(),
-      name: options?.name || `Untitled-${nextUntitledNumber.value}`,
+      name: tabName,
       query: options?.query || '',
       results: null,
       error: null,
@@ -60,12 +75,14 @@ export const useTabsStore = defineStore('tabs', () => {
       savedContent: options?.savedContent || null,
       createdAt: Date.now(),
       lastExecutedAt: null,
+      isSettings: options?.isSettings || false,
+      settingsType: options?.settingsType || undefined,
     }
 
     tabs.value.push(tab)
 
-    // Increment untitled counter if this was an untitled tab
-    if (!options?.name) {
+    // Increment untitled counter if this was an untitled tab (not settings or named)
+    if (!options?.name && !options?.isSettings) {
       nextUntitledNumber.value++
     }
 
