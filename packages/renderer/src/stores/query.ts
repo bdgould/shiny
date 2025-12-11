@@ -10,6 +10,7 @@ import {
 } from '@/services/preferences/viewPreferences'
 import { useTabsStore } from './tabs'
 import { useConnectionStore } from './connection'
+import { useHistoryStore } from './history'
 
 /**
  * Query store - now acts as a compatibility layer that proxies to the active tab
@@ -68,17 +69,65 @@ export const useQueryStore = defineStore('query', () => {
       return
     }
 
+    const connectionStore = useConnectionStore()
+    const historyStore = useHistoryStore()
+    const backend = connectionStore.backends.find((b: any) => b.id === activeTab.backendId)
+    const backendName = backend?.name || 'Unknown'
+
     tabsStore.setTabExecuting(activeTab.id, true)
+    const startTime = Date.now()
 
     try {
       // Use the Electron API to execute the query with selected backend
       const response = await window.electronAPI.query.execute(activeTab.query, activeTab.backendId)
+      const duration = Date.now() - startTime
 
       tabsStore.setTabResults(activeTab.id, response, response.queryType as QueryType)
+
+      // Calculate result count
+      let resultCount: number | null = null
+      if (response.queryType === 'SELECT' && response.bindings) {
+        resultCount = response.bindings.length
+      } else if (response.queryType === 'ASK') {
+        resultCount = 1
+      } else if (response.queryType === 'CONSTRUCT' || response.queryType === 'DESCRIBE') {
+        // For CONSTRUCT/DESCRIBE, count triples if available
+        if (response.triples) {
+          resultCount = response.triples.length
+        }
+      }
+
+      // Add to history
+      historyStore.addEntry({
+        query: activeTab.query,
+        backendId: activeTab.backendId,
+        backendName,
+        executedAt: Date.now(),
+        duration,
+        resultCount,
+        queryType: response.queryType as QueryType,
+        success: true,
+        error: null,
+      })
     } catch (err: any) {
       const errorMessage = err.message || 'Failed to execute query'
+      const duration = Date.now() - startTime
+
       tabsStore.setTabError(activeTab.id, errorMessage)
       console.error('Query execution error:', err)
+
+      // Add failed query to history
+      historyStore.addEntry({
+        query: activeTab.query,
+        backendId: activeTab.backendId,
+        backendName,
+        executedAt: Date.now(),
+        duration,
+        resultCount: null,
+        queryType: null,
+        success: false,
+        error: errorMessage,
+      })
     } finally {
       tabsStore.setTabExecuting(activeTab.id, false)
     }
