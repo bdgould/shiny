@@ -7,6 +7,7 @@
       <template v-if="isSettingsTab">
         <QuerySettingsView v-if="tabsStore.activeTab?.settingsType === 'query'" />
         <AISettingsView v-else-if="tabsStore.activeTab?.settingsType === 'ai'" />
+        <CacheSettingsView v-else-if="tabsStore.activeTab?.settingsType === 'cache'" />
       </template>
 
       <!-- Query editor for regular tabs -->
@@ -81,6 +82,7 @@ import MonacoSparqlEditor from '@/components/editor/MonacoSparqlEditor.vue'
 import ResultsView from '@/components/results/ResultsView.vue'
 import QuerySettingsView from '@/components/settings/QuerySettingsView.vue'
 import AISettingsView from '@/components/settings/AISettingsView.vue'
+import CacheSettingsView from '@/components/settings/CacheSettingsView.vue'
 
 const queryStore = useQueryStore()
 const tabsStore = useTabsStore()

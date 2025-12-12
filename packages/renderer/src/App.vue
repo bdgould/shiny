@@ -45,6 +45,10 @@ onMounted(async () => {
 
     // Restore tabs from previous session
     tabsStore.restoreFromLocalStorage()
+
+    // Initialize background cache refresh
+    const { useCacheRefresh } = await import('./composables/useCacheRefresh')
+    useCacheRefresh()
   } catch (error) {
     console.error('Failed to initialize app on startup:', error)
   }

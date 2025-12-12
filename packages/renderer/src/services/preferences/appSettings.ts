@@ -1,10 +1,11 @@
 /**
  * Application settings persistence
- * Manages query connection settings and AI configuration
+ * Manages query connection settings, AI configuration, and cache settings
  */
 
 const STORAGE_KEY_QUERY_SETTINGS = 'shiny:settings:query'
 const STORAGE_KEY_AI_SETTINGS = 'shiny:settings:ai'
+const STORAGE_KEY_CACHE_SETTINGS = 'shiny:settings:cache'
 
 export interface QueryConnectionSettings {
   connectionTimeout: number // in milliseconds
@@ -21,6 +22,14 @@ export interface AIConnectionSettings {
   maxTokens?: number
 }
 
+export interface GlobalCacheSettings {
+  enableAutocomplete: boolean
+  defaultTtl: number
+  defaultMaxElements: number
+  autoRefresh: boolean
+  refreshCheckInterval: number
+}
+
 const DEFAULT_QUERY_SETTINGS: QueryConnectionSettings = {
   connectionTimeout: 30000, // 30 seconds
   queryTimeout: 300000, // 5 minutes
@@ -34,6 +43,14 @@ const DEFAULT_AI_SETTINGS: AIConnectionSettings = {
   apiKey: '',
   temperature: 0.7,
   maxTokens: 1000,
+}
+
+const DEFAULT_CACHE_SETTINGS: GlobalCacheSettings = {
+  enableAutocomplete: true,
+  defaultTtl: 24 * 60 * 60 * 1000, // 24 hours
+  defaultMaxElements: 50000,
+  autoRefresh: true,
+  refreshCheckInterval: 5 * 60 * 1000 // 5 minutes
 }
 
 /**
@@ -211,5 +228,33 @@ export async function testAIConnection(settings: AIConnectionSettings): Promise<
       error: error instanceof Error ? error.message : 'Unknown error occurred',
       url,
     }
+  }
+}
+
+/**
+ * Get global cache settings
+ */
+export function getCacheSettings(): GlobalCacheSettings {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY_CACHE_SETTINGS)
+    if (stored) {
+      const parsed = JSON.parse(stored) as GlobalCacheSettings
+      return { ...DEFAULT_CACHE_SETTINGS, ...parsed }
+    }
+  } catch (error) {
+    console.warn('Failed to load cache settings from localStorage:', error)
+  }
+  return { ...DEFAULT_CACHE_SETTINGS }
+}
+
+/**
+ * Save global cache settings
+ */
+export function saveCacheSettings(settings: GlobalCacheSettings): void {
+  try {
+    localStorage.setItem(STORAGE_KEY_CACHE_SETTINGS, JSON.stringify(settings))
+  } catch (error) {
+    console.warn('Failed to save cache settings to localStorage:', error)
+    throw error
   }
 }

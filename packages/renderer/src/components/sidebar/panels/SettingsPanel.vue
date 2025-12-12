@@ -18,6 +18,13 @@
           <div class="settings-item-description">Configure OpenAI endpoints and test connections</div>
         </div>
       </button>
+      <button class="settings-item" @click="openCacheSettings">
+        <div class="settings-item-icon">💾</div>
+        <div class="settings-item-content">
+          <div class="settings-item-title">Ontology Cache</div>
+          <div class="settings-item-description">Configure ontology element caching and SPARQL queries</div>
+        </div>
+      </button>
     </div>
   </div>
 </template>
@@ -52,6 +59,20 @@ function openAISettings() {
     tabsStore.createTab({
       isSettings: true,
       settingsType: 'ai',
+    })
+  }
+  // Keep the drawer open so user can navigate between settings
+}
+
+function openCacheSettings() {
+  // Create a new tab for cache settings
+  const existingTab = tabsStore.tabs.find((tab) => tab.settingsType === 'cache')
+  if (existingTab) {
+    tabsStore.setActiveTab(existingTab.id)
+  } else {
+    tabsStore.createTab({
+      isSettings: true,
+      settingsType: 'cache',
     })
   }
   // Keep the drawer open so user can navigate between settings
