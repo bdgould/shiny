@@ -2,6 +2,8 @@
 
 A modern, secure Electron-based SPARQL client built with Vue 3 and TypeScript. Features a VS Code-style interface, multi-backend support, comprehensive authentication, and encrypted credential storage.
 
+A SPARQL utility knife for navigating the world of Enterprise Knowledge Grpah.
+
 ## Features
 
 ### Core Capabilities ✅
