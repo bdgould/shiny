@@ -14,6 +14,7 @@ jobs:
   validate:
     name: Validate Code
     runs-on: ubuntu-latest
+    if: "!contains(github.event.head_commit.message, '[skip ci]')"
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -196,6 +197,7 @@ jobs:
         with:
           ref: main
           fetch-depth: 0
+          ssh-key: ${{ secrets.SSH_DEPLOY_KEY }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -223,3 +225,4 @@ jobs:
           git add package.json packages/*/package.json
           git commit -m "chore: bump version to v${{ steps.new-version.outputs.version }} [skip ci]"
           git push origin main
+
