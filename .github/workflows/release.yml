@@ -8,6 +8,7 @@ on:
 permissions:
   contents: write
   actions: read
+  packages: read
 
 jobs:
   validate:
@@ -94,6 +95,16 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Debug - Check if token exists
+        run: |
+          if [ -z "$GH_TOKEN" ]; then
+            echo "GH_TOKEN is empty or not set"
+          else
+            echo "GH_TOKEN is set (length: ${#GH_TOKEN} chars)"
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Build application
         run: npm run build
         env:
@@ -102,6 +113,7 @@ jobs:
       - name: Package application
         run: npx electron-builder --mac --${{ matrix.arch }} --publish never
         env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           EP_DRAFT: false
           EP_PRE_RELEASE: false
           APPLE_ID: ${{ secrets.APPLE_ID }}
@@ -147,6 +159,7 @@ jobs:
       - name: Package application
         run: npx electron-builder --win --${{ matrix.arch }} --publish never
         env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           EP_DRAFT: false
           EP_PRE_RELEASE: false
           WIN_CSC_LINK: ${{ secrets.WIN_CSC_LINK }}
