@@ -109,10 +109,6 @@ jobs:
         run: npm run build
         env:
           ARCH: ${{ matrix.arch }}
-
-      - name: Package application
-        run: npx electron-builder --mac --${{ matrix.arch }} --publish never
-        env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           EP_DRAFT: false
           EP_PRE_RELEASE: false
@@ -155,10 +151,6 @@ jobs:
         run: npm run build
         env:
           ARCH: ${{ matrix.arch }}
-
-      - name: Package application
-        run: npx electron-builder --win --${{ matrix.arch }} --publish never
-        env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           EP_DRAFT: false
           EP_PRE_RELEASE: false
