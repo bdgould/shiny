@@ -91,7 +91,8 @@
           ]
         }
       ],
-      "icon": "icons/shiny.ico"
+      "icon": "icons/shiny.ico",
+      "artifactName": "${productName} Setup ${version}-${arch}.${ext}"
     },
     "linux": {
       "target": "AppImage",
