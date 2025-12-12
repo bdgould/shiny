@@ -56,6 +56,7 @@ onMounted(async () => {
 
 // Listen for files opened via OS (double-click .rq file)
 let removeFileOpenedListener: (() => void) | null = null
+let removeMenuNewListener: (() => void) | null = null
 let removeMenuSaveListener: (() => void) | null = null
 let removeMenuOpenListener: (() => void) | null = null
 let removeMenuSaveResultsListener: (() => void) | null = null
@@ -68,6 +69,10 @@ onMounted(async () => {
   const { canSaveResults, getExportFormats, saveResults } = useResultsSave()
 
   // Listen for native menu events
+  removeMenuNewListener = window.electronAPI.menu.onNewQuery(() => {
+    tabsStore.createTab()
+  })
+
   removeMenuSaveListener = window.electronAPI.menu.onSaveQuery(async () => {
     await saveQuery()
   })
@@ -146,6 +151,9 @@ onMounted(async () => {
 onUnmounted(() => {
   if (removeFileOpenedListener) {
     removeFileOpenedListener()
+  }
+  if (removeMenuNewListener) {
+    removeMenuNewListener()
   }
   if (removeMenuSaveListener) {
     removeMenuSaveListener()

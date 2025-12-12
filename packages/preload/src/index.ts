@@ -29,6 +29,7 @@ const ALLOWED_CHANNELS = {
     'query:result',
     'query:error',
     'file:opened',
+    'menu:newQuery',
     'menu:saveQuery',
     'menu:openQuery',
     'menu:saveResults',
@@ -245,6 +246,7 @@ export interface ElectronAPI {
     saveResults: (content: string, queryType: string, format: string) => Promise<SaveResultsResult>
   }
   menu: {
+    onNewQuery: (callback: () => void) => () => void
     onSaveQuery: (callback: () => void) => () => void
     onOpenQuery: (callback: () => void) => () => void
     onSaveResults: (callback: () => void) => () => void
@@ -466,6 +468,16 @@ contextBridge.exposeInMainWorld('electronAPI', {
     },
   },
   menu: {
+    onNewQuery: (callback: () => void) => {
+      if (!validateChannel('menu:newQuery', 'on')) {
+        throw new Error('Unauthorized IPC channel')
+      }
+      const listener = () => callback()
+      ipcRenderer.on('menu:newQuery', listener)
+      return () => {
+        ipcRenderer.removeListener('menu:newQuery', listener)
+      }
+    },
     onSaveQuery: (callback: () => void) => {
       if (!validateChannel('menu:saveQuery', 'on')) {
         throw new Error('Unauthorized IPC channel')
