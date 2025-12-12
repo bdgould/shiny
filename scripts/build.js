@@ -48,11 +48,16 @@ async function build() {
 
     // Add platform and architecture flags if ARCH env var is set (for CI builds)
     if (process.env.ARCH) {
-      const platform = process.platform === 'darwin' ? '--mac' : process.platform === 'win32' ? '--win' : '--linux'
-      builderArgs.push(platform)
-      builderArgs.push('--' + process.env.ARCH)
+      const arch = process.env.ARCH
+      if (process.platform === 'darwin') {
+        builderArgs.push('--mac', 'dmg:' + arch)
+      } else if (process.platform === 'win32') {
+        builderArgs.push('--win', 'nsis:' + arch)
+      } else {
+        builderArgs.push('--linux', 'AppImage:' + arch)
+      }
       builderArgs.push('--publish', 'never')
-      log(`Building for platform: ${platform}, architecture: ${process.env.ARCH}`)
+      log(`Building for platform: ${process.platform}, architecture: ${arch}`)
     }
 
     await run('npx', builderArgs, rootDir)
