@@ -7,11 +7,16 @@ import { ref, onMounted, onUnmounted, watch } from 'vue'
 import * as monaco from 'monaco-editor'
 import { useQueryStore } from '@/stores/query'
 import { useTabsStore } from '@/stores/tabs'
+import { useOntologyCacheStore } from '@/stores/ontologyCache'
+import { useConnectionStore } from '@/stores/connection'
+import { getCacheSettings } from '@/services/preferences/appSettings'
 import { Parser } from 'sparqljs'
 
 const editorContainer = ref<HTMLElement | null>(null)
 const queryStore = useQueryStore()
 const tabsStore = useTabsStore()
+const cacheStore = useOntologyCacheStore()
+const connectionStore = useConnectionStore()
 
 let editor: monaco.editor.IStandaloneCodeEditor | null = null
 const modelCache = new Map<string, monaco.editor.ITextModel>()
@@ -239,9 +244,94 @@ monaco.editor.defineTheme('sparql-theme-light', {
   },
 })
 
+/**
+ * Parse PREFIX declarations from SPARQL query
+ */
+function parsePrefixes(queryText: string): Map<string, string> {
+  const prefixMap = new Map<string, string>()
+  const prefixRegex = /PREFIX\s+(\w+):\s*<([^>]+)>/gi
+  let match
+
+  while ((match = prefixRegex.exec(queryText)) !== null) {
+    prefixMap.set(match[1], match[2])
+  }
+
+  return prefixMap
+}
+
+/**
+ * Expand prefixed name to full IRI
+ */
+function expandPrefixedName(prefixedName: string, prefixes: Map<string, string>): string | null {
+  const colonIndex = prefixedName.indexOf(':')
+  if (colonIndex === -1) return null
+
+  const prefix = prefixedName.substring(0, colonIndex)
+  const localName = prefixedName.substring(colonIndex + 1)
+  const namespace = prefixes.get(prefix)
+
+  if (!namespace) return null
+  return namespace + localName
+}
+
+/**
+ * Compress full IRI to prefixed name if possible
+ */
+function compressIRI(iri: string, prefixes: Map<string, string>): string {
+  for (const [prefix, namespace] of prefixes.entries()) {
+    if (iri.startsWith(namespace)) {
+      const localName = iri.substring(namespace.length)
+      return `${prefix}:${localName}`
+    }
+  }
+  return `<${iri}>`
+}
+
+/**
+ * Detect context: are we in subject, predicate, or object position?
+ */
+function detectContext(model: monaco.editor.ITextModel, position: monaco.Position): 'subject' | 'predicate' | 'object' | 'unknown' {
+  const lineContent = model.getLineContent(position.lineNumber)
+  const beforeCursor = lineContent.substring(0, position.column - 1)
+
+  // Look back for triple pattern structure
+  const triplePattern = beforeCursor.trim()
+
+  // Count elements (subject predicate object .)
+  // Simple heuristic: count spaces and special characters
+  const parts = triplePattern.split(/\s+/)
+  const lastPart = parts[parts.length - 1]
+
+  // After 'a' or 'rdf:type' = class suggestion (object position for type)
+  if (parts.length >= 2 && (parts[parts.length - 2] === 'a' || parts[parts.length - 2].match(/rdf:type|<.*type>/))) {
+    return 'object' // Actually want classes here
+  }
+
+  // Count semicolons and periods for more complex patterns
+  const semicolons = (triplePattern.match(/;/g) || []).length
+  const periods = (triplePattern.match(/\./g) || []).length
+
+  // After opening brace or period = subject position
+  if (triplePattern.match(/\{\s*$/) || triplePattern.match(/\.\s*$/)) {
+    return 'subject'
+  }
+
+  // Simple position detection based on elements in current statement
+  const inCurrentStatement = triplePattern.split(/[.;]/).pop() || ''
+  const elementsInStatement = inCurrentStatement.trim().split(/\s+/).filter(e => e && !e.match(/^\{/))
+
+  if (elementsInStatement.length === 0 || elementsInStatement.length === 1) {
+    return 'subject'
+  } else if (elementsInStatement.length === 2) {
+    return 'predicate'
+  } else {
+    return 'object'
+  }
+}
+
 // Register IntelliSense completion provider
 monaco.languages.registerCompletionItemProvider('sparql', {
-  provideCompletionItems: (model, position) => {
+  provideCompletionItems: async (model, position) => {
     const word = model.getWordUntilPosition(position)
     const range = {
       startLineNumber: position.lineNumber,
@@ -667,14 +757,161 @@ monaco.languages.registerCompletionItemProvider('sparql', {
       },
     ]
 
-    const suggestions = [...keywords, ...aggregates, ...functions, ...prefixes].map((item) => ({
+    // Combine static suggestions
+    const staticSuggestions = [...keywords, ...aggregates, ...functions, ...prefixes].map((item) => ({
       ...item,
       range,
     }))
 
-    return { suggestions }
+    // Get ontology suggestions from cache
+    const ontologySuggestions = await getOntologySuggestions(model, position, range)
+
+    return { suggestions: [...staticSuggestions, ...ontologySuggestions] }
   },
 })
+
+/**
+ * Get ontology-based completion suggestions from cache
+ */
+async function getOntologySuggestions(
+  model: monaco.editor.ITextModel,
+  position: monaco.Position,
+  range: monaco.IRange
+): Promise<monaco.languages.CompletionItem[]> {
+  const suggestions: monaco.languages.CompletionItem[] = []
+
+  // Check if autocomplete is enabled
+  const settings = getCacheSettings()
+  if (!settings.enableAutocomplete) {
+    return suggestions
+  }
+
+  // Get current backend
+  const activeTab = tabsStore.activeTab
+  if (!activeTab || !activeTab.backendId) {
+    return suggestions
+  }
+
+  const backendId = activeTab.backendId
+
+  // Check if cache exists
+  const validation = await cacheStore.validateCache(backendId)
+  if (!validation.exists) {
+    return suggestions
+  }
+
+  // Parse prefixes from query
+  const queryText = model.getValue()
+  const prefixes = parsePrefixes(queryText)
+
+  // Detect context
+  const context = detectContext(model, position)
+  const word = model.getWordUntilPosition(position)
+  const wordText = model.getValueInRange({
+    startLineNumber: position.lineNumber,
+    startColumn: word.startColumn,
+    endLineNumber: position.lineNumber,
+    endColumn: word.endColumn
+  })
+
+  // Determine if user is typing full IRI or prefixed name
+  const isTypingFullIRI = wordText.startsWith('<')
+  const isTypingPrefixed = wordText.includes(':') && !isTypingFullIRI
+
+  // Search cache based on context
+  try {
+    const searchQuery = isTypingFullIRI ? wordText.substring(1) : wordText
+
+    // Determine which types to search based on context
+    let types: Array<'class' | 'property' | 'individual'> = []
+
+    if (context === 'predicate') {
+      types = ['property']
+    } else if (context === 'object' && wordText.trim()) {
+      // After 'a' or 'rdf:type', suggest classes
+      const lineContent = model.getLineContent(position.lineNumber)
+      const beforeWord = lineContent.substring(0, word.startColumn - 1)
+      if (beforeWord.match(/\s+a\s+$/) || beforeWord.match(/rdf:type\s+$/)) {
+        types = ['class']
+      } else {
+        // General object position: could be individual or class
+        types = ['individual', 'class']
+      }
+    } else if (context === 'subject') {
+      types = ['individual', 'class']
+    } else {
+      // Unknown context: suggest everything
+      types = ['class', 'property', 'individual']
+    }
+
+    const results = await cacheStore.searchElements(backendId, {
+      query: searchQuery,
+      types,
+      limit: 20,
+      caseSensitive: false,
+      prefixOnly: false
+    })
+
+    // Convert search results to Monaco completion items
+    for (const result of results) {
+      const element = result.element
+
+      // Determine insert text (prefixed or full IRI)
+      let insertText: string
+      let label: string
+
+      if (isTypingFullIRI) {
+        // User wants full IRI
+        insertText = `<${element.iri}>`
+        label = element.iri
+      } else {
+        // Try to use prefixed name
+        const prefixedName = compressIRI(element.iri, prefixes)
+        if (prefixedName.startsWith('<')) {
+          // No prefix available, use full IRI
+          insertText = prefixedName
+          label = element.iri
+        } else {
+          // Use prefixed name
+          insertText = prefixedName
+          label = prefixedName
+        }
+      }
+
+      // Add label as alternative display if available
+      const displayLabel = element.label || label
+
+      // Determine completion item kind
+      let kind: monaco.languages.CompletionItemKind
+      let detail: string
+
+      if (element.type === 'class') {
+        kind = monaco.languages.CompletionItemKind.Class
+        detail = 'Class'
+      } else if (element.type === 'property') {
+        kind = monaco.languages.CompletionItemKind.Property
+        detail = `Property (${(element as any).propertyType})`
+      } else {
+        kind = monaco.languages.CompletionItemKind.Value
+        detail = 'Individual'
+      }
+
+      suggestions.push({
+        label: displayLabel,
+        kind,
+        detail,
+        documentation: element.description || element.iri,
+        insertText,
+        range,
+        sortText: `${3 - result.score}_${displayLabel}` // Higher score = earlier in list
+      })
+    }
+  } catch (error) {
+    console.error('Failed to get ontology suggestions:', error)
+  }
+
+  return suggestions
+}
 
 // SPARQL validation using sparqljs
 const parser = new Parser()

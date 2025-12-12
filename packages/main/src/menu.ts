@@ -50,6 +50,14 @@ export function createApplicationMenu(mainWindow: BrowserWindow) {
       label: 'File',
       submenu: [
         {
+          label: 'New Query',
+          accelerator: 'CmdOrCtrl+N',
+          click: () => {
+            mainWindow.webContents.send('menu:newQuery')
+          },
+        },
+        { type: 'separator' as const },
+        {
           label: 'Open Query...',
           accelerator: 'CmdOrCtrl+O',
           click: () => {

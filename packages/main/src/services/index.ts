@@ -5,10 +5,12 @@
 
 import { CredentialService } from './CredentialService.js'
 import { BackendService } from './BackendService.js'
+import { OntologyCacheService } from './OntologyCacheService.js'
 
 // Singleton instances
 let credentialService: CredentialService | null = null
 let backendService: BackendService | null = null
+let ontologyCacheService: OntologyCacheService | null = null
 
 /**
  * Initialize all services
@@ -23,6 +25,9 @@ export function initializeServices(): void {
 
   // Create backend service
   backendService = new BackendService(credentialService)
+
+  // Create ontology cache service
+  ontologyCacheService = new OntologyCacheService(backendService)
 
   console.log('Services initialized successfully')
 }
@@ -45,4 +50,14 @@ export function getBackendService(): BackendService {
     throw new Error('Services not initialized. Call initializeServices() first.')
   }
   return backendService
+}
+
+/**
+ * Get ontology cache service instance
+ */
+export function getOntologyCacheService(): OntologyCacheService {
+  if (!ontologyCacheService) {
+    throw new Error('Services not initialized. Call initializeServices() first.')
+  }
+  return ontologyCacheService
 }
