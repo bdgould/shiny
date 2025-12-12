@@ -44,7 +44,18 @@ async function build() {
     // 5. Package with Electron Builder
     log('Packaging application...')
     // This uses the configuration from your root package.json
-    await run('npx', ['electron-builder'], rootDir)
+    const builderArgs = ['electron-builder']
+
+    // Add platform and architecture flags if ARCH env var is set (for CI builds)
+    if (process.env.ARCH) {
+      const platform = process.platform === 'darwin' ? '--mac' : process.platform === 'win32' ? '--win' : '--linux'
+      builderArgs.push(platform)
+      builderArgs.push('--' + process.env.ARCH)
+      builderArgs.push('--publish', 'never')
+      log(`Building for platform: ${platform}, architecture: ${process.env.ARCH}`)
+    }
+
+    await run('npx', builderArgs, rootDir)
 
     log('Build complete!')
   } catch (e) {
