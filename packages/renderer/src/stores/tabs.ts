@@ -18,7 +18,7 @@ export interface Tab {
   createdAt: number
   lastExecutedAt: number | null
   isSettings?: boolean // True if this is a settings tab
-  settingsType?: 'query' | 'ai' // Type of settings panel to show
+  settingsType?: 'query' | 'ai' | 'cache' // Type of settings panel to show
 }
 
 interface TabsState {
@@ -48,14 +48,19 @@ export const useTabsStore = defineStore('tabs', () => {
     backendId?: string
     savedContent?: string
     isSettings?: boolean
-    settingsType?: 'query' | 'ai'
+    settingsType?: 'query' | 'ai' | 'cache'
   }): string {
     // Determine tab name
     let tabName = options?.name
     if (!tabName) {
       if (options?.isSettings) {
         // Settings tabs have special names
-        tabName = options.settingsType === 'query' ? 'Query Settings' : 'AI Settings'
+        const settingsNames = {
+          query: 'Query Settings',
+          ai: 'AI Settings',
+          cache: 'Cache Settings'
+        }
+        tabName = options.settingsType ? settingsNames[options.settingsType] : 'Settings'
       } else {
         tabName = `Untitled-${nextUntitledNumber.value}`
       }

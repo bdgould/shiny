@@ -22,14 +22,18 @@ const ALLOWED_CHANNELS = {
     'files:saveQuery',
     'files:openQuery',
     'files:saveResults',
+    'cache:fetch',
+    'cache:testQuery',
   ],
   on: [
     'query:result',
     'query:error',
     'file:opened',
+    'menu:newQuery',
     'menu:saveQuery',
     'menu:openQuery',
     'menu:saveResults',
+    'cache:progress',
   ],
 }
 
@@ -149,6 +153,21 @@ export interface SaveResultsResult {
   error?: string
 }
 
+// Ontology cache types
+export interface CacheProgress {
+  status: 'idle' | 'loading' | 'refreshing' | 'error' | 'success'
+  currentType?: 'class' | 'property' | 'individual'
+  fetchedCount: number
+  totalCount?: number
+  error?: string
+}
+
+export interface TestQueryResult {
+  valid: boolean
+  error?: string
+  resultCount?: number
+}
+
 // Define the API that will be exposed to the renderer process
 export interface ElectronAPI {
   query: {
@@ -227,9 +246,15 @@ export interface ElectronAPI {
     saveResults: (content: string, queryType: string, format: string) => Promise<SaveResultsResult>
   }
   menu: {
+    onNewQuery: (callback: () => void) => () => void
     onSaveQuery: (callback: () => void) => () => void
     onOpenQuery: (callback: () => void) => () => void
     onSaveResults: (callback: () => void) => () => void
+  }
+  cache: {
+    fetch: (backendId: string, onProgress?: boolean) => Promise<any>
+    testQuery: (backendId: string, query: string) => Promise<TestQueryResult>
+    onProgress: (callback: (data: { backendId: string; progress: CacheProgress }) => void) => () => void
   }
 }
 
@@ -443,6 +468,16 @@ contextBridge.exposeInMainWorld('electronAPI', {
     },
   },
   menu: {
+    onNewQuery: (callback: () => void) => {
+      if (!validateChannel('menu:newQuery', 'on')) {
+        throw new Error('Unauthorized IPC channel')
+      }
+      const listener = () => callback()
+      ipcRenderer.on('menu:newQuery', listener)
+      return () => {
+        ipcRenderer.removeListener('menu:newQuery', listener)
+      }
+    },
     onSaveQuery: (callback: () => void) => {
       if (!validateChannel('menu:saveQuery', 'on')) {
         throw new Error('Unauthorized IPC channel')
@@ -471,6 +506,30 @@ contextBridge.exposeInMainWorld('electronAPI', {
       ipcRenderer.on('menu:saveResults', listener)
       return () => {
         ipcRenderer.removeListener('menu:saveResults', listener)
+      }
+    },
+  },
+  cache: {
+    fetch: (backendId: string, onProgress?: boolean) => {
+      if (!validateChannel('cache:fetch', 'invoke')) {
+        throw new Error('Unauthorized IPC channel')
+      }
+      return ipcRenderer.invoke('cache:fetch', { backendId, onProgress })
+    },
+    testQuery: (backendId: string, query: string) => {
+      if (!validateChannel('cache:testQuery', 'invoke')) {
+        throw new Error('Unauthorized IPC channel')
+      }
+      return ipcRenderer.invoke('cache:testQuery', { backendId, query })
+    },
+    onProgress: (callback: (data: { backendId: string; progress: CacheProgress }) => void) => {
+      if (!validateChannel('cache:progress', 'on')) {
+        throw new Error('Unauthorized IPC channel')
+      }
+      const listener = (_event: any, data: { backendId: string; progress: CacheProgress }) => callback(data)
+      ipcRenderer.on('cache:progress', listener)
+      return () => {
+        ipcRenderer.removeListener('cache:progress', listener)
       }
     },
   },
