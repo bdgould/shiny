@@ -15,6 +15,7 @@ function run(command, args, cwd) {
       cwd,
       shell: true,
       stdio: 'inherit',
+      env: process.env,
     })
     proc.on('exit', (code) => {
       if (code === 0) resolve()
