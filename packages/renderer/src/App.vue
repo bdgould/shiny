@@ -1,5 +1,5 @@
 <template>
-  <div class="app">
+  <div class="app" @dragover="handleDragOver" @drop="handleDrop">
     <TopBar />
     <div class="app-content">
       <IconSidebar />
@@ -21,12 +21,16 @@ import MainPane from './components/layout/MainPane.vue'
 import FormatSelectorDialog from './components/dialogs/FormatSelectorDialog.vue'
 import { useConnectionStore } from './stores/connection'
 import { useTabsStore } from './stores/tabs'
+import { useFileDragDrop } from './composables/useFileDragDrop'
 import type { QueryFileData } from './types/electron'
 
 const connectionStore = useConnectionStore()
 const tabsStore = useTabsStore()
 const formatDialogRef = ref<InstanceType<typeof FormatSelectorDialog> | null>(null)
 const exportFormats = ref<Array<{ value: string; label: string }>>([])
+
+// Drag and drop functionality
+const { handleDragOver, handleDrop } = useFileDragDrop()
 
 // Will be set in onMounted
 let saveResultsFunction: ((format: string) => Promise<void>) | null = null
