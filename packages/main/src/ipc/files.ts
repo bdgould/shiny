@@ -53,4 +53,15 @@ ipcMain.handle(
   }
 )
 
+/**
+ * Handle opening prefix file from file system
+ */
+ipcMain.handle('files:openPrefixFile', async (event) => {
+  if (!isAuthorizedSender(event.sender)) {
+    throw new Error('Unauthorized')
+  }
+
+  return await fileService.openPrefixFile()
+})
+
 console.log('Files IPC handlers registered')
