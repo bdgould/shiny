@@ -25,6 +25,13 @@
           <div class="settings-item-description">Configure ontology element caching and SPARQL queries</div>
         </div>
       </button>
+      <button class="settings-item" @click="openPrefixSettings">
+        <div class="settings-item-icon">🏷️</div>
+        <div class="settings-item-content">
+          <div class="settings-item-title">Prefix Management</div>
+          <div class="settings-item-description">Manage SPARQL prefixes and import/export definitions</div>
+        </div>
+      </button>
     </div>
   </div>
 </template>
@@ -73,6 +80,20 @@ function openCacheSettings() {
     tabsStore.createTab({
       isSettings: true,
       settingsType: 'cache',
+    })
+  }
+  // Keep the drawer open so user can navigate between settings
+}
+
+function openPrefixSettings() {
+  // Create a new tab for prefix settings
+  const existingTab = tabsStore.tabs.find((tab) => tab.settingsType === 'prefix')
+  if (existingTab) {
+    tabsStore.setActiveTab(existingTab.id)
+  } else {
+    tabsStore.createTab({
+      isSettings: true,
+      settingsType: 'prefix',
     })
   }
   // Keep the drawer open so user can navigate between settings
