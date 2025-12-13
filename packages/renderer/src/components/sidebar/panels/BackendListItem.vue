@@ -12,7 +12,8 @@
           :disabled="isTesting"
           @click="$emit('test')"
         >
-          {{ isTesting ? '⏳' : '🔌' }}
+          <span v-if="isTesting" class="spinner"></span>
+          <span v-else>🔌</span>
         </button>
         <button class="btn-icon" title="Edit" @click="$emit('edit')">✏️</button>
         <button class="btn-icon btn-danger" title="Delete" @click="$emit('delete')">🗑️</button>
@@ -30,9 +31,11 @@
       </div>
     </div>
 
-    <div v-if="testResult" class="test-result" :class="testResult.valid ? 'success' : 'error'">
-      {{ testResult.valid ? '✓ Connection successful' : `✗ ${testResult.error}` }}
-    </div>
+    <Transition name="fade-slide">
+      <div v-if="testResult" class="test-result" :class="testResultClass">
+        {{ testResult.valid ? '✓ Connection successful' : `✗ ${testResult.error}` }}
+      </div>
+    </Transition>
   </div>
 </template>
 
@@ -44,7 +47,7 @@ import { BACKEND_TYPE_LABELS, AUTH_TYPE_LABELS } from '@/types/backends'
 interface Props {
   backend: BackendConfig
   isTesting?: boolean
-  testResult?: { valid: boolean; error?: string } | null
+  testResult?: { valid: boolean; error?: string; testing?: boolean } | null
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -70,6 +73,12 @@ const authTypeLabel = computed(() => {
     AUTH_TYPE_LABELS[props.backend.authType as keyof typeof AUTH_TYPE_LABELS] ||
     props.backend.authType
   )
+})
+
+const testResultClass = computed(() => {
+  if (!props.testResult) return ''
+  if (props.testResult.testing) return 'testing'
+  return props.testResult.valid ? 'success' : 'error'
 })
 </script>
 
@@ -196,5 +205,44 @@ const authTypeLabel = computed(() => {
   background: rgba(211, 47, 47, 0.1);
   color: var(--color-error);
   border: 1px solid var(--color-error);
+}
+
+.test-result.testing {
+  background: rgba(0, 102, 204, 0.1);
+  color: var(--color-primary);
+  border: 1px solid var(--color-primary);
+}
+
+/* Smooth fade and slide-down transition for test results */
+.fade-slide-enter-active,
+.fade-slide-leave-active {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.fade-slide-enter-from {
+  opacity: 0;
+  transform: translateY(-8px);
+}
+
+.fade-slide-leave-to {
+  opacity: 0;
+  transform: translateY(-4px);
+}
+
+/* Spinner animation for test button */
+.spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--color-border);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 </style>

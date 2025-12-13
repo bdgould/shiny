@@ -10,6 +10,9 @@
         @click="tabsStore.setActiveTab(tab.id)"
         @mousedown.middle.prevent="handleMiddleClick(tab.id)"
       >
+        <span v-if="tab.isSettings" class="settings-icon">
+          <SettingsIcon />
+        </span>
         <span class="tab-name">{{ tab.name }}</span>
         <span v-if="tab.isDirty" class="dirty-indicator">●</span>
         <span v-if="tab.isExecuting" class="executing-indicator">
@@ -37,8 +40,25 @@
 <script setup lang="ts">
 import { useTabsStore } from '@/stores/tabs'
 import type { Tab } from '@/stores/tabs'
+import { useKeyboardShortcuts } from '@/composables/useKeyboardShortcuts'
+import SettingsIcon from '@/components/sidebar/icons/SettingsIcon.vue'
+
 
 const tabsStore = useTabsStore()
+
+// Register keyboard shortcut: Cmd+W (Mac) or Ctrl+W (Win/Linux) to close active tab
+useKeyboardShortcuts([
+  {
+    key: 'w',
+    ctrlOrCmd: true,
+    callback: () => {
+      const activeTabId = tabsStore.activeTabId
+      if (activeTabId) {
+        handleCloseTab(activeTabId)
+      }
+    },
+  },
+])
 
 function handleMiddleClick(tabId: string) {
   handleCloseTab(tabId)
@@ -141,6 +161,21 @@ function getTabTooltip(tab: Tab): string {
   font-size: 1rem;
   line-height: 1;
   flex-shrink: 0;
+}
+
+.settings-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  color: var(--color-text-secondary);
+}
+
+.settings-icon :deep(svg) {
+  width: 100%;
+  height: 100%;
 }
 
 .executing-indicator {
