@@ -106,6 +106,36 @@ export class FileService {
   }
 
   /**
+   * Show open dialog and read .ttl prefix file
+   */
+  async openPrefixFile(): Promise<{ content: string } | { error: string }> {
+    try {
+      const { filePaths, canceled } = await dialog.showOpenDialog({
+        title: 'Open Turtle Prefix File',
+        filters: [
+          { name: 'Turtle', extensions: ['ttl'] },
+          { name: 'All Files', extensions: ['*'] },
+        ],
+        properties: ['openFile'],
+      })
+
+      if (canceled || filePaths.length === 0) {
+        return { error: 'No file selected' }
+      }
+
+      const filePath = filePaths[0]
+      const content = await fs.readFile(filePath, 'utf-8')
+
+      return { content }
+    } catch (error) {
+      console.error('Error opening prefix file:', error)
+      return {
+        error: error instanceof Error ? error.message : 'Unknown error',
+      }
+    }
+  }
+
+  /**
    * Show save dialog and save query results to file
    */
   async saveResults(

@@ -145,19 +145,15 @@ export const useConnectionStore = defineStore('connection', () => {
   }
 
   async function testConnection(id: string) {
-    isLoading.value = true
-    error.value = null
-
+    // Note: We don't set isLoading here to avoid hiding the backend list
+    // The component handles its own local testing state
     try {
       const result = await window.electronAPI.backends.testConnection(id)
       return result
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to test connection'
-      error.value = message
       console.error('Failed to test connection:', err)
       throw new Error(message)
-    } finally {
-      isLoading.value = false
     }
   }
 
