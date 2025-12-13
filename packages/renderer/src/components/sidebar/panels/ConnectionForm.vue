@@ -25,6 +25,7 @@
           <option value="sparql-1.1">Generic SPARQL 1.1</option>
           <option value="graphstudio">Altair Graph Studio</option>
           <option value="mobi">Mobi</option>
+          <option value="graphdb">GraphDB</option>
           <option value="neptune">AWS Neptune</option>
           <option value="stardog">Stardog</option>
         </select>
@@ -454,6 +455,61 @@
         </div>
       </template>
 
+      <!-- GraphDB-specific configuration -->
+      <template v-if="formData.type === 'graphdb'">
+        <div class="form-section-divider"></div>
+
+        <div class="form-group">
+          <label>Repository *</label>
+          <div class="graphdb-selector">
+            <button
+              type="button"
+              class="btn-secondary btn-sm"
+              :disabled="!canLoadGraphDBRepositories || graphdbAPI.isLoadingRepositories.value"
+              @click="loadGraphDBRepositoriesFromServer"
+            >
+              {{
+                graphdbAPI.isLoadingRepositories.value ? 'Loading...' : 'Load Repositories'
+              }}
+            </button>
+
+            <button
+              v-if="graphdbAPI.hasRepositories.value"
+              type="button"
+              class="btn-icon-sm"
+              title="Refresh repository list"
+              @click="refreshGraphDBRepositories"
+            >
+              🔄
+            </button>
+          </div>
+
+          <select
+            v-if="graphdbAPI.hasRepositories.value"
+            v-model="formData.graphdbRepositoryId"
+            :class="{ error: errors.graphdbRepository }"
+            class="graphdb-dropdown"
+            @change="onGraphDBRepositorySelected"
+          >
+            <option value="">Select a repository...</option>
+            <option
+              v-for="repo in graphdbAPI.repositories.value"
+              :key="repo.id"
+              :value="repo.id"
+            >
+              {{ repo.title }}
+            </option>
+          </select>
+
+          <span v-if="errors.graphdbRepository" class="error-message">
+            {{ errors.graphdbRepository }}
+          </span>
+          <span v-if="graphdbAPI.error.value" class="error-message">
+            {{ graphdbAPI.error.value }}
+          </span>
+        </div>
+      </template>
+
       <div class="form-actions">
         <button type="button" class="btn-secondary" @click="$emit('cancel')">Cancel</button>
         <button type="submit" class="btn-primary" :disabled="isSaving">
@@ -472,10 +528,12 @@ import type {
   MobiCatalog,
   MobiRecord,
   MobiRepository,
+  GraphDBRepository,
 } from '@/types/electron'
 import { useBackendValidation, type BackendFormData } from '@/composables/useBackendValidation'
 import { useGraphStudioAPI } from '@/composables/useGraphStudioAPI'
 import { useMobiAPI } from '@/composables/useMobiAPI'
+import { useGraphDBAPI } from '@/composables/useGraphDBAPI'
 import { MOBI_RECORD_TYPE_IRIS } from '@/../../main/src/backends/providers/mobi-types'
 
 interface Props {
@@ -510,6 +568,12 @@ const selectedRecordTypes = ref<string[]>([])
 const selectedCatalog = ref<MobiCatalog | null>(null)
 const selectedRecord = ref<MobiRecord | null>(null)
 const selectedRepository = ref<MobiRepository | null>(null)
+
+// GraphDB API composable
+const graphdbAPI = useGraphDBAPI()
+
+// GraphDB state
+const selectedGraphDBRepository = ref<GraphDBRepository | null>(null)
 
 // Available record types for filtering
 const availableRecordTypes = [
@@ -572,6 +636,20 @@ if (props.backend && props.backend.type === 'mobi' && props.backend.providerConf
 // Set initial query mode
 mobiQueryMode.value = initialQueryMode
 
+// Parse existing provider config if editing GraphDB backend
+let initialGraphDBRepositoryId = ''
+let initialGraphDBRepositoryTitle = ''
+
+if (props.backend && props.backend.type === 'graphdb' && props.backend.providerConfig) {
+  try {
+    const providerConfig = JSON.parse(props.backend.providerConfig)
+    initialGraphDBRepositoryId = providerConfig.repositoryId || ''
+    initialGraphDBRepositoryTitle = providerConfig.repositoryTitle || ''
+  } catch (e) {
+    console.error('Failed to parse GraphDB provider config:', e)
+  }
+}
+
 // Initialize form data
 const formData = ref<BackendFormData>({
   name: props.backend?.name || '',
@@ -598,6 +676,9 @@ const formData = ref<BackendFormData>({
   branchId: initialBranchId,
   branchTitle: initialBranchTitle,
   includeImports: initialIncludeImports,
+  // GraphDB fields
+  graphdbRepositoryId: initialGraphDBRepositoryId,
+  graphdbRepositoryTitle: initialGraphDBRepositoryTitle,
 })
 
 const { errors, validateForm, clearErrors } = useBackendValidation()
@@ -643,6 +724,13 @@ watch(
       selectedCatalog.value = null
       selectedRecord.value = null
       selectedRecordTypes.value = []
+    }
+
+    // Clear GraphDB-specific fields when switching away
+    if (newType !== 'graphdb') {
+      formData.value.graphdbRepositoryId = ''
+      formData.value.graphdbRepositoryTitle = ''
+      selectedGraphDBRepository.value = null
     }
   }
 )
@@ -1079,6 +1167,68 @@ function onRepositorySelected() {
   }
 }
 
+// ===== GraphDB Functions =====
+
+// Computed: Can load GraphDB repositories (need endpoint and optional credentials)
+const canLoadGraphDBRepositories = computed(() => {
+  if (!formData.value.endpoint) return false
+
+  // GraphDB can work with or without credentials
+  if (formData.value.authType === 'basic') {
+    return !!formData.value.username && !!formData.value.password
+  }
+
+  return true
+})
+
+// GraphDB: Load repositories from server
+async function loadGraphDBRepositoriesFromServer() {
+  if (!canLoadGraphDBRepositories.value) return
+
+  const credentials =
+    formData.value.authType === 'basic'
+      ? { username: formData.value.username, password: formData.value.password }
+      : undefined
+
+  await graphdbAPI.loadRepositories(
+    formData.value.endpoint,
+    credentials,
+    false,
+    formData.value.allowInsecure
+  )
+}
+
+// GraphDB: Refresh repositories
+async function refreshGraphDBRepositories() {
+  if (!canLoadGraphDBRepositories.value) return
+
+  const credentials =
+    formData.value.authType === 'basic'
+      ? { username: formData.value.username, password: formData.value.password }
+      : undefined
+
+  await graphdbAPI.refreshRepositories(
+    formData.value.endpoint,
+    credentials,
+    formData.value.allowInsecure
+  )
+}
+
+// GraphDB: When repository is selected
+function onGraphDBRepositorySelected() {
+  const repository = graphdbAPI.repositories.value.find(
+    (repo) => repo.id === formData.value.graphdbRepositoryId
+  )
+
+  if (repository) {
+    selectedGraphDBRepository.value = repository
+    formData.value.graphdbRepositoryTitle = repository.title
+  } else {
+    selectedGraphDBRepository.value = null
+    formData.value.graphdbRepositoryTitle = ''
+  }
+}
+
 // Load existing credentials when editing
 async function loadExistingCredentials() {
   if (!isEditing || !props.backend) return
@@ -1240,6 +1390,34 @@ onMounted(async () => {
               }
             }
           }
+        }
+      }
+    }
+  }
+
+  // Load GraphDB repositories when editing GraphDB backend
+  if (isEditing && formData.value.type === 'graphdb' && formData.value.endpoint) {
+    const credentials =
+      formData.value.authType === 'basic'
+        ? { username: formData.value.username, password: formData.value.password }
+        : undefined
+
+    if (canLoadGraphDBRepositories.value) {
+      // Load repositories
+      await graphdbAPI.loadRepositories(
+        formData.value.endpoint,
+        credentials,
+        false,
+        formData.value.allowInsecure
+      )
+
+      // Restore selected repository
+      if (formData.value.graphdbRepositoryId) {
+        const repository = graphdbAPI.repositories.value.find(
+          (repo) => repo.id === formData.value.graphdbRepositoryId
+        )
+        if (repository) {
+          selectedGraphDBRepository.value = repository
         }
       }
     }

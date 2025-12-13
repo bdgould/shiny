@@ -19,6 +19,11 @@ const ALLOWED_CHANNELS = {
     'mobi:listRepositories',
     'mobi:listRecords',
     'mobi:listBranches',
+    'graphdb:authenticate',
+    'graphdb:getServerInfo',
+    'graphdb:listRepositories',
+    'graphdb:getRepositoryDetails',
+    'graphdb:testConnection',
     'files:saveQuery',
     'files:openQuery',
     'files:saveResults',
@@ -127,6 +132,49 @@ export interface MobiRepository {
 
 export interface MobiAuthResponse {
   username: string
+}
+
+// GraphDB types
+export interface GraphDBRepository {
+  id: string
+  title: string
+  uri: string
+  state: 'active' | 'inactive' | 'initializing' | 'error'
+  readable: boolean
+  writable: boolean
+  type?: string
+  sesameType?: string
+  location?: string
+  externalUrl?: string
+}
+
+export interface GraphDBNamespace {
+  prefix: string
+  namespace: string
+}
+
+export interface GraphDBServerInfo {
+  productName: string
+  productVersion: string
+  versionFamily: '9.x' | '10.x' | '11.x' | 'unknown'
+  sesameVersion?: string
+}
+
+export interface GraphDBAuthResponse {
+  success: boolean
+  token?: string
+  username?: string
+}
+
+export interface GraphDBRepositoryDetails {
+  repositoryId: string
+  namespaces: GraphDBNamespace[]
+  tripleCount?: number
+}
+
+export interface GraphDBConnectionResult {
+  success: boolean
+  message: string
 }
 
 // File operations types
@@ -238,6 +286,36 @@ export interface ElectronAPI {
       credentials?: { username?: string; password?: string },
       allowInsecure?: boolean
     ) => Promise<MobiBranch[]>
+  }
+  graphdb: {
+    authenticate: (
+      baseUrl: string,
+      username: string,
+      password: string,
+      allowInsecure?: boolean
+    ) => Promise<GraphDBAuthResponse>
+    getServerInfo: (
+      baseUrl: string,
+      credentials?: { username?: string; password?: string },
+      allowInsecure?: boolean
+    ) => Promise<GraphDBServerInfo>
+    listRepositories: (
+      baseUrl: string,
+      credentials?: { username?: string; password?: string },
+      allowInsecure?: boolean
+    ) => Promise<GraphDBRepository[]>
+    getRepositoryDetails: (
+      baseUrl: string,
+      repositoryId: string,
+      credentials?: { username?: string; password?: string },
+      allowInsecure?: boolean
+    ) => Promise<GraphDBRepositoryDetails>
+    testConnection: (
+      baseUrl: string,
+      repositoryId: string,
+      credentials?: { username?: string; password?: string },
+      allowInsecure?: boolean
+    ) => Promise<GraphDBConnectionResult>
   }
   files: {
     saveQuery: (
@@ -433,6 +511,84 @@ contextBridge.exposeInMainWorld('electronAPI', {
         baseUrl,
         catalogId,
         recordId,
+        credentials,
+        allowInsecure,
+      })
+    },
+  },
+  graphdb: {
+    authenticate: (
+      baseUrl: string,
+      username: string,
+      password: string,
+      allowInsecure?: boolean
+    ) => {
+      if (!validateChannel('graphdb:authenticate', 'invoke')) {
+        throw new Error('Unauthorized IPC channel')
+      }
+      return ipcRenderer.invoke('graphdb:authenticate', {
+        baseUrl,
+        username,
+        password,
+        allowInsecure,
+      })
+    },
+    getServerInfo: (
+      baseUrl: string,
+      credentials?: { username?: string; password?: string },
+      allowInsecure?: boolean
+    ) => {
+      if (!validateChannel('graphdb:getServerInfo', 'invoke')) {
+        throw new Error('Unauthorized IPC channel')
+      }
+      return ipcRenderer.invoke('graphdb:getServerInfo', {
+        baseUrl,
+        credentials,
+        allowInsecure,
+      })
+    },
+    listRepositories: (
+      baseUrl: string,
+      credentials?: { username?: string; password?: string },
+      allowInsecure?: boolean
+    ) => {
+      if (!validateChannel('graphdb:listRepositories', 'invoke')) {
+        throw new Error('Unauthorized IPC channel')
+      }
+      return ipcRenderer.invoke('graphdb:listRepositories', {
+        baseUrl,
+        credentials,
+        allowInsecure,
+      })
+    },
+    getRepositoryDetails: (
+      baseUrl: string,
+      repositoryId: string,
+      credentials?: { username?: string; password?: string },
+      allowInsecure?: boolean
+    ) => {
+      if (!validateChannel('graphdb:getRepositoryDetails', 'invoke')) {
+        throw new Error('Unauthorized IPC channel')
+      }
+      return ipcRenderer.invoke('graphdb:getRepositoryDetails', {
+        baseUrl,
+        repositoryId,
+        credentials,
+        allowInsecure,
+      })
+    },
+    testConnection: (
+      baseUrl: string,
+      repositoryId: string,
+      credentials?: { username?: string; password?: string },
+      allowInsecure?: boolean
+    ) => {
+      if (!validateChannel('graphdb:testConnection', 'invoke')) {
+        throw new Error('Unauthorized IPC channel')
+      }
+      return ipcRenderer.invoke('graphdb:testConnection', {
+        baseUrl,
+        repositoryId,
         credentials,
         allowInsecure,
       })

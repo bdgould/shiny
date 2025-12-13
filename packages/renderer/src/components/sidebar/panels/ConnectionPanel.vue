@@ -116,6 +116,15 @@ async function handleSave(formData: BackendFormData) {
       }
     }
 
+    // Build provider config for GraphDB
+    if (formData.type === 'graphdb' && formData.graphdbRepositoryId) {
+      providerConfig = JSON.stringify({
+        repositoryId: formData.graphdbRepositoryId,
+        repositoryTitle: formData.graphdbRepositoryTitle || '',
+      })
+      console.log('[ConnectionPanel] Created GraphDB config:', providerConfig)
+    }
+
     if (editingBackend.value) {
       // Update existing backend
       await connectionStore.updateBackend(
