@@ -72,6 +72,53 @@ export interface MobiAuthResponse {
   username: string
 }
 
+export interface MobiRepository {
+  id: string
+  iri: string
+  title: string
+  description?: string
+}
+
+export interface GraphDBRepository {
+  id: string
+  title: string
+  uri: string
+  readable: boolean
+  writable: boolean
+  type: string
+  location?: string
+  externalUrl?: string
+}
+
+export interface GraphDBNamespace {
+  prefix: string
+  namespace: string
+}
+
+export interface GraphDBServerInfo {
+  productName: string
+  productVersion: string
+  versionFamily: '9.x' | '10.x' | '11.x' | 'unknown'
+  sesameVersion?: string
+}
+
+export interface GraphDBAuthResponse {
+  success: boolean
+  token?: string
+  username?: string
+}
+
+export interface GraphDBRepositoryDetails {
+  repositoryId: string
+  namespaces: GraphDBNamespace[]
+  tripleCount?: number
+}
+
+export interface GraphDBConnectionResult {
+  success: boolean
+  message: string
+}
+
 export interface BackendMetadata {
   id: string
   name: string
@@ -143,6 +190,11 @@ export interface ElectronAPI {
       credentials?: { username?: string; password?: string },
       allowInsecure?: boolean
     ) => Promise<MobiCatalog[]>
+    listRepositories: (
+      baseUrl: string,
+      credentials?: { username?: string; password?: string },
+      allowInsecure?: boolean
+    ) => Promise<MobiRepository[]>
     listRecords: (
       baseUrl: string,
       catalogId: string,
@@ -157,6 +209,36 @@ export interface ElectronAPI {
       credentials?: { username?: string; password?: string },
       allowInsecure?: boolean
     ) => Promise<MobiBranch[]>
+  }
+  graphdb: {
+    authenticate: (
+      baseUrl: string,
+      username: string,
+      password: string,
+      allowInsecure?: boolean
+    ) => Promise<GraphDBAuthResponse>
+    getServerInfo: (
+      baseUrl: string,
+      credentials?: { username?: string; password?: string },
+      allowInsecure?: boolean
+    ) => Promise<GraphDBServerInfo>
+    listRepositories: (
+      baseUrl: string,
+      credentials?: { username?: string; password?: string },
+      allowInsecure?: boolean
+    ) => Promise<GraphDBRepository[]>
+    getRepositoryDetails: (
+      baseUrl: string,
+      repositoryId: string,
+      credentials?: { username?: string; password?: string },
+      allowInsecure?: boolean
+    ) => Promise<GraphDBRepositoryDetails>
+    testConnection: (
+      baseUrl: string,
+      repositoryId: string,
+      credentials?: { username?: string; password?: string },
+      allowInsecure?: boolean
+    ) => Promise<GraphDBConnectionResult>
   }
   files: {
     saveQuery: (

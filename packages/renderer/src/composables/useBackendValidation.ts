@@ -35,6 +35,10 @@ export interface BackendFormData {
   branchId?: string
   branchTitle?: string
   includeImports?: boolean
+
+  // GraphDB-specific fields
+  graphdbRepositoryId?: string
+  graphdbRepositoryTitle?: string
 }
 
 export interface ValidationErrors {
@@ -49,6 +53,7 @@ export interface ValidationErrors {
   repository?: string
   catalog?: string
   record?: string
+  graphdbRepository?: string
 }
 
 export function useBackendValidation() {
@@ -166,6 +171,17 @@ export function useBackendValidation() {
     return errors
   }
 
+  function validateGraphDB(formData: BackendFormData): { graphdbRepository?: string } {
+    const errors: { graphdbRepository?: string } = {}
+
+    // GraphDB requires a repository to be selected
+    if (!formData.graphdbRepositoryId || formData.graphdbRepositoryId.trim().length === 0) {
+      errors.graphdbRepository = 'Please select a repository'
+    }
+
+    return errors
+  }
+
   function validateForm(formData: BackendFormData): boolean {
     errors.value = {}
 
@@ -202,6 +218,13 @@ export function useBackendValidation() {
       if (mobiErrors.repository) errors.value.repository = mobiErrors.repository
       if (mobiErrors.catalog) errors.value.catalog = mobiErrors.catalog
       if (mobiErrors.record) errors.value.record = mobiErrors.record
+    }
+
+    // Validate GraphDB-specific fields
+    if (formData.type === 'graphdb') {
+      const graphdbErrors = validateGraphDB(formData)
+      if (graphdbErrors.graphdbRepository)
+        errors.value.graphdbRepository = graphdbErrors.graphdbRepository
     }
 
     // Return true if no errors
