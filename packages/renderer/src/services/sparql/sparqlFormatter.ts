@@ -194,13 +194,16 @@ function applyRdfTypeShorthand(query: string, settings: SparqlFormattingSettings
   let result = query
 
   if (settings.useRdfTypeShorthand) {
-    // Replace full rdf:type IRI with 'a'
+    // Determine the case for 'a' based on keyword case setting
+    const aKeyword = settings.keywordCase === 'uppercase' ? 'A' : 'a'
+
+    // Replace full rdf:type IRI with 'a' or 'A'
     result = result.replace(
       /<http:\/\/www\.w3\.org\/1999\/02\/22-rdf-syntax-ns#type>/g,
-      'a'
+      aKeyword
     )
     // Also handle prefixed version
-    result = result.replace(/\brdf:type\b/g, 'a')
+    result = result.replace(/\brdf:type\b/g, aKeyword)
   }
   // If false, sparqljs already outputs full IRI, so no action needed
 
