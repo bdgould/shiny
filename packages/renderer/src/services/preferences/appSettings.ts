@@ -6,6 +6,8 @@
 const STORAGE_KEY_QUERY_SETTINGS = 'shiny:settings:query'
 const STORAGE_KEY_AI_SETTINGS = 'shiny:settings:ai'
 const STORAGE_KEY_CACHE_SETTINGS = 'shiny:settings:cache'
+const STORAGE_KEY_SPARQL_FORMATTING_SETTINGS = 'shiny:settings:sparql-formatting'
+const STORAGE_KEY_PREFIX_SETTINGS = 'shiny:settings:prefix'
 
 export interface QueryConnectionSettings {
   connectionTimeout: number // in milliseconds
@@ -30,6 +32,40 @@ export interface GlobalCacheSettings {
   refreshCheckInterval: number
 }
 
+export interface SparqlFormattingSettings {
+  indentSize: number // Number of spaces for indentation
+  useTabs: boolean // Use tabs instead of spaces
+  keywordCase: 'uppercase' | 'lowercase' // Case for SPARQL keywords
+  alignPrefixes: boolean // Align PREFIX declarations
+  alignPredicates: boolean // Align predicates in triple patterns
+  useRdfTypeShorthand: boolean // Use 'a' instead of rdf:type or full IRI
+  braceStyle: 'same-line' | 'new-line' // Opening brace placement
+  insertSpaces: {
+    afterCommas: boolean // Space after commas in value lists
+    beforeBraces: boolean // Space before opening braces
+    afterBraces: boolean // Space after opening braces
+    beforeParentheses: boolean // Space before opening parentheses
+    beforeStatementSeparators: boolean // Space before . and ; separators
+  }
+  lineBreaks: {
+    afterPrefix: boolean // Line break after each PREFIX
+    afterSelect: boolean // Line break after SELECT clause
+    afterWhere: boolean // Line break after WHERE clause
+    betweenClauses: boolean // Blank line between major clauses
+    betweenPrefixAndQuery: boolean // Blank line between PREFIXes and query
+  }
+  maxLineLength: number // Maximum line length before wrapping
+}
+
+export interface PrefixDefinition {
+  prefix: string
+  namespace: string
+}
+
+export interface PrefixManagementSettings {
+  prefixes: PrefixDefinition[]
+}
+
 const DEFAULT_QUERY_SETTINGS: QueryConnectionSettings = {
   connectionTimeout: 30000, // 30 seconds
   queryTimeout: 300000, // 5 minutes
@@ -51,6 +87,44 @@ const DEFAULT_CACHE_SETTINGS: GlobalCacheSettings = {
   defaultMaxElements: 50000,
   autoRefresh: true,
   refreshCheckInterval: 5 * 60 * 1000 // 5 minutes
+}
+
+
+const DEFAULT_SPARQL_FORMATTING_SETTINGS: SparqlFormattingSettings = {
+  indentSize: 2,
+  useTabs: false,
+  keywordCase: 'uppercase',
+  alignPrefixes: true,
+  alignPredicates: false,
+  useRdfTypeShorthand: true,
+  braceStyle: 'same-line',
+  insertSpaces: {
+    afterCommas: true,
+    beforeBraces: true,
+    afterBraces: true,
+    beforeParentheses: false,
+    beforeStatementSeparators: false,
+  },
+  lineBreaks: {
+    afterPrefix: true,
+    afterSelect: true,
+    afterWhere: true,
+    betweenClauses: false,
+    betweenPrefixAndQuery: true,
+  },
+  maxLineLength: 120,
+}
+
+const DEFAULT_PREFIX_SETTINGS: PrefixManagementSettings = {
+  prefixes: [
+    { prefix: 'rdf', namespace: 'http://www.w3.org/1999/02/22-rdf-syntax-ns#' },
+    { prefix: 'rdfs', namespace: 'http://www.w3.org/2000/01/rdf-schema#' },
+    { prefix: 'owl', namespace: 'http://www.w3.org/2002/07/owl#' },
+    { prefix: 'xsd', namespace: 'http://www.w3.org/2001/XMLSchema#' },
+    { prefix: 'skos', namespace: 'http://www.w3.org/2004/02/skos/core#' },
+    { prefix: 'dcterms', namespace: 'http://purl.org/dc/terms/' },
+    { prefix: 'foaf', namespace: 'http://xmlns.com/foaf/0.1/' },
+  ]
 }
 
 /**
@@ -255,6 +329,75 @@ export function saveCacheSettings(settings: GlobalCacheSettings): void {
     localStorage.setItem(STORAGE_KEY_CACHE_SETTINGS, JSON.stringify(settings))
   } catch (error) {
     console.warn('Failed to save cache settings to localStorage:', error)
+    throw error
+  }
+}
+
+/**
+<<<<<<< HEAD
+ * Get SPARQL formatting settings
+ */
+export function getSparqlFormattingSettings(): SparqlFormattingSettings {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY_SPARQL_FORMATTING_SETTINGS)
+    if (stored) {
+      const parsed = JSON.parse(stored) as SparqlFormattingSettings
+      // Deep merge for nested objects
+      return {
+        ...DEFAULT_SPARQL_FORMATTING_SETTINGS,
+        ...parsed,
+        insertSpaces: {
+          ...DEFAULT_SPARQL_FORMATTING_SETTINGS.insertSpaces,
+          ...(parsed.insertSpaces || {}),
+        },
+        lineBreaks: {
+          ...DEFAULT_SPARQL_FORMATTING_SETTINGS.lineBreaks,
+          ...(parsed.lineBreaks || {}),
+        },
+      }
+    }
+  } catch (error) {
+    console.warn('Failed to load SPARQL formatting settings from localStorage:', error)
+  }
+  return { ...DEFAULT_SPARQL_FORMATTING_SETTINGS }
+}
+
+/**
+ * Save SPARQL formatting settings
+ */
+export function saveSparqlFormattingSettings(settings: SparqlFormattingSettings): void {
+  try {
+    localStorage.setItem(STORAGE_KEY_SPARQL_FORMATTING_SETTINGS, JSON.stringify(settings))
+  } catch (error) {
+    console.warn('Failed to save SPARQL formatting settings to localStorage:', error)
+    throw error
+  }
+}
+
+/**
+ * Get prefix management settings
+ */
+export function getPrefixSettings(): PrefixManagementSettings {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY_PREFIX_SETTINGS)
+    if (stored) {
+      const parsed = JSON.parse(stored) as PrefixManagementSettings
+      return { ...DEFAULT_PREFIX_SETTINGS, ...parsed }
+    }
+  } catch (error) {
+    console.warn('Failed to load prefix settings from localStorage:', error)
+  }
+  return { ...DEFAULT_PREFIX_SETTINGS }
+}
+
+/**
+ * Save prefix management settings
+ */
+export function savePrefixSettings(settings: PrefixManagementSettings): void {
+  try {
+    localStorage.setItem(STORAGE_KEY_PREFIX_SETTINGS, JSON.stringify(settings))
+  } catch (error) {
+    console.warn('Failed to save prefix settings to localStorage:', error)
     throw error
   }
 }

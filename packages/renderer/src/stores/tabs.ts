@@ -18,7 +18,7 @@ export interface Tab {
   createdAt: number
   lastExecutedAt: number | null
   isSettings?: boolean // True if this is a settings tab
-  settingsType?: 'query' | 'ai' | 'cache' // Type of settings panel to show
+  settingsType?: 'query' | 'ai' | 'cache' | 'prefix' | 'sparql-formatting' // Type of settings panel to show
 }
 
 interface TabsState {
@@ -48,7 +48,7 @@ export const useTabsStore = defineStore('tabs', () => {
     backendId?: string
     savedContent?: string
     isSettings?: boolean
-    settingsType?: 'query' | 'ai' | 'cache'
+    settingsType?: 'query' | 'ai' | 'cache' | 'prefix' | 'sparql-formatting'
   }): string {
     // Determine tab name
     let tabName = options?.name
@@ -58,7 +58,9 @@ export const useTabsStore = defineStore('tabs', () => {
         const settingsNames = {
           query: 'Query Settings',
           ai: 'AI Settings',
-          cache: 'Cache Settings'
+          cache: 'Cache Settings',
+          'sparql-formatting': 'SPARQL Formatting',
+          prefix: 'Prefix Management'
         }
         tabName = options.settingsType ? settingsNames[options.settingsType] : 'Settings'
       } else {

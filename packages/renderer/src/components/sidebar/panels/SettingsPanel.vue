@@ -11,11 +11,18 @@
           <div class="settings-item-description">Connection timeouts and query execution settings</div>
         </div>
       </button>
-      <button class="settings-item" @click="openAISettings">
-        <div class="settings-item-icon">🤖</div>
+      <button class="settings-item" @click="openPrefixSettings">
+        <div class="settings-item-icon">🏷️</div>
         <div class="settings-item-content">
-          <div class="settings-item-title">AI Configuration</div>
-          <div class="settings-item-description">Configure OpenAI endpoints and test connections</div>
+          <div class="settings-item-title">Prefix Management</div>
+          <div class="settings-item-description">Manage SPARQL prefixes and import/export definitions</div>
+        </div>
+      </button>
+      <button class="settings-item" @click="openSparqlFormattingSettings">
+        <div class="settings-item-icon">✨</div>
+        <div class="settings-item-content">
+          <div class="settings-item-title">SPARQL Formatting</div>
+          <div class="settings-item-description">Configure formatting preferences for SPARQL queries</div>
         </div>
       </button>
       <button class="settings-item" @click="openCacheSettings">
@@ -23,6 +30,13 @@
         <div class="settings-item-content">
           <div class="settings-item-title">Ontology Cache</div>
           <div class="settings-item-description">Configure ontology element caching and SPARQL queries</div>
+        </div>
+      </button>
+      <button class="settings-item" @click="openAISettings">
+        <div class="settings-item-icon">🤖</div>
+        <div class="settings-item-content">
+          <div class="settings-item-title">AI Configuration</div>
+          <div class="settings-item-description">Configure OpenAI endpoints and test connections</div>
         </div>
       </button>
     </div>
@@ -73,6 +87,34 @@ function openCacheSettings() {
     tabsStore.createTab({
       isSettings: true,
       settingsType: 'cache',
+    })
+  }
+  // Keep the drawer open so user can navigate between settings
+}
+
+function openPrefixSettings() {
+  // Create a new tab for prefix settings
+  const existingTab = tabsStore.tabs.find((tab) => tab.settingsType === 'prefix')
+  if (existingTab) {
+    tabsStore.setActiveTab(existingTab.id)
+  } else {
+    tabsStore.createTab({
+      isSettings: true,
+      settingsType: 'prefix',
+    })
+  }
+  // Keep the drawer open so user can navigate between settings
+}
+
+function openSparqlFormattingSettings() {
+  // Create a new tab for SPARQL formatting settings
+  const existingTab = tabsStore.tabs.find((tab) => tab.settingsType === 'sparql-formatting')
+  if (existingTab) {
+    tabsStore.setActiveTab(existingTab.id)
+  } else {
+    tabsStore.createTab({
+      isSettings: true,
+      settingsType: 'sparql-formatting',
     })
   }
   // Keep the drawer open so user can navigate between settings

@@ -13,7 +13,17 @@ export default mergeConfig(
     test: {
       name: 'renderer',
       environment: 'happy-dom',
-      include: ['src/**/*.{test,spec}.{ts,vue.ts}', 'src/**/__tests__/**/*.{ts,vue.ts}'],
+      include: [
+        'src/**/*.{test,spec}.{ts,tsx,js,jsx}',
+        'src/**/*.test.vue.ts',
+      ],
+      exclude: [
+        '**/node_modules/**',
+        '**/dist/**',
+        '**/.{git,cache,output,temp}/**',
+        'src/**/__tests__/fixtures/**',
+        'src/**/__tests__/helpers/**',
+      ],
       globals: true,
       setupFiles: [path.resolve(__dirname, './tests/setup.ts')],
       coverage: {
@@ -27,6 +37,11 @@ export default mergeConfig(
           'src/main.ts', // Entry point
           '**/*.config.ts',
           'tests/**',
+          // your specific problem dirs/files
+          "src/**/__tests__/fixtures/**",
+          "src/**/__tests__/helpers/**",
+          "src/**/__tests__/**/fixtures/**",
+          "src/**/__tests__/**/helpers/**",
         ],
         thresholds: {
           lines: 50,

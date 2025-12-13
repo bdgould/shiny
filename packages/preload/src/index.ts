@@ -27,6 +27,7 @@ const ALLOWED_CHANNELS = {
     'files:saveQuery',
     'files:openQuery',
     'files:saveResults',
+    'files:openPrefixFile',
     'cache:fetch',
     'cache:testQuery',
   ],
@@ -38,6 +39,7 @@ const ALLOWED_CHANNELS = {
     'menu:saveQuery',
     'menu:openQuery',
     'menu:saveResults',
+    'menu:formatQuery',
     'cache:progress',
   ],
 }
@@ -201,6 +203,8 @@ export interface SaveResultsResult {
   error?: string
 }
 
+export type OpenPrefixFileResult = { content: string } | { error: string }
+
 // Ontology cache types
 export interface CacheProgress {
   status: 'idle' | 'loading' | 'refreshing' | 'error' | 'success'
@@ -322,12 +326,14 @@ export interface ElectronAPI {
     openQuery: () => Promise<OpenQueryResult>
     onFileOpened: (callback: (data: QueryFileData) => void) => () => void
     saveResults: (content: string, queryType: string, format: string) => Promise<SaveResultsResult>
+    openPrefixFile: () => Promise<OpenPrefixFileResult>
   }
   menu: {
     onNewQuery: (callback: () => void) => () => void
     onSaveQuery: (callback: () => void) => () => void
     onOpenQuery: (callback: () => void) => () => void
     onSaveResults: (callback: () => void) => () => void
+    onFormatQuery: (callback: () => void) => () => void
   }
   cache: {
     fetch: (backendId: string, onProgress?: boolean) => Promise<any>
@@ -622,6 +628,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
       }
       return ipcRenderer.invoke('files:saveResults', content, queryType, format)
     },
+    openPrefixFile: () => {
+      if (!validateChannel('files:openPrefixFile', 'invoke')) {
+        throw new Error('Unauthorized IPC channel')
+      }
+      return ipcRenderer.invoke('files:openPrefixFile')
+    },
   },
   menu: {
     onNewQuery: (callback: () => void) => {
@@ -662,6 +674,16 @@ contextBridge.exposeInMainWorld('electronAPI', {
       ipcRenderer.on('menu:saveResults', listener)
       return () => {
         ipcRenderer.removeListener('menu:saveResults', listener)
+      }
+    },
+    onFormatQuery: (callback: () => void) => {
+      if (!validateChannel('menu:formatQuery', 'on')) {
+        throw new Error('Unauthorized IPC channel')
+      }
+      const listener = () => callback()
+      ipcRenderer.on('menu:formatQuery', listener)
+      return () => {
+        ipcRenderer.removeListener('menu:formatQuery', listener)
       }
     },
   },

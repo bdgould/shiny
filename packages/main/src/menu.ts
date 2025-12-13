@@ -109,6 +109,14 @@ export function createApplicationMenu(mainWindow: BrowserWindow) {
               { type: 'separator' as const },
               { role: 'selectAll' as const },
             ]),
+        { type: 'separator' as const },
+        {
+          label: 'Format Query',
+          accelerator: 'CmdOrCtrl+Shift+F',
+          click: () => {
+            mainWindow.webContents.send('menu:formatQuery')
+          },
+        },
       ],
     },
 
