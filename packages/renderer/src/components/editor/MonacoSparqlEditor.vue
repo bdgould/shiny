@@ -9,8 +9,9 @@ import { useQueryStore } from '@/stores/query'
 import { useTabsStore } from '@/stores/tabs'
 import { useOntologyCacheStore } from '@/stores/ontologyCache'
 import { useConnectionStore } from '@/stores/connection'
-import { getCacheSettings } from '@/services/preferences/appSettings'
+import { getCacheSettings, getSparqlFormattingSettings } from '@/services/preferences/appSettings'
 import { Parser } from 'sparqljs'
+import { formatSparqlQuery } from '@/services/sparql/sparqlFormatter'
 
 const editorContainer = ref<HTMLElement | null>(null)
 const queryStore = useQueryStore()
@@ -1009,6 +1010,41 @@ function switchToTabModel(tabId: string) {
   editor.setModel(model)
 }
 
+// Function to format the current query
+function formatQuery() {
+  if (!editor) return
+
+  // Don't format if we're in a settings tab
+  if (tabsStore.activeTab?.isSettings) return
+
+  const model = editor.getModel()
+  if (!model) return
+
+  const currentQuery = model.getValue()
+  if (!currentQuery.trim()) return
+
+  try {
+    // Get formatting settings
+    const settings = getSparqlFormattingSettings()
+
+    // Format the query
+    const formattedQuery = formatSparqlQuery(currentQuery, settings)
+
+    // Apply formatted query to editor
+    editor.executeEdits('format', [
+      {
+        range: model.getFullModelRange(),
+        text: formattedQuery,
+      },
+    ])
+
+    // Set cursor to beginning
+    editor.setPosition({ lineNumber: 1, column: 1 })
+  } catch (error) {
+    console.error('Failed to format query:', error)
+  }
+}
+
 onMounted(() => {
   if (!editorContainer.value) return
 
@@ -1065,6 +1101,19 @@ onMounted(() => {
     await openQuery()
   })
 
+  // Register keyboard shortcut: Cmd+Shift+F (Mac) or Ctrl+Shift+F (Win/Linux) to format query
+  editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KeyF, () => {
+    formatQuery()
+  })
+
+  // Listen for format query menu event
+  const cleanupFormatMenu = window.electronAPI.menu.onFormatQuery(() => {
+    formatQuery()
+  })
+
+  // Store cleanup function to call on unmount
+  const onUnmountCallbacks = [cleanupFormatMenu]
+
   // Watch for tab switches and update the editor model
   watch(
     () => tabsStore.activeTabId,
@@ -1074,9 +1123,17 @@ onMounted(() => {
       }
     }
   )
+
+  // Store cleanup callbacks on editor instance for unmount
+  ;(editor as any)._onUnmountCallbacks = onUnmountCallbacks
 })
 
 onUnmounted(() => {
+  // Call cleanup callbacks
+  if (editor && (editor as any)._onUnmountCallbacks) {
+    ;(editor as any)._onUnmountCallbacks.forEach((cleanup: () => void) => cleanup())
+  }
+
   // Dispose all cached models
   modelCache.forEach((model) => model.dispose())
   modelCache.clear()

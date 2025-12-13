@@ -34,6 +34,7 @@ const ALLOWED_CHANNELS = {
     'menu:saveQuery',
     'menu:openQuery',
     'menu:saveResults',
+    'menu:formatQuery',
     'cache:progress',
   ],
 }
@@ -254,6 +255,7 @@ export interface ElectronAPI {
     onSaveQuery: (callback: () => void) => () => void
     onOpenQuery: (callback: () => void) => () => void
     onSaveResults: (callback: () => void) => () => void
+    onFormatQuery: (callback: () => void) => () => void
   }
   cache: {
     fetch: (backendId: string, onProgress?: boolean) => Promise<any>
@@ -516,6 +518,16 @@ contextBridge.exposeInMainWorld('electronAPI', {
       ipcRenderer.on('menu:saveResults', listener)
       return () => {
         ipcRenderer.removeListener('menu:saveResults', listener)
+      }
+    },
+    onFormatQuery: (callback: () => void) => {
+      if (!validateChannel('menu:formatQuery', 'on')) {
+        throw new Error('Unauthorized IPC channel')
+      }
+      const listener = () => callback()
+      ipcRenderer.on('menu:formatQuery', listener)
+      return () => {
+        ipcRenderer.removeListener('menu:formatQuery', listener)
       }
     },
   },
