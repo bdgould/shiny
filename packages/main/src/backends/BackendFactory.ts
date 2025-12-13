@@ -10,6 +10,7 @@ import { GraphStudioProvider } from './providers/GraphStudioProvider.js'
 import { MobiProvider } from './providers/MobiProvider.js'
 import { NeptuneProvider } from './providers/NeptuneProvider.js'
 import { StardogProvider } from './providers/StardogProvider.js'
+import { GraphDBProvider } from './providers/GraphDBProvider.js'
 
 /**
  * Provider registry
@@ -31,6 +32,7 @@ function initializeProviders(): void {
   providers.set('mobi', new MobiProvider())
   providers.set('neptune', new NeptuneProvider())
   providers.set('stardog', new StardogProvider())
+  providers.set('graphdb', new GraphDBProvider())
 }
 
 // Initialize on module load
