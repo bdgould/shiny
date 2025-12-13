@@ -90,8 +90,13 @@
           <div class="form-group">
             <label for="import-text">Import Prefixes</label>
             <p class="help-text">
-              Paste Turtle-style prefix definitions (@prefix). Existing prefixes with the same name will be replaced.
+              Paste Turtle-style prefix definitions (@prefix) or load from a .ttl file. Existing prefixes with the same name will be replaced.
             </p>
+            <div class="import-controls">
+              <button class="btn-secondary" @click="loadPrefixFile" style="margin-bottom: 8px">
+                Load from File
+              </button>
+            </div>
             <textarea
               id="import-text"
               v-model="importText"
@@ -211,6 +216,33 @@ function exportPrefixes() {
   setTimeout(() => {
     saveMessage.value = ''
   }, 3000)
+}
+
+async function loadPrefixFile() {
+  importError.value = ''
+
+  try {
+    const result = await window.electronAPI.files.openPrefixFile()
+
+    if ('error' in result) {
+      // User canceled or error occurred
+      if (result.error !== 'No file selected') {
+        importError.value = `Failed to load file: ${result.error}`
+      }
+      return
+    }
+
+    // Replace textarea content with file content
+    importText.value = result.content
+
+    saveMessage.value = 'File loaded successfully. Review and click "Import from Turtle" to apply.'
+    saveMessageType.value = 'success'
+    setTimeout(() => {
+      saveMessage.value = ''
+    }, 3000)
+  } catch (error) {
+    importError.value = 'Failed to load file. Please try again.'
+  }
 }
 
 function importPrefixes() {

@@ -22,6 +22,7 @@ const ALLOWED_CHANNELS = {
     'files:saveQuery',
     'files:openQuery',
     'files:saveResults',
+    'files:openPrefixFile',
     'cache:fetch',
     'cache:testQuery',
   ],
@@ -153,6 +154,8 @@ export interface SaveResultsResult {
   error?: string
 }
 
+export type OpenPrefixFileResult = { content: string } | { error: string }
+
 // Ontology cache types
 export interface CacheProgress {
   status: 'idle' | 'loading' | 'refreshing' | 'error' | 'success'
@@ -244,6 +247,7 @@ export interface ElectronAPI {
     openQuery: () => Promise<OpenQueryResult>
     onFileOpened: (callback: (data: QueryFileData) => void) => () => void
     saveResults: (content: string, queryType: string, format: string) => Promise<SaveResultsResult>
+    openPrefixFile: () => Promise<OpenPrefixFileResult>
   }
   menu: {
     onNewQuery: (callback: () => void) => () => void
@@ -465,6 +469,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
         throw new Error('Unauthorized IPC channel')
       }
       return ipcRenderer.invoke('files:saveResults', content, queryType, format)
+    },
+    openPrefixFile: () => {
+      if (!validateChannel('files:openPrefixFile', 'invoke')) {
+        throw new Error('Unauthorized IPC channel')
+      }
+      return ipcRenderer.invoke('files:openPrefixFile')
     },
   },
   menu: {
