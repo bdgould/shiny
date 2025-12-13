@@ -7,6 +7,7 @@ const STORAGE_KEY_QUERY_SETTINGS = 'shiny:settings:query'
 const STORAGE_KEY_AI_SETTINGS = 'shiny:settings:ai'
 const STORAGE_KEY_CACHE_SETTINGS = 'shiny:settings:cache'
 const STORAGE_KEY_SPARQL_FORMATTING_SETTINGS = 'shiny:settings:sparql-formatting'
+const STORAGE_KEY_PREFIX_SETTINGS = 'shiny:settings:prefix'
 
 export interface QueryConnectionSettings {
   connectionTimeout: number // in milliseconds
@@ -56,6 +57,15 @@ export interface SparqlFormattingSettings {
   maxLineLength: number // Maximum line length before wrapping
 }
 
+export interface PrefixDefinition {
+  prefix: string
+  namespace: string
+}
+
+export interface PrefixManagementSettings {
+  prefixes: PrefixDefinition[]
+}
+
 const DEFAULT_QUERY_SETTINGS: QueryConnectionSettings = {
   connectionTimeout: 30000, // 30 seconds
   queryTimeout: 300000, // 5 minutes
@@ -78,6 +88,7 @@ const DEFAULT_CACHE_SETTINGS: GlobalCacheSettings = {
   autoRefresh: true,
   refreshCheckInterval: 5 * 60 * 1000 // 5 minutes
 }
+
 
 const DEFAULT_SPARQL_FORMATTING_SETTINGS: SparqlFormattingSettings = {
   indentSize: 2,
@@ -102,6 +113,18 @@ const DEFAULT_SPARQL_FORMATTING_SETTINGS: SparqlFormattingSettings = {
     betweenPrefixAndQuery: true,
   },
   maxLineLength: 120,
+}
+
+const DEFAULT_PREFIX_SETTINGS: PrefixManagementSettings = {
+  prefixes: [
+    { prefix: 'rdf', namespace: 'http://www.w3.org/1999/02/22-rdf-syntax-ns#' },
+    { prefix: 'rdfs', namespace: 'http://www.w3.org/2000/01/rdf-schema#' },
+    { prefix: 'owl', namespace: 'http://www.w3.org/2002/07/owl#' },
+    { prefix: 'xsd', namespace: 'http://www.w3.org/2001/XMLSchema#' },
+    { prefix: 'skos', namespace: 'http://www.w3.org/2004/02/skos/core#' },
+    { prefix: 'dcterms', namespace: 'http://purl.org/dc/terms/' },
+    { prefix: 'foaf', namespace: 'http://xmlns.com/foaf/0.1/' },
+  ]
 }
 
 /**
@@ -311,6 +334,7 @@ export function saveCacheSettings(settings: GlobalCacheSettings): void {
 }
 
 /**
+<<<<<<< HEAD
  * Get SPARQL formatting settings
  */
 export function getSparqlFormattingSettings(): SparqlFormattingSettings {
@@ -346,6 +370,34 @@ export function saveSparqlFormattingSettings(settings: SparqlFormattingSettings)
     localStorage.setItem(STORAGE_KEY_SPARQL_FORMATTING_SETTINGS, JSON.stringify(settings))
   } catch (error) {
     console.warn('Failed to save SPARQL formatting settings to localStorage:', error)
+    throw error
+  }
+}
+
+/**
+ * Get prefix management settings
+ */
+export function getPrefixSettings(): PrefixManagementSettings {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY_PREFIX_SETTINGS)
+    if (stored) {
+      const parsed = JSON.parse(stored) as PrefixManagementSettings
+      return { ...DEFAULT_PREFIX_SETTINGS, ...parsed }
+    }
+  } catch (error) {
+    console.warn('Failed to load prefix settings from localStorage:', error)
+  }
+  return { ...DEFAULT_PREFIX_SETTINGS }
+}
+
+/**
+ * Save prefix management settings
+ */
+export function savePrefixSettings(settings: PrefixManagementSettings): void {
+  try {
+    localStorage.setItem(STORAGE_KEY_PREFIX_SETTINGS, JSON.stringify(settings))
+  } catch (error) {
+    console.warn('Failed to save prefix settings to localStorage:', error)
     throw error
   }
 }
