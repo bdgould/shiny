@@ -7,7 +7,12 @@
       <p>{{ error }}</p>
     </div>
     <div v-else-if="serializedData" class="serialization-container">
-      <pre>{{ serializedData }}</pre>
+      <div class="code-with-lines">
+        <div class="line-numbers">
+          <div v-for="lineNum in lineCount" :key="lineNum" class="line-number">{{ lineNum }}</div>
+        </div>
+        <pre class="code-content">{{ serializedData }}</pre>
+      </div>
     </div>
     <div v-else class="empty">No data to display</div>
   </div>
@@ -34,6 +39,11 @@ const formatLabel = computed(() => {
     jsonld: 'JSON-LD',
   }
   return labels[props.format]
+})
+
+const lineCount = computed(() => {
+  if (!serializedData.value) return 0
+  return serializedData.value.split('\n').length
 })
 
 async function serialize() {
@@ -119,11 +129,31 @@ watch(() => [props.turtleData, props.format], serialize)
   padding: 1rem;
 }
 
-.serialization-container pre {
-  margin: 0;
+.code-with-lines {
+  display: flex;
+  gap: 1rem;
   font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
   font-size: 0.875rem;
   line-height: 1.6;
+}
+
+.line-numbers {
+  flex-shrink: 0;
+  user-select: none;
+  text-align: right;
+  color: var(--color-text-secondary);
+  padding-right: 1rem;
+  border-right: 1px solid var(--color-border);
+}
+
+.line-number {
+  line-height: 1.6;
+  min-width: 2.5rem;
+}
+
+.code-content {
+  flex: 1;
+  margin: 0;
   color: var(--color-text-primary);
   white-space: pre-wrap;
   word-wrap: break-word;

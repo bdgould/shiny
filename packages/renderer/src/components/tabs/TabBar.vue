@@ -40,9 +40,25 @@
 <script setup lang="ts">
 import { useTabsStore } from '@/stores/tabs'
 import type { Tab } from '@/stores/tabs'
+import { useKeyboardShortcuts } from '@/composables/useKeyboardShortcuts'
 import SettingsIcon from '@/components/sidebar/icons/SettingsIcon.vue'
 
+
 const tabsStore = useTabsStore()
+
+// Register keyboard shortcut: Cmd+W (Mac) or Ctrl+W (Win/Linux) to close active tab
+useKeyboardShortcuts([
+  {
+    key: 'w',
+    ctrlOrCmd: true,
+    callback: () => {
+      const activeTabId = tabsStore.activeTabId
+      if (activeTabId) {
+        handleCloseTab(activeTabId)
+      }
+    },
+  },
+])
 
 function handleMiddleClick(tabId: string) {
   handleCloseTab(tabId)
