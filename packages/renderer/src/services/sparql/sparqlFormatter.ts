@@ -314,7 +314,7 @@ function applySpacingRules(query: string, settings: SparqlFormattingSettings): s
     result = result.replace(/([^\s])(;)/g, '$1 $2')
     // Add space before period only when it's a statement terminator
     // Match: word/variable/IRI/> followed by . at end of line or before newline
-    result = result.replace(/([>\w\?"])(\.)(\s*(?:\n|$))/gm, '$1 $2$3')
+    result = result.replace(/([>\w?"])(\.)(\s*(?:\n|$))/gm, '$1 $2$3')
   } else {
     // Remove spaces before separators
     result = result.replace(/\s+(;)/g, '$1')

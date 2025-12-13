@@ -231,7 +231,7 @@ describe('formatSparqlQuery', () => {
         const indentedLine = lines.find((l) => l.match(/^\s+\?s/))
         // Should have some indentation with 4 spaces
         if (indentedLine) {
-          expect(indentedLine).toMatch(/^    /) // 4 spaces
+          expect(indentedLine).toMatch(/^ {4}/) // 4 spaces
         }
       })
 
