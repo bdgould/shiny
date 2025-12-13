@@ -6,8 +6,10 @@
       <!-- Settings view for settings tabs -->
       <template v-if="isSettingsTab">
         <QuerySettingsView v-if="tabsStore.activeTab?.settingsType === 'query'" />
-        <AISettingsView v-else-if="tabsStore.activeTab?.settingsType === 'ai'" />
+        <PrefixManagementSettingsView v-else-if="tabsStore.activeTab?.settingsType === 'prefix'" />
+        <SparqlFormattingSettingsView v-else-if="tabsStore.activeTab?.settingsType === 'sparql-formatting'" />
         <CacheSettingsView v-else-if="tabsStore.activeTab?.settingsType === 'cache'" />
+        <AISettingsView v-else-if="tabsStore.activeTab?.settingsType === 'ai'" />
       </template>
 
       <!-- Query editor for regular tabs -->
@@ -83,6 +85,8 @@ import ResultsView from '@/components/results/ResultsView.vue'
 import QuerySettingsView from '@/components/settings/QuerySettingsView.vue'
 import AISettingsView from '@/components/settings/AISettingsView.vue'
 import CacheSettingsView from '@/components/settings/CacheSettingsView.vue'
+import SparqlFormattingSettingsView from '@/components/settings/SparqlFormattingSettingsView.vue'
+import PrefixManagementSettingsView from '@/components/settings/PrefixManagementSettingsView.vue'
 
 const queryStore = useQueryStore()
 const tabsStore = useTabsStore()

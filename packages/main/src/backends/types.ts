@@ -4,7 +4,7 @@
 
 import type { CacheConfig } from './ontologyTypes.js'
 
-export type BackendType = 'sparql-1.1' | 'graphstudio' | 'neptune' | 'stardog' | 'mobi'
+export type BackendType = 'sparql-1.1' | 'graphstudio' | 'neptune' | 'stardog' | 'mobi' | 'graphdb'
 export type AuthType = 'none' | 'basic' | 'bearer' | 'custom'
 
 /**
