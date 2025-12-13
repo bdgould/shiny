@@ -32,7 +32,7 @@
     </div>
 
     <Transition name="fade-slide">
-      <div v-if="testResult" class="test-result" :class="testResult.valid ? 'success' : 'error'">
+      <div v-if="testResult" class="test-result" :class="testResultClass">
         {{ testResult.valid ? '✓ Connection successful' : `✗ ${testResult.error}` }}
       </div>
     </Transition>
@@ -47,7 +47,7 @@ import { BACKEND_TYPE_LABELS, AUTH_TYPE_LABELS } from '@/types/backends'
 interface Props {
   backend: BackendConfig
   isTesting?: boolean
-  testResult?: { valid: boolean; error?: string } | null
+  testResult?: { valid: boolean; error?: string; testing?: boolean } | null
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -73,6 +73,12 @@ const authTypeLabel = computed(() => {
     AUTH_TYPE_LABELS[props.backend.authType as keyof typeof AUTH_TYPE_LABELS] ||
     props.backend.authType
   )
+})
+
+const testResultClass = computed(() => {
+  if (!props.testResult) return ''
+  if (props.testResult.testing) return 'testing'
+  return props.testResult.valid ? 'success' : 'error'
 })
 </script>
 
@@ -199,6 +205,12 @@ const authTypeLabel = computed(() => {
   background: rgba(211, 47, 47, 0.1);
   color: var(--color-error);
   border: 1px solid var(--color-error);
+}
+
+.test-result.testing {
+  background: rgba(0, 102, 204, 0.1);
+  color: var(--color-primary);
+  border: 1px solid var(--color-primary);
 }
 
 /* Smooth fade and slide-down transition for test results */
