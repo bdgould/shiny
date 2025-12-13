@@ -223,7 +223,7 @@ ipcMain.handle(
         })
         productVersion = response.data?.productVersion || response.data
         if (typeof productVersion === 'object') {
-          productVersion = productVersion.productVersion || ''
+          productVersion = productVersion['productVersion'] || ''
         }
         console.log('[GraphDB] Got version from /rest/info/version:', productVersion)
       } catch (error) {
