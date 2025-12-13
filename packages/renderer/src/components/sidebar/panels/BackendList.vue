@@ -47,11 +47,11 @@ defineEmits<{
 
 // Test connection state
 const testingBackendId = ref<string | null>(null)
-const testResults = ref<Record<string, { valid: boolean; error?: string }>>({})
+const testResults = ref<Record<string, { valid: boolean; error?: string; testing?: boolean }>>({})
 
 async function handleTest(backendId: string) {
   testingBackendId.value = backendId
-  testResults.value[backendId] = { valid: false, error: 'Testing...' }
+  testResults.value[backendId] = { valid: false, error: 'Testing...', testing: true }
 
   try {
     const result = await connectionStore.testConnection(backendId)
