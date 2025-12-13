@@ -37,17 +37,21 @@ export interface SparqlFormattingSettings {
   keywordCase: 'uppercase' | 'lowercase' // Case for SPARQL keywords
   alignPrefixes: boolean // Align PREFIX declarations
   alignPredicates: boolean // Align predicates in triple patterns
+  useRdfTypeShorthand: boolean // Use 'a' instead of rdf:type or full IRI
+  braceStyle: 'same-line' | 'new-line' // Opening brace placement
   insertSpaces: {
     afterCommas: boolean // Space after commas in value lists
     beforeBraces: boolean // Space before opening braces
     afterBraces: boolean // Space after opening braces
     beforeParentheses: boolean // Space before opening parentheses
+    beforeStatementSeparators: boolean // Space before . and ; separators
   }
   lineBreaks: {
     afterPrefix: boolean // Line break after each PREFIX
     afterSelect: boolean // Line break after SELECT clause
     afterWhere: boolean // Line break after WHERE clause
     betweenClauses: boolean // Blank line between major clauses
+    betweenPrefixAndQuery: boolean // Blank line between PREFIXes and query
   }
   maxLineLength: number // Maximum line length before wrapping
 }
@@ -81,17 +85,21 @@ const DEFAULT_SPARQL_FORMATTING_SETTINGS: SparqlFormattingSettings = {
   keywordCase: 'uppercase',
   alignPrefixes: true,
   alignPredicates: false,
+  useRdfTypeShorthand: true,
+  braceStyle: 'same-line',
   insertSpaces: {
     afterCommas: true,
     beforeBraces: true,
     afterBraces: true,
     beforeParentheses: false,
+    beforeStatementSeparators: false,
   },
   lineBreaks: {
     afterPrefix: true,
     afterSelect: true,
     afterWhere: true,
     betweenClauses: false,
+    betweenPrefixAndQuery: true,
   },
   maxLineLength: 120,
 }

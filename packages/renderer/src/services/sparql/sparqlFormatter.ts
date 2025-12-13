@@ -44,10 +44,16 @@ function applyFormattingRules(query: string, settings: SparqlFormattingSettings)
     result = applyLowercaseKeywords(result)
   }
 
+  // Apply rdf:type shorthand (after keyword case so 'a' gets proper casing)
+  result = applyRdfTypeShorthand(result, settings)
+
   // Apply prefix alignment
   if (settings.alignPrefixes) {
     result = alignPrefixes(result)
   }
+
+  // Apply brace style (before indentation and spacing)
+  result = applyBraceStyle(result, settings)
 
   // Apply indentation
   result = applyIndentation(result, settings)
@@ -182,11 +188,62 @@ function alignPrefixes(query: string): string {
 }
 
 /**
+ * Apply rdf:type shorthand preference
+ */
+function applyRdfTypeShorthand(query: string, settings: SparqlFormattingSettings): string {
+  let result = query
+
+  if (settings.useRdfTypeShorthand) {
+    // Replace full rdf:type IRI with 'a'
+    result = result.replace(
+      /<http:\/\/www\.w3\.org\/1999\/02\/22-rdf-syntax-ns#type>/g,
+      'a'
+    )
+    // Also handle prefixed version
+    result = result.replace(/\brdf:type\b/g, 'a')
+  }
+  // If false, sparqljs already outputs full IRI, so no action needed
+
+  return result
+}
+
+/**
+ * Apply brace style (same-line vs new-line)
+ */
+function applyBraceStyle(query: string, settings: SparqlFormattingSettings): string {
+  let result = query
+
+  const keywords = ['CONSTRUCT', 'WHERE', 'OPTIONAL', 'GRAPH', 'UNION', 'MINUS']
+
+  if (settings.braceStyle === 'new-line') {
+    // Move opening braces to new line after keywords
+    for (const keyword of keywords) {
+      // Pattern: KEYWORD followed by optional space and opening brace
+      const regex = new RegExp(`(${keyword})(\\s*)\\{`, 'gi')
+      result = result.replace(regex, '$1\n{')
+    }
+  } else {
+    // Ensure opening braces are on same line (remove newlines before braces)
+    for (const keyword of keywords) {
+      const regex = new RegExp(`(${keyword})\\s*\\n\\s*\\{`, 'gi')
+      result = result.replace(regex, '$1 {')
+    }
+  }
+
+  return result
+}
+
+/**
  * Apply indentation rules
  */
 function applyIndentation(query: string, settings: SparqlFormattingSettings): string {
   const indent = settings.useTabs ? '\t' : ' '.repeat(settings.indentSize)
-  const lines = query.split('\n')
+
+  // First, fix any malformed spacing from the generator (e.g., " WHERE" with single leading space)
+  // This handles the sparqljs generator bug where subquery WHERE gets a single leading space
+  let normalized = query.replace(/\n\s+(WHERE|SELECT|CONSTRUCT|DESCRIBE|ASK|OPTIONAL|UNION|MINUS|GRAPH|FILTER|BIND|VALUES)\s/gi, '\n$1 ')
+
+  const lines = normalized.split('\n')
   let indentLevel = 0
   const result: string[] = []
 
@@ -248,6 +305,19 @@ function applySpacingRules(query: string, settings: SparqlFormattingSettings): s
     result = result.replace(/(\w)\(/g, '$1 (')
   }
 
+  // Space before statement separators (. and ;)
+  if (settings.insertSpaces.beforeStatementSeparators) {
+    // Add space before semicolon (always safe)
+    result = result.replace(/([^\s])(;)/g, '$1 $2')
+    // Add space before period only when it's a statement terminator
+    // Match: word/variable/IRI/> followed by . at end of line or before newline
+    result = result.replace(/([>\w\?"])(\.)(\s*(?:\n|$))/gm, '$1 $2$3')
+  } else {
+    // Remove spaces before separators
+    result = result.replace(/\s+(;)/g, '$1')
+    result = result.replace(/\s+(\.)(\s*(?:\n|$))/gm, '$1$2')
+  }
+
   return result
 }
 
@@ -262,13 +332,19 @@ function applyLineBreakRules(query: string, settings: SparqlFormattingSettings):
     result = result.replace(/(PREFIX\s+\S+:\s+<[^>]+>)\s*/gi, '$1\n')
   }
 
+  // Blank line between PREFIXes and query
+  if (settings.lineBreaks.betweenPrefixAndQuery) {
+    // Add blank line after last PREFIX and before query keywords
+    result = result.replace(/(PREFIX\s+\S+:\s+<[^>]+>\n)(\s*(?:SELECT|CONSTRUCT|DESCRIBE|ASK))/gi, '$1\n$2')
+  }
+
   // Line break after SELECT clause
   if (settings.lineBreaks.afterSelect) {
     result = result.replace(/(SELECT\s+(?:DISTINCT\s+)?[^{]+?)(\s*WHERE)/gi, '$1\n$2')
   }
 
-  // Line break after WHERE clause
-  if (settings.lineBreaks.afterWhere) {
+  // Line break after WHERE clause (only if braceStyle allows it)
+  if (settings.lineBreaks.afterWhere && settings.braceStyle === 'new-line') {
     result = result.replace(/(WHERE\s*)\{/gi, '$1\n{')
   }
 

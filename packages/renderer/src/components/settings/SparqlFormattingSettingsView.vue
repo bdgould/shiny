@@ -50,6 +50,15 @@
         </div>
 
         <div class="form-group">
+          <label for="brace-style">Opening Brace Style</label>
+          <select id="brace-style" v-model="settings.braceStyle">
+            <option value="same-line">Same Line (CONSTRUCT {)</option>
+            <option value="new-line">New Line (CONSTRUCT\n{)</option>
+          </select>
+          <span class="help-text">Placement of opening braces after keywords</span>
+        </div>
+
+        <div class="form-group">
           <label class="checkbox-label">
             <input type="checkbox" v-model="settings.alignPrefixes" />
             <span>Align PREFIX declarations</span>
@@ -63,6 +72,14 @@
             <span>Align predicates in triple patterns</span>
           </label>
           <span class="help-text">Align predicates and objects in triple patterns</span>
+        </div>
+
+        <div class="form-group">
+          <label class="checkbox-label">
+            <input type="checkbox" v-model="settings.useRdfTypeShorthand" />
+            <span>Use 'a' shortcut for rdf:type</span>
+          </label>
+          <span class="help-text">Use 'a' instead of rdf:type or full IRI (&lt;http://...#type&gt;)</span>
         </div>
       </div>
 
@@ -100,6 +117,14 @@
           </label>
           <span class="help-text">Insert space before opening parentheses in function calls</span>
         </div>
+
+        <div class="form-group">
+          <label class="checkbox-label">
+            <input type="checkbox" v-model="settings.insertSpaces.beforeStatementSeparators" />
+            <span>Space before statement separators</span>
+          </label>
+          <span class="help-text">Insert space before . and ; separators (?s ?p ?o . vs ?s ?p ?o.)</span>
+        </div>
       </div>
 
       <div class="settings-section">
@@ -111,6 +136,14 @@
             <span>Line break after each PREFIX</span>
           </label>
           <span class="help-text">Place each PREFIX declaration on its own line</span>
+        </div>
+
+        <div class="form-group">
+          <label class="checkbox-label">
+            <input type="checkbox" v-model="settings.lineBreaks.betweenPrefixAndQuery" />
+            <span>Blank line between PREFIXes and query</span>
+          </label>
+          <span class="help-text">Insert blank line after PREFIX declarations and before the query</span>
         </div>
 
         <div class="form-group">
@@ -184,17 +217,21 @@ const settings = ref<SparqlFormattingSettings>({
   keywordCase: 'uppercase',
   alignPrefixes: true,
   alignPredicates: false,
+  useRdfTypeShorthand: true,
+  braceStyle: 'same-line',
   insertSpaces: {
     afterCommas: true,
     beforeBraces: true,
     afterBraces: true,
     beforeParentheses: false,
+    beforeStatementSeparators: false,
   },
   lineBreaks: {
     afterPrefix: true,
     afterSelect: true,
     afterWhere: true,
     betweenClauses: false,
+    betweenPrefixAndQuery: true,
   },
   maxLineLength: 120,
 })
@@ -234,17 +271,21 @@ function resetToDefaults() {
     keywordCase: 'uppercase',
     alignPrefixes: true,
     alignPredicates: false,
+    useRdfTypeShorthand: true,
+    braceStyle: 'same-line',
     insertSpaces: {
       afterCommas: true,
       beforeBraces: true,
       afterBraces: true,
       beforeParentheses: false,
+      beforeStatementSeparators: false,
     },
     lineBreaks: {
       afterPrefix: true,
       afterSelect: true,
       afterWhere: true,
       betweenClauses: false,
+      betweenPrefixAndQuery: true,
     },
     maxLineLength: 120,
   }
