@@ -162,6 +162,20 @@ npm run build
 
 This will create distributable packages in the `dist/` directory using electron-builder.
 
+**macOS Users**: The builds are not code-signed with an Apple Developer ID. When you first open the app, macOS Gatekeeper will show a "damaged" error. To open the app:
+
+1. Right-click (or Control-click) on the app in Finder
+2. Select "Open" from the context menu
+3. Click "Open" in the dialog that appears
+
+Alternatively, you can allow the app via System Settings:
+```bash
+# Remove quarantine attribute
+xattr -d com.apple.quarantine /Applications/Shiny.app
+```
+
+After the first time, the app will open normally.
+
 ### Other Commands
 
 ```bash

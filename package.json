@@ -79,7 +79,12 @@
           ]
         }
       ],
-      "icon": "icons/shiny.icns"
+      "icon": "icons/shiny.icns",
+      "identity": null,
+      "hardenedRuntime": false,
+      "gatekeeperAssess": false,
+      "entitlements": null,
+      "entitlementsInherit": null
     },
     "win": {
       "target": [
