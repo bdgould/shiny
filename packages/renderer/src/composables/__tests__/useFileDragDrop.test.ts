@@ -101,8 +101,11 @@ describe('useFileDragDrop', () => {
       const dataTransfer = new DataTransfer()
       dataTransfer.items.add(file)
 
-      const event = new DragEvent('drop', {
-        dataTransfer
+      const event = new DragEvent('drop')
+      // Manually set dataTransfer as DragEvent constructor doesn't support it in test environment
+      Object.defineProperty(event, 'dataTransfer', {
+        value: dataTransfer,
+        writable: false
       })
 
       vi.spyOn(event, 'preventDefault')
@@ -130,8 +133,10 @@ describe('useFileDragDrop', () => {
       const dataTransfer = new DataTransfer()
       dataTransfer.items.add(file)
 
-      const event = new DragEvent('drop', {
-        dataTransfer
+      const event = new DragEvent('drop')
+      Object.defineProperty(event, 'dataTransfer', {
+        value: dataTransfer,
+        writable: false
       })
 
       vi.spyOn(event, 'preventDefault')
@@ -159,8 +164,10 @@ describe('useFileDragDrop', () => {
       const dataTransfer = new DataTransfer()
       dataTransfer.items.add(file)
 
-      const event = new DragEvent('drop', {
-        dataTransfer
+      const event = new DragEvent('drop')
+      Object.defineProperty(event, 'dataTransfer', {
+        value: dataTransfer,
+        writable: false
       })
 
       vi.spyOn(event, 'preventDefault')
@@ -188,8 +195,10 @@ describe('useFileDragDrop', () => {
       const dataTransfer = new DataTransfer()
       dataTransfer.items.add(file)
 
-      const event = new DragEvent('drop', {
-        dataTransfer
+      const event = new DragEvent('drop')
+      Object.defineProperty(event, 'dataTransfer', {
+        value: dataTransfer,
+        writable: false
       })
 
       vi.spyOn(event, 'preventDefault')
@@ -213,8 +222,10 @@ describe('useFileDragDrop', () => {
       const dataTransfer = new DataTransfer()
       dataTransfer.items.add(file)
 
-      const event = new DragEvent('drop', {
-        dataTransfer
+      const event = new DragEvent('drop')
+      Object.defineProperty(event, 'dataTransfer', {
+        value: dataTransfer,
+        writable: false
       })
 
       vi.spyOn(event, 'preventDefault')
@@ -227,8 +238,7 @@ describe('useFileDragDrop', () => {
 
       expect(openFileInNewTabSpy).not.toHaveBeenCalled()
       expect(mockToastFunctions.warning).toHaveBeenCalledWith(
-        expect.stringContaining('test.txt'),
-        undefined
+        expect.stringContaining('test.txt')
       )
     })
 
@@ -242,8 +252,10 @@ describe('useFileDragDrop', () => {
       dataTransfer.items.add(file1)
       dataTransfer.items.add(file2)
 
-      const event = new DragEvent('drop', {
-        dataTransfer
+      const event = new DragEvent('drop')
+      Object.defineProperty(event, 'dataTransfer', {
+        value: dataTransfer,
+        writable: false
       })
 
       vi.spyOn(event, 'preventDefault')
@@ -265,8 +277,10 @@ describe('useFileDragDrop', () => {
       const dataTransfer = new DataTransfer()
       dataTransfer.items.add(file)
 
-      const event = new DragEvent('drop', {
-        dataTransfer
+      const event = new DragEvent('drop')
+      Object.defineProperty(event, 'dataTransfer', {
+        value: dataTransfer,
+        writable: false
       })
 
       expect(isLoading.value).toBe(false)
