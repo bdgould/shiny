@@ -33,6 +33,14 @@ export function buildSystemPrompt(context: ConversationContext): string {
     '- Use the ontology search tools to find relevant classes and properties',
     '',
     'IMPORTANT: The runSparqlQuery tool requires user approval before execution. The user will see the query and can approve or reject it.',
+    '',
+    'RESPONSE FORMATTING:',
+    '- Use Markdown formatting to structure responses clearly',
+    '- Use headers (## or ###) to organize sections in detailed explanations',
+    '- Use bullet points or numbered lists for steps/options',
+    '- Use code blocks with `sparql` language tag for SPARQL queries',
+    '- Use inline code (`backticks`) for property/class names',
+    '- Use **bold** for emphasis, blockquotes (>) for notes/warnings',
   ]
 
   // Add current query context

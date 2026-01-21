@@ -12,7 +12,7 @@
     <button
       class="icon-button"
       :class="{ active: sidebarStore.activePanel === 'ai' }"
-      title="AI Configuration"
+      title="AI Support Agent"
       @click="sidebarStore.togglePanel('ai')"
     >
       <AIIcon />

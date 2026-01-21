@@ -50,6 +50,8 @@ export async function executeTool(
       return executeGetPropertyDetails(args, backendId)
     case 'runSparqlQuery':
       return executeRunSparqlQuery(args, backendId)
+    case 'refreshOntologyCache':
+      return executeRefreshOntologyCache(backendId)
     default:
       return {
         success: false,
@@ -398,6 +400,64 @@ async function executeRunSparqlQuery(
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Query execution failed',
+    }
+  }
+}
+
+/**
+ * Refresh the ontology cache for a backend
+ */
+async function executeRefreshOntologyCache(
+  backendId: string | null
+): Promise<ToolExecutionResult> {
+  try {
+    const ontologyCacheStore = useOntologyCacheStore()
+
+    if (!backendId) {
+      return {
+        success: false,
+        error: 'No backend selected for the current query tab',
+      }
+    }
+
+    // Check if already refreshing
+    if (ontologyCacheStore.isLoading(backendId)) {
+      return {
+        success: true,
+        result: {
+          status: 'already_refreshing',
+          message: 'Cache refresh is already in progress for this backend',
+        },
+      }
+    }
+
+    // Perform the refresh
+    const cache = await ontologyCacheStore.refreshCache(backendId, false)
+
+    if (cache) {
+      return {
+        success: true,
+        result: {
+          status: 'refreshed',
+          message: 'Ontology cache refreshed successfully',
+          stats: {
+            classCount: cache.classes.length,
+            propertyCount: cache.properties.length,
+            individualCount: cache.individuals.length,
+          },
+        },
+      }
+    } else {
+      const error = ontologyCacheStore.getError(backendId)
+      return {
+        success: false,
+        error: error || 'Failed to refresh ontology cache',
+      }
+    }
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Cache refresh failed',
     }
   }
 }

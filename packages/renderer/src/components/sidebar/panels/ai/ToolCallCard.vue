@@ -82,6 +82,7 @@ const backendTools = new Set([
   'getClassDetails',
   'getPropertyDetails',
   'runSparqlQuery',
+  'refreshOntologyCache',
 ])
 
 const usesBackend = computed(() => backendTools.has(props.toolCall.name))
@@ -103,6 +104,7 @@ const toolDisplayName = computed(() => {
     getClassDetails: 'Get Class Details',
     getPropertyDetails: 'Get Property Details',
     runSparqlQuery: 'Run SPARQL Query',
+    refreshOntologyCache: 'Refresh Ontology Cache',
   }
   return names[props.toolCall.name] || props.toolCall.name
 })
@@ -114,6 +116,7 @@ const toolIcon = computed(() => {
     getClassDetails: '📦',
     getPropertyDetails: '🔗',
     runSparqlQuery: '▶',
+    refreshOntologyCache: '🔄',
   }
   return icons[props.toolCall.name] || '⚙'
 })

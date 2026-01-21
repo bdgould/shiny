@@ -42,6 +42,7 @@
 import { computed } from 'vue'
 import type { ChatMessage } from '@/types/aiChat'
 import ToolCallCard from './ToolCallCard.vue'
+import { renderMarkdown, decodeHtmlEntities } from '@/services/markdown/markdownRenderer'
 
 const props = defineProps<{
   message: ChatMessage
@@ -53,71 +54,6 @@ defineEmits<{
 }>()
 
 /**
- * Simple markdown renderer
- * Handles: code blocks, inline code, bold, italic, links
- */
-function renderMarkdown(text: string): string {
-  let html = escapeHtml(text)
-
-  // Code blocks (```language\ncode\n```)
-  html = html.replace(/```(\w*)\n([\s\S]*?)```/g, (_, lang, code) => {
-    const langClass = lang ? ` class="language-${lang}"` : ''
-    const trimmedCode = code.trim()
-    // Escape code for data attribute: quotes and newlines (use &#10; so \n-><br> replacement doesn't affect it)
-    const dataCode = trimmedCode.replace(/"/g, '&quot;').replace(/\n/g, '&#10;')
-    return `<div class="code-block-wrapper"><button class="copy-code-btn" data-code="${dataCode}">Copy</button><pre><code${langClass}>${trimmedCode}</code></pre></div>`
-  })
-
-  // Inline code (`code`)
-  html = html.replace(/`([^`]+)`/g, '<code>$1</code>')
-
-  // Bold (**text** or __text__)
-  html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
-  html = html.replace(/__([^_]+)__/g, '<strong>$1</strong>')
-
-  // Italic (*text* or _text_)
-  html = html.replace(/\*([^*]+)\*/g, '<em>$1</em>')
-  html = html.replace(/_([^_]+)_/g, '<em>$1</em>')
-
-  // Links [text](url)
-  html = html.replace(
-    /\[([^\]]+)\]\(([^)]+)\)/g,
-    '<a href="$2" target="_blank" rel="noopener">$1</a>'
-  )
-
-  // Line breaks
-  html = html.replace(/\n/g, '<br>')
-
-  return html
-}
-
-function escapeHtml(text: string): string {
-  const map: Record<string, string> = {
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#039;',
-  }
-  return text.replace(/[&<>"']/g, (m) => map[m])
-}
-
-/**
- * Decode HTML entities back to original characters for clipboard copy
- */
-function decodeHtml(text: string): string {
-  const map: Record<string, string> = {
-    '&amp;': '&',
-    '&lt;': '<',
-    '&gt;': '>',
-    '&quot;': '"',
-    '&#039;': "'",
-    '&#10;': '\n',
-  }
-  return text.replace(/&(amp|lt|gt|quot|#039|#10);/g, (m) => map[m])
-}
-
-/**
  * Handle clicks on dynamically rendered content (event delegation)
  */
 function handleContentClick(event: MouseEvent) {
@@ -125,7 +61,7 @@ function handleContentClick(event: MouseEvent) {
   if (target.classList.contains('copy-code-btn')) {
     const code = target.dataset.code
     if (code) {
-      copyToClipboard(decodeHtml(code), target)
+      copyToClipboard(decodeHtmlEntities(code), target)
     }
   }
 }
@@ -198,35 +134,28 @@ const renderedContent = computed(() => {
 
 /* Markdown styles */
 .markdown-content :deep(.code-block-wrapper) {
-  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
   margin: 8px 0;
+  gap: 4px;
 }
 
 .markdown-content :deep(.copy-code-btn) {
-  position: absolute;
-  top: 6px;
-  right: 6px;
-  padding: 4px 8px;
-  font-size: 12px;
+  padding: 3px 10px;
+  font-size: 11px;
   font-family: inherit;
-  background: var(--color-background-secondary);
+  background: var(--color-background);
   color: var(--color-text-secondary);
   border: 1px solid var(--color-border);
   border-radius: 4px;
   cursor: pointer;
-  opacity: 0;
-  transition:
-    opacity 0.2s,
-    background-color 0.2s;
-  z-index: 1;
-}
-
-.markdown-content :deep(.code-block-wrapper:hover .copy-code-btn) {
-  opacity: 1;
+  transition: background-color 0.2s, color 0.2s, border-color 0.2s;
 }
 
 .markdown-content :deep(.copy-code-btn:hover) {
-  background: var(--color-background);
+  background: var(--color-background-secondary);
+  color: var(--color-text-primary);
 }
 
 .markdown-content :deep(.copy-code-btn.copied) {
@@ -240,6 +169,8 @@ const renderedContent = computed(() => {
   border-radius: 6px;
   overflow-x: auto;
   margin: 0;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .markdown-content :deep(code) {
@@ -273,6 +204,126 @@ const renderedContent = computed(() => {
 
 .markdown-content :deep(em) {
   font-style: italic;
+}
+
+/* Headers */
+.markdown-content :deep(h1),
+.markdown-content :deep(h2),
+.markdown-content :deep(h3),
+.markdown-content :deep(h4),
+.markdown-content :deep(h5),
+.markdown-content :deep(h6) {
+  margin: 16px 0 8px 0;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.markdown-content :deep(h1) {
+  font-size: 1.5em;
+}
+
+.markdown-content :deep(h2) {
+  font-size: 1.3em;
+}
+
+.markdown-content :deep(h3) {
+  font-size: 1.15em;
+}
+
+.markdown-content :deep(h4),
+.markdown-content :deep(h5),
+.markdown-content :deep(h6) {
+  font-size: 1em;
+}
+
+.markdown-content :deep(h1:first-child),
+.markdown-content :deep(h2:first-child),
+.markdown-content :deep(h3:first-child),
+.markdown-content :deep(h4:first-child),
+.markdown-content :deep(h5:first-child),
+.markdown-content :deep(h6:first-child) {
+  margin-top: 0;
+}
+
+/* Paragraphs */
+.markdown-content :deep(p) {
+  margin: 8px 0;
+}
+
+.markdown-content :deep(p:first-child) {
+  margin-top: 0;
+}
+
+.markdown-content :deep(p:last-child) {
+  margin-bottom: 0;
+}
+
+/* Lists */
+.markdown-content :deep(ul),
+.markdown-content :deep(ol) {
+  margin: 8px 0;
+  padding-left: 24px;
+}
+
+.markdown-content :deep(li) {
+  margin: 4px 0;
+}
+
+.markdown-content :deep(ul) {
+  list-style-type: disc;
+}
+
+.markdown-content :deep(ol) {
+  list-style-type: decimal;
+}
+
+.markdown-content :deep(li > ul),
+.markdown-content :deep(li > ol) {
+  margin: 4px 0;
+}
+
+/* Blockquotes */
+.markdown-content :deep(blockquote) {
+  margin: 8px 0;
+  padding: 8px 12px;
+  border-left: 3px solid var(--color-accent, #3b82f6);
+  background: var(--color-background);
+  color: var(--color-text-secondary);
+}
+
+.markdown-content :deep(blockquote p) {
+  margin: 0;
+}
+
+/* Tables */
+.markdown-content :deep(table) {
+  border-collapse: collapse;
+  margin: 8px 0;
+  width: 100%;
+  font-size: 13px;
+}
+
+.markdown-content :deep(th),
+.markdown-content :deep(td) {
+  border: 1px solid var(--color-border);
+  padding: 6px 10px;
+  text-align: left;
+}
+
+.markdown-content :deep(th) {
+  background: var(--color-background);
+  font-weight: 600;
+}
+
+.markdown-content :deep(tr:nth-child(even)) {
+  background: var(--color-background);
+}
+
+/* Horizontal rule */
+.markdown-content :deep(hr) {
+  border: none;
+  border-top: 1px solid var(--color-border);
+  margin: 16px 0;
 }
 
 /* Typing indicator */
