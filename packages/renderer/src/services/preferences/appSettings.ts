@@ -130,7 +130,7 @@ const DEFAULT_PREFIX_SETTINGS: PrefixManagementSettings = {
 /**
  * Normalize base URL - ensure it ends with /v1 and doesn't have trailing slash
  */
-function normalizeBaseUrl(url: string): string {
+export function normalizeBaseUrl(url: string): string {
   // Remove trailing slash
   let normalized = url.replace(/\/$/, '')
 
