@@ -167,6 +167,7 @@ const renderedContent = computed(() => {
   background: var(--color-background);
   padding: 10px;
   border-radius: 6px;
+  border: 1px solid var(--color-border);
   overflow-x: auto;
   margin: 0;
   width: 100%;

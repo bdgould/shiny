@@ -125,6 +125,53 @@
       </div>
 
       <div class="settings-section">
+        <h3>Query Context</h3>
+        <p class="help-text">
+          Provide project-specific context (best practices, naming conventions, common patterns) that
+          the AI can retrieve on-demand when writing queries.
+        </p>
+
+        <div class="form-group">
+          <label class="checkbox-label">
+            <input v-model="queryContextSettings.enabled" type="checkbox" />
+            <span>Enable Query Context</span>
+          </label>
+          <span class="help-text"
+            >When enabled, the AI can use the getQueryContext tool to retrieve this content</span
+          >
+        </div>
+
+        <div v-if="queryContextSettings.enabled" class="form-group">
+          <label for="query-context-content">Context Content (Markdown)</label>
+          <textarea
+            id="query-context-content"
+            v-model="queryContextSettings.content"
+            class="context-textarea"
+            placeholder="# SPARQL Best Practices
+
+## Naming Conventions
+- Use camelCase for variable names
+- Prefix temporary variables with underscore
+
+## Common Patterns
+```sparql
+# Pattern for fetching labels
+?entity rdfs:label ?label .
+FILTER(LANG(?label) = 'en')
+```
+
+## Domain-Specific Notes
+- Always include the graph pattern for...
+"
+            rows="12"
+          ></textarea>
+          <span class="help-text"
+            >Enter markdown content describing your project's SPARQL conventions and patterns</span
+          >
+        </div>
+      </div>
+
+      <div class="settings-section">
         <h3>Test Connection</h3>
         <p class="help-text">Send a test request to verify your configuration</p>
 
@@ -174,7 +221,10 @@ import {
   saveAISettings,
   testAIConnection,
   fetchAIModels,
+  getQueryContextSettings,
+  saveQueryContextSettings,
   type AIConnectionSettings,
+  type QueryContextSettings,
 } from '@/services/preferences/appSettings'
 
 const settings = ref<AIConnectionSettings>({
@@ -183,6 +233,11 @@ const settings = ref<AIConnectionSettings>({
   apiKey: '',
   temperature: 0.7,
   maxTokens: 1000,
+})
+
+const queryContextSettings = ref<QueryContextSettings>({
+  enabled: false,
+  content: '',
 })
 
 const saveMessage = ref('')
@@ -206,11 +261,13 @@ onMounted(() => {
 
 function loadSettings() {
   settings.value = getAISettings()
+  queryContextSettings.value = getQueryContextSettings()
 }
 
 function saveSettings() {
   try {
     saveAISettings(settings.value)
+    saveQueryContextSettings(queryContextSettings.value)
     saveMessage.value = 'Settings saved successfully!'
     saveMessageType.value = 'success'
     setTimeout(() => {
@@ -232,6 +289,10 @@ function resetToDefaults() {
     apiKey: '',
     temperature: 0.7,
     maxTokens: 1000,
+  }
+  queryContextSettings.value = {
+    enabled: false,
+    content: '',
   }
   testResult.value = null
   availableModels.value = []
@@ -653,5 +714,30 @@ async function testConnection() {
   background: rgba(239, 68, 68, 0.1);
   color: rgb(239, 68, 68);
   border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.context-textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  background: var(--color-bg-input);
+  color: var(--color-text-primary);
+  font-size: 13px;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  line-height: 1.5;
+  resize: vertical;
+  min-height: 200px;
+  transition: border-color 0.15s ease;
+}
+
+.context-textarea:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.context-textarea::placeholder {
+  color: var(--color-text-secondary);
+  opacity: 0.6;
 }
 </style>

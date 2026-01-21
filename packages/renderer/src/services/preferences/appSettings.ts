@@ -8,6 +8,7 @@ const STORAGE_KEY_AI_SETTINGS = 'shiny:settings:ai'
 const STORAGE_KEY_CACHE_SETTINGS = 'shiny:settings:cache'
 const STORAGE_KEY_SPARQL_FORMATTING_SETTINGS = 'shiny:settings:sparql-formatting'
 const STORAGE_KEY_PREFIX_SETTINGS = 'shiny:settings:prefix'
+const STORAGE_KEY_QUERY_CONTEXT_SETTINGS = 'shiny:settings:query-context'
 
 export interface QueryConnectionSettings {
   connectionTimeout: number // in milliseconds
@@ -64,6 +65,11 @@ export interface PrefixDefinition {
 
 export interface PrefixManagementSettings {
   prefixes: PrefixDefinition[]
+}
+
+export interface QueryContextSettings {
+  enabled: boolean
+  content: string // Markdown content with best practices, patterns, conventions
 }
 
 const DEFAULT_QUERY_SETTINGS: QueryConnectionSettings = {
@@ -124,6 +130,11 @@ const DEFAULT_PREFIX_SETTINGS: PrefixManagementSettings = {
     { prefix: 'dcterms', namespace: 'http://purl.org/dc/terms/' },
     { prefix: 'foaf', namespace: 'http://xmlns.com/foaf/0.1/' },
   ],
+}
+
+const DEFAULT_QUERY_CONTEXT_SETTINGS: QueryContextSettings = {
+  enabled: false,
+  content: '',
 }
 
 /**
@@ -401,6 +412,34 @@ export function savePrefixSettings(settings: PrefixManagementSettings): void {
     localStorage.setItem(STORAGE_KEY_PREFIX_SETTINGS, JSON.stringify(settings))
   } catch (error) {
     console.warn('Failed to save prefix settings to localStorage:', error)
+    throw error
+  }
+}
+
+/**
+ * Get query context settings
+ */
+export function getQueryContextSettings(): QueryContextSettings {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY_QUERY_CONTEXT_SETTINGS)
+    if (stored) {
+      const parsed = JSON.parse(stored) as QueryContextSettings
+      return { ...DEFAULT_QUERY_CONTEXT_SETTINGS, ...parsed }
+    }
+  } catch (error) {
+    console.warn('Failed to load query context settings from localStorage:', error)
+  }
+  return { ...DEFAULT_QUERY_CONTEXT_SETTINGS }
+}
+
+/**
+ * Save query context settings
+ */
+export function saveQueryContextSettings(settings: QueryContextSettings): void {
+  try {
+    localStorage.setItem(STORAGE_KEY_QUERY_CONTEXT_SETTINGS, JSON.stringify(settings))
+  } catch (error) {
+    console.warn('Failed to save query context settings to localStorage:', error)
     throw error
   }
 }

@@ -10,6 +10,7 @@ import type {
   AnyOntologyElement,
 } from '../../types/ontologyCache'
 import { useOntologyCacheStore } from '../../stores/ontologyCache'
+import { getQueryContextSettings } from '../preferences/appSettings'
 
 /**
  * Result of a tool execution
@@ -52,6 +53,8 @@ export async function executeTool(
       return executeRunSparqlQuery(args, backendId)
     case 'refreshOntologyCache':
       return executeRefreshOntologyCache(backendId)
+    case 'getQueryContext':
+      return executeGetQueryContext()
     default:
       return {
         success: false,
@@ -487,4 +490,46 @@ function formatElement(element: AnyOntologyElement): Record<string, unknown> {
   }
 
   return base
+}
+
+/**
+ * Get user-defined query context
+ */
+async function executeGetQueryContext(): Promise<ToolExecutionResult> {
+  try {
+    const settings = getQueryContextSettings()
+
+    if (!settings.enabled) {
+      return {
+        success: true,
+        result: {
+          available: false,
+          message: 'Query context is not enabled. The user has not configured project-specific context.',
+        },
+      }
+    }
+
+    if (!settings.content || settings.content.trim() === '') {
+      return {
+        success: true,
+        result: {
+          available: false,
+          message: 'Query context is enabled but no content has been provided yet.',
+        },
+      }
+    }
+
+    return {
+      success: true,
+      result: {
+        available: true,
+        content: settings.content,
+      },
+    }
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to retrieve query context',
+    }
+  }
 }

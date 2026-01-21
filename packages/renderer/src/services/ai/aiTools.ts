@@ -175,6 +175,25 @@ export const refreshOntologyCacheTool: OpenAITool = {
 }
 
 /**
+ * Tool: Get user-defined query context
+ */
+export const getQueryContextTool: OpenAITool = {
+  type: 'function',
+  function: {
+    name: 'getQueryContext',
+    description:
+      'Retrieve user-defined query context containing SPARQL best practices, ' +
+      'common patterns, naming conventions, and domain-specific guidance. ' +
+      'Use when you need project-specific conventions or recommended patterns.',
+    parameters: {
+      type: 'object',
+      properties: {},
+      required: [],
+    },
+  },
+}
+
+/**
  * All available tools for the AI assistant
  */
 export const aiTools: OpenAITool[] = [
@@ -184,6 +203,7 @@ export const aiTools: OpenAITool[] = [
   getPropertyDetailsTool,
   runSparqlQueryTool,
   refreshOntologyCacheTool,
+  getQueryContextTool,
 ]
 
 /**

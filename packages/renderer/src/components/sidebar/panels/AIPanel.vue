@@ -196,24 +196,43 @@ async function executeToolCallOnly(messageId: string, toolCallId: string) {
   // Get the backend ID from the active tab - this is the source of truth
   const backendId = tabsStore.activeTab?.backendId || null
 
-  // Update status to executing
-  aiChatStore.updateToolCallStatus(messageId, toolCallId, 'executing')
+  // Track execution timing
+  const startedAt = Date.now()
+
+  // Update status to executing with start time
+  aiChatStore.updateToolCallStatus(messageId, toolCallId, 'executing', undefined, undefined, {
+    startedAt,
+  })
   aiChatStore.setLoading(true)
 
   try {
     // Pass the backend ID explicitly to avoid Pinia store access issues in services
     const result = await executeTool(toolCall, { backendId })
 
+    const completedAt = Date.now()
+    const latencyMs = completedAt - startedAt
+
     if (result.success) {
-      aiChatStore.updateToolCallStatus(messageId, toolCallId, 'completed', result.result)
+      aiChatStore.updateToolCallStatus(messageId, toolCallId, 'completed', result.result, undefined, {
+        completedAt,
+        latencyMs,
+      })
       aiChatStore.addToolMessage(toolCallId, JSON.stringify(result.result))
     } else {
-      aiChatStore.updateToolCallStatus(messageId, toolCallId, 'error', undefined, result.error)
+      aiChatStore.updateToolCallStatus(messageId, toolCallId, 'error', undefined, result.error, {
+        completedAt,
+        latencyMs,
+      })
       aiChatStore.addToolMessage(toolCallId, JSON.stringify({ error: result.error }))
     }
   } catch (error) {
+    const completedAt = Date.now()
+    const latencyMs = completedAt - startedAt
     const errorMessage = error instanceof Error ? error.message : 'Tool execution failed'
-    aiChatStore.updateToolCallStatus(messageId, toolCallId, 'error', undefined, errorMessage)
+    aiChatStore.updateToolCallStatus(messageId, toolCallId, 'error', undefined, errorMessage, {
+      completedAt,
+      latencyMs,
+    })
     aiChatStore.addToolMessage(toolCallId, JSON.stringify({ error: errorMessage }))
   } finally {
     aiChatStore.setLoading(false)

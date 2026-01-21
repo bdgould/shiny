@@ -7,6 +7,9 @@
         <span class="status-badge" :class="[`badge-${toolCall.status}`]">
           {{ statusLabel }}
         </span>
+        <span v-if="formattedLatency" class="latency-badge">
+          {{ formattedLatency }}
+        </span>
       </div>
       <button class="expand-toggle" :aria-label="expanded ? 'Collapse' : 'Expand'">
         {{ expanded ? '−' : '+' }}
@@ -105,6 +108,7 @@ const toolDisplayName = computed(() => {
     getPropertyDetails: 'Get Property Details',
     runSparqlQuery: 'Run SPARQL Query',
     refreshOntologyCache: 'Refresh Ontology Cache',
+    getQueryContext: 'Get Query Context',
   }
   return names[props.toolCall.name] || props.toolCall.name
 })
@@ -117,6 +121,7 @@ const toolIcon = computed(() => {
     getPropertyDetails: '🔗',
     runSparqlQuery: '▶',
     refreshOntologyCache: '🔄',
+    getQueryContext: '📖',
   }
   return icons[props.toolCall.name] || '⚙'
 })
@@ -139,6 +144,15 @@ const formattedArguments = computed(() => {
 
 const formattedResult = computed(() => {
   return JSON.stringify(props.toolCall.result, null, 2)
+})
+
+const formattedLatency = computed(() => {
+  const latency = props.toolCall.latencyMs
+  if (latency === undefined) return null
+  if (latency < 1000) {
+    return `${latency}ms`
+  }
+  return `${(latency / 1000).toFixed(2)}s`
 })
 
 function toggleExpanded() {
@@ -223,6 +237,16 @@ function toggleExpanded() {
 .badge-error {
   background: rgba(239, 68, 68, 0.2);
   color: var(--color-error, #ef4444);
+}
+
+.latency-badge {
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 500;
+  background: var(--color-background);
+  color: var(--color-text-secondary);
+  font-family: var(--font-mono, monospace);
 }
 
 .expand-toggle {
