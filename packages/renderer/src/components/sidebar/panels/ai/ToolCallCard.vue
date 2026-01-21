@@ -50,9 +50,7 @@
         >
           Approve
         </button>
-        <button class="action-btn reject-btn" @click="$emit('reject')">
-          Reject
-        </button>
+        <button class="action-btn reject-btn" @click="$emit('reject')">Reject</button>
       </div>
     </div>
   </div>
@@ -79,7 +77,12 @@ const connectionStore = useConnectionStore()
 const expanded = ref(props.toolCall.status === 'pending')
 
 // Tools that require a backend connection
-const backendTools = new Set(['searchOntology', 'getClassDetails', 'getPropertyDetails', 'runSparqlQuery'])
+const backendTools = new Set([
+  'searchOntology',
+  'getClassDetails',
+  'getPropertyDetails',
+  'runSparqlQuery',
+])
 
 const usesBackend = computed(() => backendTools.has(props.toolCall.name))
 
@@ -99,7 +102,7 @@ const toolDisplayName = computed(() => {
     listOntologyElements: 'List Ontology Elements',
     getClassDetails: 'Get Class Details',
     getPropertyDetails: 'Get Property Details',
-    runSparqlQuery: 'Run SPARQL Query'
+    runSparqlQuery: 'Run SPARQL Query',
   }
   return names[props.toolCall.name] || props.toolCall.name
 })
@@ -110,7 +113,7 @@ const toolIcon = computed(() => {
     listOntologyElements: '📋',
     getClassDetails: '📦',
     getPropertyDetails: '🔗',
-    runSparqlQuery: '▶'
+    runSparqlQuery: '▶',
   }
   return icons[props.toolCall.name] || '⚙'
 })
@@ -122,7 +125,7 @@ const statusLabel = computed(() => {
     rejected: 'Rejected',
     executing: 'Executing...',
     completed: 'Completed',
-    error: 'Error'
+    error: 'Error',
   }
   return labels[props.toolCall.status] || props.toolCall.status
 })

@@ -9,7 +9,7 @@ import type {
   ConversationContext,
   OpenAIMessage,
   OpenAIStreamChunk,
-  OpenAIToolCall
+  OpenAIToolCall,
 } from '../../types/aiChat'
 import { getAISettings, normalizeBaseUrl } from '../preferences/appSettings'
 import { aiTools, requiresApproval } from './aiTools'
@@ -32,7 +32,7 @@ export function buildSystemPrompt(context: ConversationContext): string {
     '- Point out potential issues or errors',
     '- Use the ontology search tools to find relevant classes and properties',
     '',
-    'IMPORTANT: The runSparqlQuery tool requires user approval before execution. The user will see the query and can approve or reject it.'
+    'IMPORTANT: The runSparqlQuery tool requires user approval before execution. The user will see the query and can approve or reject it.',
   ]
 
   // Add current query context
@@ -78,12 +78,12 @@ export function messagesToOpenAI(messages: ChatMessage[]): OpenAIMessage[] {
     if (msg.role === 'user') {
       result.push({
         role: 'user',
-        content: msg.content
+        content: msg.content,
       })
     } else if (msg.role === 'assistant') {
       const openaiMsg: OpenAIMessage = {
         role: 'assistant',
-        content: msg.content || null
+        content: msg.content || null,
       }
 
       // Add tool calls if present
@@ -93,8 +93,8 @@ export function messagesToOpenAI(messages: ChatMessage[]): OpenAIMessage[] {
           type: 'function' as const,
           function: {
             name: tc.name,
-            arguments: JSON.stringify(tc.arguments)
-          }
+            arguments: JSON.stringify(tc.arguments),
+          },
         }))
       }
 
@@ -103,7 +103,7 @@ export function messagesToOpenAI(messages: ChatMessage[]): OpenAIMessage[] {
       result.push({
         role: 'tool',
         content: msg.content,
-        tool_call_id: msg.toolCallId
+        tool_call_id: msg.toolCallId,
       })
     }
   }
@@ -147,14 +147,11 @@ export async function* streamChatCompletion(
 
   const requestBody = {
     model: settings.model,
-    messages: [
-      { role: 'system', content: systemPrompt },
-      ...openaiMessages
-    ],
+    messages: [{ role: 'system', content: systemPrompt }, ...openaiMessages],
     tools: aiTools,
     stream: true,
     temperature: settings.temperature ?? 0.7,
-    max_tokens: settings.maxTokens ?? 2000
+    max_tokens: settings.maxTokens ?? 2000,
   }
 
   try {
@@ -162,9 +159,9 @@ export async function* streamChatCompletion(
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${settings.apiKey}`
+        Authorization: `Bearer ${settings.apiKey}`,
       },
-      body: JSON.stringify(requestBody)
+      body: JSON.stringify(requestBody),
     })
 
     if (!response.ok) {
@@ -235,7 +232,7 @@ export async function* streamChatCompletion(
                   partialToolCalls.set(index, {
                     id: tcDelta.id || '',
                     name: tcDelta.function?.name || '',
-                    arguments: ''
+                    arguments: '',
                   })
                 }
 
@@ -271,7 +268,7 @@ export async function* streamChatCompletion(
                     id: partial.id,
                     name: partial.name,
                     arguments: args,
-                    status: requiresApproval(partial.name) ? 'pending' : 'approved'
+                    status: requiresApproval(partial.name) ? 'pending' : 'approved',
                   })
                 }
 

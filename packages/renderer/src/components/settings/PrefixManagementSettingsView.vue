@@ -3,8 +3,9 @@
     <div class="settings-header">
       <h2>Prefix Management</h2>
       <p class="settings-description">
-        Manage system-wide SPARQL prefixes that can be used in your queries. These prefixes must still be explicitly
-        added to your queries to work - autocomplete functionality will be added in a future update.
+        Manage system-wide SPARQL prefixes that can be used in your queries. These prefixes must
+        still be explicitly added to your queries to work - autocomplete functionality will be added
+        in a future update.
       </p>
     </div>
 
@@ -23,11 +24,7 @@
             No prefixes defined. Add your first prefix below.
           </div>
 
-          <div
-            v-for="(prefix, index) in settings.prefixes"
-            :key="index"
-            class="prefix-row"
-          >
+          <div v-for="(prefix, index) in settings.prefixes" :key="index" class="prefix-row">
             <div class="prefix-col">
               <code>{{ prefix.prefix }}</code>
             </div>
@@ -90,7 +87,8 @@
           <div class="form-group">
             <label for="import-text">Import Prefixes</label>
             <p class="help-text">
-              Paste Turtle-style prefix definitions (@prefix) or load from a .ttl file. Existing prefixes with the same name will be replaced.
+              Paste Turtle-style prefix definitions (@prefix) or load from a .ttl file. Existing
+              prefixes with the same name will be replaced.
             </p>
             <div class="import-controls">
               <button class="btn-secondary" @click="loadPrefixFile" style="margin-bottom: 8px">
@@ -106,7 +104,9 @@
             <button class="btn-secondary" @click="importPrefixes" style="margin-top: 8px">
               Import from Turtle
             </button>
-            <span v-if="importError" class="error-text" style="margin-top: 8px">{{ importError }}</span>
+            <span v-if="importError" class="error-text" style="margin-top: 8px">{{
+              importError
+            }}</span>
           </div>
         </div>
       </div>
@@ -260,7 +260,8 @@ function importPrefixes() {
     const matches = [...importText.value.matchAll(prefixRegex)]
 
     if (matches.length === 0) {
-      importError.value = 'No valid prefix definitions found. Expected format: @prefix prefix: <namespace> .'
+      importError.value =
+        'No valid prefix definitions found. Expected format: @prefix prefix: <namespace> .'
       return
     }
 

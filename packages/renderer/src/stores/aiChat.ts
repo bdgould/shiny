@@ -8,7 +8,7 @@ import type {
   ChatMessage,
   ToolCall,
   ConversationContext,
-  PersistedConversation
+  PersistedConversation,
 } from '../types/aiChat'
 import { useTabsStore } from './tabs'
 import { useConnectionStore } from './connection'
@@ -41,9 +41,7 @@ export const useAIChatStore = defineStore('aiChat', () => {
   })
 
   const pendingToolCalls = computed(() => {
-    return messages.value
-      .flatMap((m) => m.toolCalls || [])
-      .filter((tc) => tc.status === 'pending')
+    return messages.value.flatMap((m) => m.toolCalls || []).filter((tc) => tc.status === 'pending')
   })
 
   const hasPendingToolCalls = computed(() => pendingToolCalls.value.length > 0)
@@ -72,7 +70,7 @@ export const useAIChatStore = defineStore('aiChat', () => {
         backend = {
           name: b.name,
           type: b.type,
-          endpoint: b.endpoint
+          endpoint: b.endpoint,
         }
       }
     }
@@ -86,7 +84,7 @@ export const useAIChatStore = defineStore('aiChat', () => {
           classCount: cache.classes.length,
           propertyCount: cache.properties.length,
           individualCount: cache.individuals.length,
-          namespaces: Object.keys(cache.namespaces)
+          namespaces: Object.keys(cache.namespaces),
         }
       }
     }
@@ -94,7 +92,7 @@ export const useAIChatStore = defineStore('aiChat', () => {
     return {
       currentQuery,
       backend,
-      ontology
+      ontology,
     }
   }
 
@@ -106,7 +104,7 @@ export const useAIChatStore = defineStore('aiChat', () => {
       id: generateId(),
       role: 'user',
       content,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     }
     messages.value.push(message)
     trimMessages()
@@ -124,7 +122,7 @@ export const useAIChatStore = defineStore('aiChat', () => {
       content,
       timestamp: Date.now(),
       toolCalls,
-      isStreaming: false
+      isStreaming: false,
     }
     messages.value.push(message)
     trimMessages()
@@ -141,7 +139,7 @@ export const useAIChatStore = defineStore('aiChat', () => {
       role: 'tool',
       content,
       timestamp: Date.now(),
-      toolCallId
+      toolCallId,
     }
     messages.value.push(message)
     trimMessages()
@@ -158,7 +156,7 @@ export const useAIChatStore = defineStore('aiChat', () => {
       role: 'assistant',
       content: '',
       timestamp: Date.now(),
-      isStreaming: true
+      isStreaming: true,
     }
     messages.value.push(message)
     return message
@@ -275,7 +273,7 @@ export const useAIChatStore = defineStore('aiChat', () => {
     try {
       const data: PersistedConversation = {
         messages: messages.value,
-        lastUpdated: Date.now()
+        lastUpdated: Date.now(),
       }
       localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
     } catch (err) {
@@ -294,7 +292,7 @@ export const useAIChatStore = defineStore('aiChat', () => {
         // Mark any incomplete streaming messages as complete
         messages.value = data.messages.map((m) => ({
           ...m,
-          isStreaming: false
+          isStreaming: false,
         }))
       }
     } catch (err) {
@@ -332,6 +330,6 @@ export const useAIChatStore = defineStore('aiChat', () => {
     setError,
     setLoading,
     setStreaming,
-    restoreConversation
+    restoreConversation,
   }
 })

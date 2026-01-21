@@ -32,9 +32,7 @@
         </svg>
       </button>
     </div>
-    <div class="input-hint">
-      Press Enter to send, Shift+Enter for new line
-    </div>
+    <div class="input-hint">Press Enter to send, Shift+Enter for new line</div>
   </div>
 </template>
 
@@ -103,7 +101,7 @@ function setValue(value: string) {
 
 defineExpose({
   focus,
-  setValue
+  setValue,
 })
 </script>
 
@@ -167,7 +165,9 @@ defineExpose({
   background: var(--color-accent, #3b82f6);
   color: white;
   cursor: pointer;
-  transition: background-color 0.15s, opacity 0.15s;
+  transition:
+    background-color 0.15s,
+    opacity 0.15s;
   flex-shrink: 0;
 }
 

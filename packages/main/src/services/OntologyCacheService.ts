@@ -12,7 +12,7 @@ import type {
   CacheProgress,
   CacheStats,
   CacheMetadata,
-  PropertyType
+  PropertyType,
 } from '../backends/ontologyTypes.js'
 
 import { CACHE_SCHEMA_VERSION, DEFAULT_CACHE_CONFIG } from '../backends/ontologyTypes.js'
@@ -51,10 +51,7 @@ export class OntologyCacheService {
   /**
    * Fetch complete ontology cache from a backend
    */
-  async fetchCache(
-    backendId: string,
-    progressCallback?: ProgressCallback
-  ): Promise<OntologyCache> {
+  async fetchCache(backendId: string, progressCallback?: ProgressCallback): Promise<OntologyCache> {
     // Get backend config
     const backend = await this.backendService.getBackend(backendId)
     if (!backend) {
@@ -77,13 +74,17 @@ export class OntologyCacheService {
     let fetchedCount = 0
 
     // Helper to emit progress
-    const emitProgress = (status: CacheProgress['status'], currentType?: CacheProgress['currentType'], error?: string) => {
+    const emitProgress = (
+      status: CacheProgress['status'],
+      currentType?: CacheProgress['currentType'],
+      error?: string
+    ) => {
       if (progressCallback) {
         progressCallback({
           status,
           currentType,
           fetchedCount,
-          error
+          error,
         })
       }
     }
@@ -154,7 +155,7 @@ export class OntologyCacheService {
         propertyCount: properties.length,
         individualCount: individuals.length,
         totalCount: fetchedCount,
-        namespaceCount: Object.keys(namespaces).length
+        namespaceCount: Object.keys(namespaces).length,
       }
 
       // Create metadata
@@ -163,7 +164,7 @@ export class OntologyCacheService {
         lastUpdated: Date.now(),
         ttl: cacheConfig.ttl,
         version: CACHE_SCHEMA_VERSION,
-        stats
+        stats,
       }
 
       emitProgress('success')
@@ -173,7 +174,7 @@ export class OntologyCacheService {
         classes,
         properties,
         individuals,
-        namespaces
+        namespaces,
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error'
@@ -214,7 +215,7 @@ export class OntologyCacheService {
             label: row.label?.value,
             description: row.description?.value,
             namespace,
-            localName
+            localName,
           })
         }
       })
@@ -222,7 +223,9 @@ export class OntologyCacheService {
       return Array.from(classMap.values())
     } catch (error) {
       console.error('Failed to fetch classes:', error)
-      throw new Error(`Failed to fetch classes: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      throw new Error(
+        `Failed to fetch classes: ${error instanceof Error ? error.message : 'Unknown error'}`
+      )
     }
   }
 
@@ -263,7 +266,7 @@ export class OntologyCacheService {
             namespace,
             localName,
             domain: [],
-            range: []
+            range: [],
           }
           propertyMap.set(iri, property)
         }
@@ -280,7 +283,9 @@ export class OntologyCacheService {
       return Array.from(propertyMap.values())
     } catch (error) {
       console.error('Failed to fetch properties:', error)
-      throw new Error(`Failed to fetch properties: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      throw new Error(
+        `Failed to fetch properties: ${error instanceof Error ? error.message : 'Unknown error'}`
+      )
     }
   }
 
@@ -318,7 +323,7 @@ export class OntologyCacheService {
             description: row.description?.value,
             namespace,
             localName,
-            classes: []
+            classes: [],
           }
           individualMap.set(iri, individual)
         }
@@ -332,7 +337,9 @@ export class OntologyCacheService {
       return Array.from(individualMap.values())
     } catch (error) {
       console.error('Failed to fetch individuals:', error)
-      throw new Error(`Failed to fetch individuals: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      throw new Error(
+        `Failed to fetch individuals: ${error instanceof Error ? error.message : 'Unknown error'}`
+      )
     }
   }
 
@@ -345,7 +352,7 @@ export class OntologyCacheService {
     if (hashIndex > 0 && hashIndex < iri.length - 1) {
       return {
         namespace: iri.substring(0, hashIndex + 1),
-        localName: iri.substring(hashIndex + 1)
+        localName: iri.substring(hashIndex + 1),
       }
     }
 
@@ -354,21 +361,23 @@ export class OntologyCacheService {
     if (slashIndex > 0 && slashIndex < iri.length - 1) {
       return {
         namespace: iri.substring(0, slashIndex + 1),
-        localName: iri.substring(slashIndex + 1)
+        localName: iri.substring(slashIndex + 1),
       }
     }
 
     // Can't parse, return as-is
     return {
       namespace: undefined,
-      localName: iri
+      localName: iri,
     }
   }
 
   /**
    * Extract common namespaces from a collection of elements
    */
-  private extractNamespaces(elements: Array<{ iri: string; namespace?: string }>): Record<string, string> {
+  private extractNamespaces(
+    elements: Array<{ iri: string; namespace?: string }>
+  ): Record<string, string> {
     const namespaceMap = new Map<string, number>() // namespace -> count
 
     elements.forEach((element) => {
@@ -398,7 +407,7 @@ export class OntologyCacheService {
       dc: 'http://purl.org/dc/elements/1.1/',
       dcterms: 'http://purl.org/dc/terms/',
       skos: 'http://www.w3.org/2004/02/skos/core#',
-      foaf: 'http://xmlns.com/foaf/0.1/'
+      foaf: 'http://xmlns.com/foaf/0.1/',
     }
 
     // Check if any well-known namespace is used and add it with its standard prefix
@@ -406,7 +415,7 @@ export class OntologyCacheService {
       // Check if this URI is in the namespace map
       if (namespaceMap.has(uri)) {
         // Replace the generated prefix with the well-known one
-        const existingPrefix = Object.keys(result).find(k => result[k] === uri)
+        const existingPrefix = Object.keys(result).find((k) => result[k] === uri)
         if (existingPrefix) {
           delete result[existingPrefix]
         }
@@ -420,7 +429,10 @@ export class OntologyCacheService {
   /**
    * Test a custom SPARQL query (for UI validation)
    */
-  async testQuery(backendId: string, query: string): Promise<{ valid: boolean; error?: string; resultCount?: number }> {
+  async testQuery(
+    backendId: string,
+    query: string
+  ): Promise<{ valid: boolean; error?: string; resultCount?: number }> {
     try {
       // Get backend config
       const backend = await this.backendService.getBackend(backendId)
@@ -444,7 +456,7 @@ export class OntologyCacheService {
     } catch (error) {
       return {
         valid: false,
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       }
     }
   }

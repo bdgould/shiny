@@ -26,20 +26,20 @@ defineEmits<{
 const actions: QuickAction[] = [
   {
     label: 'Explain Query',
-    prompt: 'Please explain what this SPARQL query does step by step.'
+    prompt: 'Please explain what this SPARQL query does step by step.',
   },
   {
     label: 'Optimize Query',
-    prompt: 'Can you suggest optimizations for this query to improve performance?'
+    prompt: 'Can you suggest optimizations for this query to improve performance?',
   },
   {
     label: 'Find Errors',
-    prompt: 'Please review this query for potential errors or issues.'
+    prompt: 'Please review this query for potential errors or issues.',
   },
   {
     label: 'Fix Syntax',
-    prompt: 'Check this query for syntax errors and suggest fixes.'
-  }
+    prompt: 'Check this query for syntax errors and suggest fixes.',
+  },
 ]
 </script>
 
@@ -62,7 +62,9 @@ const actions: QuickAction[] = [
   background: var(--color-background-secondary);
   color: var(--color-text-primary);
   cursor: pointer;
-  transition: background-color 0.15s, border-color 0.15s;
+  transition:
+    background-color 0.15s,
+    border-color 0.15s;
   white-space: nowrap;
 }
 

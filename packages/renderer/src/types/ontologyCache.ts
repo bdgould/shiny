@@ -17,7 +17,7 @@ import type {
   CacheMetadata,
   OntologyCache,
   CacheQueryTemplates,
-  PropertyType
+  PropertyType,
 } from '../../../main/src/backends/ontologyTypes'
 
 // Re-export main types
@@ -35,7 +35,7 @@ export type {
   CacheMetadata,
   OntologyCache,
   CacheQueryTemplates,
-  PropertyType
+  PropertyType,
 }
 
 /**
@@ -52,7 +52,7 @@ export const CACHE_STORES = {
   CLASSES: 'classes',
   PROPERTIES: 'properties',
   INDIVIDUALS: 'individuals',
-  NAMESPACES: 'namespaces'
+  NAMESPACES: 'namespaces',
 } as const
 
 /**
@@ -151,7 +151,7 @@ export const DEFAULT_GLOBAL_CACHE_SETTINGS: GlobalCacheSettings = {
   defaultTtl: 24 * 60 * 60 * 1000, // 24 hours
   defaultMaxElements: 50000,
   autoRefresh: true,
-  refreshCheckInterval: 5 * 60 * 1000 // 5 minutes
+  refreshCheckInterval: 5 * 60 * 1000, // 5 minutes
 }
 
 /**
@@ -221,8 +221,8 @@ WHERE {
   BIND(COALESCE(?dcTitle, ?rdfsLabel) AS ?label)
   BIND(COALESCE(?dcDesc, ?rdfsComment) AS ?description)
 }
-LIMIT 10000`
-  }
+LIMIT 10000`,
+  },
 }
 
 /**

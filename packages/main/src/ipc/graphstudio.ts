@@ -327,26 +327,34 @@ ipcMain.handle(
       }
 
       // Parse graphmart response
-      const graphmart = normalizeGraphmart(graphmartResponse.data.graphmart || graphmartResponse.data)
+      const graphmart = normalizeGraphmart(
+        graphmartResponse.data.graphmart || graphmartResponse.data
+      )
 
       // Fetch layers from dedicated endpoint
       try {
         let layersResponse
         try {
-          layersResponse = await axiosInstance.get(`${baseUrl}/api/graphmarts/${encodedUri}/layers`, {
-            headers: {
-              Accept: 'application/json',
-              ...authHeaders,
-            },
-          })
+          layersResponse = await axiosInstance.get(
+            `${baseUrl}/api/graphmarts/${encodedUri}/layers`,
+            {
+              headers: {
+                Accept: 'application/json',
+                ...authHeaders,
+              },
+            }
+          )
         } catch (error) {
           // Fallback to API v1
-          layersResponse = await axiosInstance.get(`${baseUrl}/api/v1/graphmarts/${encodedUri}/layers`, {
-            headers: {
-              Accept: 'application/json',
-              ...authHeaders,
-            },
-          })
+          layersResponse = await axiosInstance.get(
+            `${baseUrl}/api/v1/graphmarts/${encodedUri}/layers`,
+            {
+              headers: {
+                Accept: 'application/json',
+                ...authHeaders,
+              },
+            }
+          )
         }
 
         // Parse layers response
@@ -361,7 +369,9 @@ ipcMain.handle(
           enabled: layer.enabled !== undefined ? layer.enabled : true,
         }))
 
-        console.log(`[GraphStudio] Fetched ${graphmart.layers.length} layers for graphmart ${graphmartUri}`)
+        console.log(
+          `[GraphStudio] Fetched ${graphmart.layers.length} layers for graphmart ${graphmartUri}`
+        )
       } catch (error) {
         console.warn(`[GraphStudio] Failed to fetch layers for ${graphmartUri}:`, error)
         // Keep empty layers array if fetch fails

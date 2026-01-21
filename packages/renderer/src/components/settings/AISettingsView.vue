@@ -3,7 +3,8 @@
     <div class="settings-header">
       <h2>AI Configuration</h2>
       <p class="settings-description">
-        Configure OpenAI-compatible endpoints for AI features. Enter your API credentials and test the connection.
+        Configure OpenAI-compatible endpoints for AI features. Enter your API credentials and test
+        the connection.
       </p>
     </div>
 
@@ -19,7 +20,9 @@
             type="url"
             placeholder="https://api.openai.com/v1"
           />
-          <span class="help-text">Base URL for OpenAI-compatible API (without /chat/completions)</span>
+          <span class="help-text"
+            >Base URL for OpenAI-compatible API (without /chat/completions)</span
+          >
         </div>
 
         <div class="form-group">
@@ -50,7 +53,9 @@
                 class="model-select"
               >
                 <option value="" disabled>Select a model...</option>
-                <option v-for="model in availableModels" :key="model" :value="model">{{ model }}</option>
+                <option v-for="model in availableModels" :key="model" :value="model">
+                  {{ model }}
+                </option>
               </select>
               <input
                 v-else
@@ -75,7 +80,11 @@
           </div>
           <span v-if="modelWarning" class="help-text warning">⚠️ {{ modelWarning }}</span>
           <span v-else class="help-text">
-            {{ availableModels.length > 0 ? 'Select a model or enter a custom one' : 'Click "Fetch Models" to load available models, or type your own' }}
+            {{
+              availableModels.length > 0
+                ? 'Select a model or enter a custom one'
+                : 'Click "Fetch Models" to load available models, or type your own'
+            }}
           </span>
         </div>
       </div>
@@ -96,7 +105,9 @@
             />
             <span class="unit">{{ settings.temperature }}</span>
           </div>
-          <span class="help-text">Controls randomness (0.0 = deterministic, 2.0 = very random)</span>
+          <span class="help-text"
+            >Controls randomness (0.0 = deterministic, 2.0 = very random)</span
+          >
         </div>
 
         <div class="form-group">
@@ -121,7 +132,11 @@
           {{ isTesting ? 'Testing...' : 'Test Endpoint' }}
         </button>
 
-        <div v-if="testResult" class="test-result" :class="testResult.success ? 'success' : 'error'">
+        <div
+          v-if="testResult"
+          class="test-result"
+          :class="testResult.success ? 'success' : 'error'"
+        >
           <div class="test-result-header">
             {{ testResult.success ? '✅ Connection successful!' : '❌ Connection failed' }}
           </div>
@@ -178,7 +193,12 @@ const isFetchingModels = ref(false)
 const availableModels = ref<string[]>([])
 const useCustomModel = ref(false)
 const modelWarning = ref('')
-const testResult = ref<{ success: boolean; response?: string; error?: string; url?: string } | null>(null)
+const testResult = ref<{
+  success: boolean
+  response?: string
+  error?: string
+  url?: string
+} | null>(null)
 
 onMounted(() => {
   loadSettings()

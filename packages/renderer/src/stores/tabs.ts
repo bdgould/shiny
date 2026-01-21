@@ -60,7 +60,7 @@ export const useTabsStore = defineStore('tabs', () => {
           ai: 'AI Settings',
           cache: 'Cache Settings',
           'sparql-formatting': 'SPARQL Formatting',
-          prefix: 'Prefix Management'
+          prefix: 'Prefix Management',
         }
         tabName = options.settingsType ? settingsNames[options.settingsType] : 'Settings'
       } else {

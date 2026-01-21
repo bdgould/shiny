@@ -4,7 +4,11 @@
  */
 
 import type { ToolCall } from '../../types/aiChat'
-import type { OntologyElementType, CacheSearchResult, AnyOntologyElement } from '../../types/ontologyCache'
+import type {
+  OntologyElementType,
+  CacheSearchResult,
+  AnyOntologyElement,
+} from '../../types/ontologyCache'
 import { useOntologyCacheStore } from '../../stores/ontologyCache'
 
 /**
@@ -49,7 +53,7 @@ export async function executeTool(
     default:
       return {
         success: false,
-        error: `Unknown tool: ${name}`
+        error: `Unknown tool: ${name}`,
       }
   }
 }
@@ -67,7 +71,7 @@ async function executeSearchOntology(
     if (!backendId) {
       return {
         success: false,
-        error: 'No backend selected for the current query tab'
+        error: 'No backend selected for the current query tab',
       }
     }
 
@@ -75,7 +79,7 @@ async function executeSearchOntology(
     if (!query) {
       return {
         success: false,
-        error: 'Query parameter is required'
+        error: 'Query parameter is required',
       }
     }
 
@@ -95,7 +99,7 @@ async function executeSearchOntology(
     const results = await ontologyCacheStore.searchElements(backendId, {
       query,
       types,
-      limit
+      limit,
     })
 
     // Format results for AI consumption
@@ -105,20 +109,20 @@ async function executeSearchOntology(
       type: r.element.type,
       description: r.element.description,
       matchedField: r.matchedField,
-      score: r.score
+      score: r.score,
     }))
 
     return {
       success: true,
       result: {
         count: formattedResults.length,
-        results: formattedResults
-      }
+        results: formattedResults,
+      },
     }
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Search failed'
+      error: error instanceof Error ? error.message : 'Search failed',
     }
   }
 }
@@ -136,7 +140,7 @@ async function executeListOntologyElements(
     if (!backendId) {
       return {
         success: false,
-        error: 'No backend selected for the current query tab'
+        error: 'No backend selected for the current query tab',
       }
     }
 
@@ -144,7 +148,7 @@ async function executeListOntologyElements(
     if (!elementType || !['class', 'property', 'individual'].includes(elementType)) {
       return {
         success: false,
-        error: 'Type parameter must be one of: class, property, individual'
+        error: 'Type parameter must be one of: class, property, individual',
       }
     }
 
@@ -158,7 +162,7 @@ async function executeListOntologyElements(
     if (!cache) {
       return {
         success: false,
-        error: 'Ontology cache not available. Please refresh the cache first.'
+        error: 'Ontology cache not available. Please refresh the cache first.',
       }
     }
 
@@ -195,13 +199,13 @@ async function executeListOntologyElements(
         totalPages,
         hasMore,
         count: formattedResults.length,
-        elements: formattedResults
-      }
+        elements: formattedResults,
+      },
     }
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to list ontology elements'
+      error: error instanceof Error ? error.message : 'Failed to list ontology elements',
     }
   }
 }
@@ -219,7 +223,7 @@ async function executeGetClassDetails(
     if (!backendId) {
       return {
         success: false,
-        error: 'No backend selected for the current query tab'
+        error: 'No backend selected for the current query tab',
       }
     }
 
@@ -227,20 +231,16 @@ async function executeGetClassDetails(
     if (!iri) {
       return {
         success: false,
-        error: 'IRI parameter is required'
+        error: 'IRI parameter is required',
       }
     }
 
-    const element = await ontologyCacheStore.getElementByIri(
-      backendId,
-      iri,
-      'class'
-    )
+    const element = await ontologyCacheStore.getElementByIri(backendId, iri, 'class')
 
     if (!element) {
       return {
         success: true,
-        result: { found: false, message: `No class found with IRI: ${iri}` }
+        result: { found: false, message: `No class found with IRI: ${iri}` },
       }
     }
 
@@ -248,13 +248,13 @@ async function executeGetClassDetails(
       success: true,
       result: {
         found: true,
-        class: formatElement(element)
-      }
+        class: formatElement(element),
+      },
     }
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to get class details'
+      error: error instanceof Error ? error.message : 'Failed to get class details',
     }
   }
 }
@@ -272,7 +272,7 @@ async function executeGetPropertyDetails(
     if (!backendId) {
       return {
         success: false,
-        error: 'No backend selected for the current query tab'
+        error: 'No backend selected for the current query tab',
       }
     }
 
@@ -280,20 +280,16 @@ async function executeGetPropertyDetails(
     if (!iri) {
       return {
         success: false,
-        error: 'IRI parameter is required'
+        error: 'IRI parameter is required',
       }
     }
 
-    const element = await ontologyCacheStore.getElementByIri(
-      backendId,
-      iri,
-      'property'
-    )
+    const element = await ontologyCacheStore.getElementByIri(backendId, iri, 'property')
 
     if (!element) {
       return {
         success: true,
-        result: { found: false, message: `No property found with IRI: ${iri}` }
+        result: { found: false, message: `No property found with IRI: ${iri}` },
       }
     }
 
@@ -301,13 +297,13 @@ async function executeGetPropertyDetails(
       success: true,
       result: {
         found: true,
-        property: formatElement(element)
-      }
+        property: formatElement(element),
+      },
     }
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to get property details'
+      error: error instanceof Error ? error.message : 'Failed to get property details',
     }
   }
 }
@@ -323,7 +319,7 @@ async function executeRunSparqlQuery(
     if (!backendId) {
       return {
         success: false,
-        error: 'No backend selected for the current query tab'
+        error: 'No backend selected for the current query tab',
       }
     }
 
@@ -331,7 +327,7 @@ async function executeRunSparqlQuery(
     if (!query) {
       return {
         success: false,
-        error: 'Query parameter is required'
+        error: 'Query parameter is required',
       }
     }
 
@@ -361,31 +357,33 @@ async function executeRunSparqlQuery(
           type: 'select',
           rowCount: result.data?.results?.bindings?.length || 0,
           columns: result.data?.head?.vars || [],
-          rows: (result.data?.results?.bindings || []).slice(0, 20).map((binding: Record<string, { value: string }>) => {
-            const row: Record<string, string> = {}
-            for (const [key, val] of Object.entries(binding)) {
-              row[key] = val.value
-            }
-            return row
-          }),
-          truncated: (result.data?.results?.bindings?.length || 0) > 20
-        }
+          rows: (result.data?.results?.bindings || [])
+            .slice(0, 20)
+            .map((binding: Record<string, { value: string }>) => {
+              const row: Record<string, string> = {}
+              for (const [key, val] of Object.entries(binding)) {
+                row[key] = val.value
+              }
+              return row
+            }),
+          truncated: (result.data?.results?.bindings?.length || 0) > 20,
+        },
       }
     } else if (result.type === 'construct' || result.type === 'describe') {
       return {
         success: true,
         result: {
           type: result.type,
-          tripleCount: Array.isArray(result.data) ? result.data.length : 0
-        }
+          tripleCount: Array.isArray(result.data) ? result.data.length : 0,
+        },
       }
     } else if (result.type === 'ask') {
       return {
         success: true,
         result: {
           type: 'ask',
-          answer: result.data
-        }
+          answer: result.data,
+        },
       }
     }
 
@@ -393,13 +391,13 @@ async function executeRunSparqlQuery(
       success: true,
       result: {
         type: result.type,
-        data: result.data
-      }
+        data: result.data,
+      },
     }
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Query execution failed'
+      error: error instanceof Error ? error.message : 'Query execution failed',
     }
   }
 }
@@ -413,7 +411,7 @@ function formatElement(element: AnyOntologyElement): Record<string, unknown> {
     localName: element.localName,
     label: element.label,
     description: element.description,
-    type: element.type
+    type: element.type,
   }
 
   // Add property-specific fields

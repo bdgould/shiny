@@ -30,29 +30,32 @@ class MockFileReader {
     // Use the blob.text() API which returns a promise
     // We need to schedule the callback in the next tick like the real FileReader
     if (blob && typeof (blob as any).text === 'function') {
-      ;(blob as any).text().then((text: string) => {
-        this.result = text
-        this.readyState = 2 // DONE
+      ;(blob as any)
+        .text()
+        .then((text: string) => {
+          this.result = text
+          this.readyState = 2 // DONE
 
-        if (this.onload) {
-          const event = {
-            target: this,
-            loaded: text.length,
-            total: text.length,
+          if (this.onload) {
+            const event = {
+              target: this,
+              loaded: text.length,
+              total: text.length,
+            }
+            this.onload(event)
           }
-          this.onload(event)
-        }
-      }).catch((err: Error) => {
-        this.error = err
-        this.readyState = 2 // DONE
+        })
+        .catch((err: Error) => {
+          this.error = err
+          this.readyState = 2 // DONE
 
-        if (this.onerror) {
-          const event = {
-            target: this,
+          if (this.onerror) {
+            const event = {
+              target: this,
+            }
+            this.onerror(event)
           }
-          this.onerror(event)
-        }
-      })
+        })
     } else {
       // Fallback for non-standard blob implementations
       queueMicrotask(() => {
@@ -89,7 +92,9 @@ class MockFileReader {
 
   addEventListener(): void {}
   removeEventListener(): void {}
-  dispatchEvent(): boolean { return true }
+  dispatchEvent(): boolean {
+    return true
+  }
 }
 
 // Replace global FileReader with our mock

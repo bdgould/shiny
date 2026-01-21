@@ -7,7 +7,9 @@
       <template v-if="isSettingsTab">
         <QuerySettingsView v-if="tabsStore.activeTab?.settingsType === 'query'" />
         <PrefixManagementSettingsView v-else-if="tabsStore.activeTab?.settingsType === 'prefix'" />
-        <SparqlFormattingSettingsView v-else-if="tabsStore.activeTab?.settingsType === 'sparql-formatting'" />
+        <SparqlFormattingSettingsView
+          v-else-if="tabsStore.activeTab?.settingsType === 'sparql-formatting'"
+        />
         <CacheSettingsView v-else-if="tabsStore.activeTab?.settingsType === 'cache'" />
         <AISettingsView v-else-if="tabsStore.activeTab?.settingsType === 'ai'" />
       </template>
@@ -17,7 +19,11 @@
         <div class="editor-controls">
           <select v-model="activeTabBackend" class="backend-select" @change="handleBackendChange">
             <option :value="null" disabled>Select backend...</option>
-            <option v-for="backend in connectionStore.backends" :key="backend.id" :value="backend.id">
+            <option
+              v-for="backend in connectionStore.backends"
+              :key="backend.id"
+              :value="backend.id"
+            >
               {{ backend.name }}
             </option>
           </select>

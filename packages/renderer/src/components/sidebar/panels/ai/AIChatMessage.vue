@@ -80,7 +80,10 @@ function renderMarkdown(text: string): string {
   html = html.replace(/_([^_]+)_/g, '<em>$1</em>')
 
   // Links [text](url)
-  html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>')
+  html = html.replace(
+    /\[([^\]]+)\]\(([^)]+)\)/g,
+    '<a href="$2" target="_blank" rel="noopener">$1</a>'
+  )
 
   // Line breaks
   html = html.replace(/\n/g, '<br>')
@@ -94,7 +97,7 @@ function escapeHtml(text: string): string {
     '<': '&lt;',
     '>': '&gt;',
     '"': '&quot;',
-    "'": '&#039;'
+    "'": '&#039;',
   }
   return text.replace(/[&<>"']/g, (m) => map[m])
 }
@@ -109,7 +112,7 @@ function decodeHtml(text: string): string {
     '&gt;': '>',
     '&quot;': '"',
     '&#039;': "'",
-    '&#10;': '\n'
+    '&#10;': '\n',
   }
   return text.replace(/&(amp|lt|gt|quot|#039|#10);/g, (m) => map[m])
 }
@@ -212,7 +215,9 @@ const renderedContent = computed(() => {
   border-radius: 4px;
   cursor: pointer;
   opacity: 0;
-  transition: opacity 0.2s, background-color 0.2s;
+  transition:
+    opacity 0.2s,
+    background-color 0.2s;
   z-index: 1;
 }
 

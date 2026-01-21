@@ -51,9 +51,7 @@ export function useCacheRefresh() {
 
       // Get all backends with cache enabled
       const allBackends = connectionStore.backends
-      const enabledBackends = allBackends.filter(
-        (backend) => backend.cacheConfig?.enabled
-      )
+      const enabledBackends = allBackends.filter((backend) => backend.cacheConfig?.enabled)
 
       // Check each enabled backend
       for (const backend of enabledBackends) {
@@ -72,12 +70,15 @@ export function useCacheRefresh() {
 
         // If cache is stale or doesn't exist, refresh it
         if (validation.stale || (!validation.exists && cachedBackendIds.includes(backend.id))) {
-          console.log(`Background refresh: Cache for backend ${backend.name} is stale, refreshing...`)
+          console.log(
+            `Background refresh: Cache for backend ${backend.name} is stale, refreshing...`
+          )
           refreshInProgress.value.add(backend.id)
           lastRefreshTimes.value.set(backend.id, Date.now())
 
           // Refresh in background (don't await)
-          cacheStore.smartRefresh(backend.id)
+          cacheStore
+            .smartRefresh(backend.id)
             .catch((error) => {
               console.error(`Background refresh failed for backend ${backend.name}:`, error)
             })
@@ -178,6 +179,6 @@ export function useCacheRefresh() {
     stop,
     triggerCheck,
     forceRefresh,
-    canRefresh
+    canRefresh,
   }
 }

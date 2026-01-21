@@ -134,7 +134,13 @@ describe('useOntologyCacheStore', () => {
           lastUpdated: Date.now(),
           ttl: 86400000,
           version: 1,
-          stats: { classCount: 0, propertyCount: 0, individualCount: 0, totalCount: 0, namespaceCount: 0 },
+          stats: {
+            classCount: 0,
+            propertyCount: 0,
+            individualCount: 0,
+            totalCount: 0,
+            namespaceCount: 0,
+          },
         },
         classes: [],
         properties: [],
@@ -167,7 +173,13 @@ describe('useOntologyCacheStore', () => {
           lastUpdated: Date.now(),
           ttl: 86400000,
           version: 1,
-          stats: { classCount: 0, propertyCount: 0, individualCount: 0, totalCount: 0, namespaceCount: 0 },
+          stats: {
+            classCount: 0,
+            propertyCount: 0,
+            individualCount: 0,
+            totalCount: 0,
+            namespaceCount: 0,
+          },
         },
         classes: [],
         properties: [],
@@ -193,7 +205,13 @@ describe('useOntologyCacheStore', () => {
           lastUpdated: Date.now(),
           ttl: 86400000,
           version: 1,
-          stats: { classCount: 0, propertyCount: 0, individualCount: 0, totalCount: 0, namespaceCount: 0 },
+          stats: {
+            classCount: 0,
+            propertyCount: 0,
+            individualCount: 0,
+            totalCount: 0,
+            namespaceCount: 0,
+          },
         },
         classes: [],
         properties: [],
@@ -225,7 +243,13 @@ describe('useOntologyCacheStore', () => {
           lastUpdated: Date.now(),
           ttl: 86400000,
           version: 1,
-          stats: { classCount: 0, propertyCount: 0, individualCount: 0, totalCount: 0, namespaceCount: 0 },
+          stats: {
+            classCount: 0,
+            propertyCount: 0,
+            individualCount: 0,
+            totalCount: 0,
+            namespaceCount: 0,
+          },
         },
         classes: [],
         properties: [],
@@ -330,7 +354,13 @@ describe('useOntologyCacheStore', () => {
           lastUpdated: Date.now(),
           ttl: 86400000,
           version: 1,
-          stats: { classCount: 0, propertyCount: 0, individualCount: 0, totalCount: 0, namespaceCount: 0 },
+          stats: {
+            classCount: 0,
+            propertyCount: 0,
+            individualCount: 0,
+            totalCount: 0,
+            namespaceCount: 0,
+          },
         },
         classes: [],
         properties: [],
@@ -384,7 +414,9 @@ describe('useOntologyCacheStore', () => {
     })
 
     it('should handle search errors', async () => {
-      vi.mocked(mockOntologyCacheService.searchElements).mockRejectedValue(new Error('Search failed'))
+      vi.mocked(mockOntologyCacheService.searchElements).mockRejectedValue(
+        new Error('Search failed')
+      )
 
       const store = useOntologyCacheStore()
 
@@ -431,7 +463,13 @@ describe('useOntologyCacheStore', () => {
           lastUpdated: Date.now(),
           ttl: 86400000,
           version: 1,
-          stats: { classCount: 0, propertyCount: 0, individualCount: 0, totalCount: 0, namespaceCount: 0 },
+          stats: {
+            classCount: 0,
+            propertyCount: 0,
+            individualCount: 0,
+            totalCount: 0,
+            namespaceCount: 0,
+          },
         },
         classes: [],
         properties: [],
@@ -460,7 +498,13 @@ describe('useOntologyCacheStore', () => {
           lastUpdated: Date.now() - 90000000,
           ttl: 86400000,
           version: 1,
-          stats: { classCount: 1, propertyCount: 0, individualCount: 0, totalCount: 1, namespaceCount: 0 },
+          stats: {
+            classCount: 1,
+            propertyCount: 0,
+            individualCount: 0,
+            totalCount: 1,
+            namespaceCount: 0,
+          },
         },
         classes: [
           {
@@ -500,7 +544,13 @@ describe('useOntologyCacheStore', () => {
           lastUpdated: Date.now(),
           ttl: 86400000,
           version: 1,
-          stats: { classCount: 0, propertyCount: 0, individualCount: 0, totalCount: 0, namespaceCount: 0 },
+          stats: {
+            classCount: 0,
+            propertyCount: 0,
+            individualCount: 0,
+            totalCount: 0,
+            namespaceCount: 0,
+          },
         },
         classes: [],
         properties: [],

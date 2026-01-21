@@ -5,7 +5,13 @@
 /**
  * Tool call status in the approval flow
  */
-export type ToolCallStatus = 'pending' | 'approved' | 'rejected' | 'executing' | 'completed' | 'error'
+export type ToolCallStatus =
+  | 'pending'
+  | 'approved'
+  | 'rejected'
+  | 'executing'
+  | 'completed'
+  | 'error'
 
 /**
  * A tool call requested by the AI
@@ -140,11 +146,14 @@ export interface OpenAIFunction {
   description: string
   parameters: {
     type: 'object'
-    properties: Record<string, {
-      type: string
-      description: string
-      enum?: string[]
-    }>
+    properties: Record<
+      string,
+      {
+        type: string
+        description: string
+        enum?: string[]
+      }
+    >
     required?: string[]
   }
 }

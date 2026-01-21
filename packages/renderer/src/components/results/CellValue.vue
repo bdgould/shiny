@@ -6,7 +6,7 @@
       target="_blank"
       rel="noopener noreferrer"
       class="uri-link clickable"
-      :class="{ 'copied': showCopied }"
+      :class="{ copied: showCopied }"
       :title="showCopied ? 'Copied!' : value"
       @click="handleUriClick"
     >
@@ -15,20 +15,24 @@
     <span
       v-else-if="type === 'literal'"
       class="literal clickable"
-      :class="{ 'copied': showCopied }"
+      :class="{ copied: showCopied }"
       :title="showCopied ? 'Copied!' : value"
       @click="handleCopyClick"
     >
       {{ showCopied ? '✓ Copied!' : value }}
       <span v-if="!showCopied && language" class="annotation">@{{ language }}</span>
-      <span v-else-if="!showCopied && datatype && !isDefaultDatatype" class="annotation" :title="datatype">
+      <span
+        v-else-if="!showCopied && datatype && !isDefaultDatatype"
+        class="annotation"
+        :title="datatype"
+      >
         ^^{{ shortenURI(datatype) }}
       </span>
     </span>
     <span
       v-else-if="type === 'bnode'"
       class="bnode clickable"
-      :class="{ 'copied': showCopied }"
+      :class="{ copied: showCopied }"
       :title="showCopied ? 'Copied!' : `_:${value}`"
       @click="handleBnodeClick"
     >
@@ -108,7 +112,10 @@ const handleBnodeClick = async () => {
 
 .clickable {
   cursor: pointer;
-  transition: color 0.2s, background-color 0.2s, opacity 0.2s;
+  transition:
+    color 0.2s,
+    background-color 0.2s,
+    opacity 0.2s;
 }
 
 .clickable:hover {

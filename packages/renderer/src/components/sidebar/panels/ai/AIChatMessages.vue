@@ -3,9 +3,7 @@
     <div v-if="messages.length === 0" class="empty-state">
       <div class="empty-icon">💬</div>
       <div class="empty-title">Ask me about your SPARQL query</div>
-      <div class="empty-subtitle">
-        I can help you write, optimize, and debug SPARQL queries.
-      </div>
+      <div class="empty-subtitle">I can help you write, optimize, and debug SPARQL queries.</div>
     </div>
 
     <div v-else class="messages-list">

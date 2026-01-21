@@ -11,7 +11,7 @@ import type {
   AnyOntologyElement,
   CacheMetadata,
   CacheStats,
-  OntologyElementType
+  OntologyElementType,
 } from '../../types/ontologyCache'
 
 import {
@@ -21,7 +21,7 @@ import {
   type CacheValidation,
   type CacheSearchOptions,
   type CacheSearchResult,
-  type NamespaceEntry
+  type NamespaceEntry,
 } from '../../types/ontologyCache'
 
 import { CACHE_SCHEMA_VERSION } from '../../../../main/src/backends/ontologyTypes'
@@ -68,7 +68,7 @@ class OntologyCacheService {
         // Create classes store with composite key (backendId + iri)
         if (!db.objectStoreNames.contains(CACHE_STORES.CLASSES)) {
           const classStore = db.createObjectStore(CACHE_STORES.CLASSES, {
-            keyPath: ['backendId', 'iri']
+            keyPath: ['backendId', 'iri'],
           })
           classStore.createIndex('backendId', 'backendId', { unique: false })
           classStore.createIndex('label', 'label', { unique: false })
@@ -77,7 +77,7 @@ class OntologyCacheService {
         // Create properties store with composite key (backendId + iri)
         if (!db.objectStoreNames.contains(CACHE_STORES.PROPERTIES)) {
           const propStore = db.createObjectStore(CACHE_STORES.PROPERTIES, {
-            keyPath: ['backendId', 'iri']
+            keyPath: ['backendId', 'iri'],
           })
           propStore.createIndex('backendId', 'backendId', { unique: false })
           propStore.createIndex('label', 'label', { unique: false })
@@ -86,7 +86,7 @@ class OntologyCacheService {
         // Create individuals store with composite key (backendId + iri)
         if (!db.objectStoreNames.contains(CACHE_STORES.INDIVIDUALS)) {
           const indStore = db.createObjectStore(CACHE_STORES.INDIVIDUALS, {
-            keyPath: ['backendId', 'iri']
+            keyPath: ['backendId', 'iri'],
           })
           indStore.createIndex('backendId', 'backendId', { unique: false })
           indStore.createIndex('label', 'label', { unique: false })
@@ -95,7 +95,7 @@ class OntologyCacheService {
         // Create namespaces store with composite key (backendId + prefix)
         if (!db.objectStoreNames.contains(CACHE_STORES.NAMESPACES)) {
           const nsStore = db.createObjectStore(CACHE_STORES.NAMESPACES, {
-            keyPath: ['backendId', 'prefix']
+            keyPath: ['backendId', 'prefix'],
           })
           nsStore.createIndex('backendId', 'backendId', { unique: false })
         }
@@ -116,7 +116,7 @@ class OntologyCacheService {
         CACHE_STORES.CLASSES,
         CACHE_STORES.PROPERTIES,
         CACHE_STORES.INDIVIDUALS,
-        CACHE_STORES.NAMESPACES
+        CACHE_STORES.NAMESPACES,
       ],
       'readwrite'
     )
@@ -167,7 +167,7 @@ class OntologyCacheService {
       CACHE_STORES.CLASSES,
       CACHE_STORES.PROPERTIES,
       CACHE_STORES.INDIVIDUALS,
-      CACHE_STORES.NAMESPACES
+      CACHE_STORES.NAMESPACES,
     ]
 
     stores.forEach((storeName) => {
@@ -201,7 +201,7 @@ class OntologyCacheService {
         CACHE_STORES.CLASSES,
         CACHE_STORES.PROPERTIES,
         CACHE_STORES.INDIVIDUALS,
-        CACHE_STORES.NAMESPACES
+        CACHE_STORES.NAMESPACES,
       ],
       'readonly'
     )
@@ -260,7 +260,7 @@ class OntologyCacheService {
             classes,
             properties,
             individuals,
-            namespaces
+            namespaces,
           })
         } catch (error) {
           reject(error)
@@ -321,7 +321,7 @@ class OntologyCacheService {
       return {
         exists: false,
         valid: false,
-        stale: false
+        stale: false,
       }
     }
 
@@ -336,7 +336,7 @@ class OntologyCacheService {
       stale: isExpired,
       age,
       ttl: metadata.ttl,
-      expiresAt
+      expiresAt,
     }
   }
 
@@ -351,7 +351,7 @@ class OntologyCacheService {
         CACHE_STORES.CLASSES,
         CACHE_STORES.PROPERTIES,
         CACHE_STORES.INDIVIDUALS,
-        CACHE_STORES.NAMESPACES
+        CACHE_STORES.NAMESPACES,
       ],
       'readwrite'
     )
@@ -375,7 +375,7 @@ class OntologyCacheService {
         CACHE_STORES.CLASSES,
         CACHE_STORES.PROPERTIES,
         CACHE_STORES.INDIVIDUALS,
-        CACHE_STORES.NAMESPACES
+        CACHE_STORES.NAMESPACES,
       ],
       'readwrite'
     )
@@ -389,7 +389,7 @@ class OntologyCacheService {
         CACHE_STORES.CLASSES,
         CACHE_STORES.PROPERTIES,
         CACHE_STORES.INDIVIDUALS,
-        CACHE_STORES.NAMESPACES
+        CACHE_STORES.NAMESPACES,
       ]
 
       stores.forEach((storeName) => {

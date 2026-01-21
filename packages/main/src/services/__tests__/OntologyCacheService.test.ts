@@ -121,9 +121,7 @@ describe('OntologyCacheService', () => {
 
       // Verify progress callbacks
       expect(progressCallback).toHaveBeenCalled()
-      expect(progressCallback).toHaveBeenCalledWith(
-        expect.objectContaining({ status: 'success' })
-      )
+      expect(progressCallback).toHaveBeenCalledWith(expect.objectContaining({ status: 'success' }))
     })
 
     it('should throw error when backend not found', async () => {

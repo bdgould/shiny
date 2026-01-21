@@ -21,7 +21,9 @@
               <input type="checkbox" v-model="globalSettings.enableAutocomplete" />
               <span>Enable autocomplete from cache</span>
             </label>
-            <span class="help-text">Show cached ontology elements in SPARQL editor autocomplete</span>
+            <span class="help-text"
+              >Show cached ontology elements in SPARQL editor autocomplete</span
+            >
           </div>
 
           <div class="form-group">
@@ -128,14 +130,20 @@
                   </div>
                   <div class="status-item">
                     <span class="status-label">Last Updated:</span>
-                    <span class="status-value">{{ formatTimestamp(cacheMetadata?.lastUpdated) }}</span>
+                    <span class="status-value">{{
+                      formatTimestamp(cacheMetadata?.lastUpdated)
+                    }}</span>
                   </div>
                 </div>
                 <div v-else class="no-cache-message">
                   No cache data yet. Click "Refresh Cache Now" to fetch ontology elements.
                 </div>
                 <div class="cache-actions">
-                  <button class="btn-secondary btn-small" @click="refreshCache" :disabled="isRefreshing">
+                  <button
+                    class="btn-secondary btn-small"
+                    @click="refreshCache"
+                    :disabled="isRefreshing"
+                  >
                     {{ isRefreshing ? 'Refreshing...' : 'Refresh Cache Now' }}
                   </button>
                   <button v-if="cacheStats" class="btn-secondary btn-small" @click="clearCache">
@@ -155,8 +163,8 @@
           </button>
           <div v-show="expandedSections.queries" class="section-content">
             <p class="section-description">
-              Customize the SPARQL queries used to fetch ontology elements. Use Dublin Core (dc:title, dc:description)
-              and RDFS (rdfs:label, rdfs:comment) predicates.
+              Customize the SPARQL queries used to fetch ontology elements. Use Dublin Core
+              (dc:title, dc:description) and RDFS (rdfs:label, rdfs:comment) predicates.
             </p>
 
             <!-- Classes Query -->
@@ -164,7 +172,11 @@
               <div class="query-header">
                 <h4>Classes Query</h4>
                 <div class="query-actions">
-                  <button class="btn-link btn-small" @click="testQuery('classes')" :disabled="isTestingQuery">
+                  <button
+                    class="btn-link btn-small"
+                    @click="testQuery('classes')"
+                    :disabled="isTestingQuery"
+                  >
                     {{ isTestingQuery ? 'Testing...' : 'Test Query' }}
                   </button>
                   <button class="btn-link btn-small" @click="resetQuery('classes')">
@@ -178,8 +190,16 @@
                 rows="10"
                 spellcheck="false"
               ></textarea>
-              <div v-if="testResults.classes" class="test-result" :class="testResults.classes.valid ? 'success' : 'error'">
-                {{ testResults.classes.valid ? `✓ Valid (${testResults.classes.resultCount} results)` : `✗ ${testResults.classes.error}` }}
+              <div
+                v-if="testResults.classes"
+                class="test-result"
+                :class="testResults.classes.valid ? 'success' : 'error'"
+              >
+                {{
+                  testResults.classes.valid
+                    ? `✓ Valid (${testResults.classes.resultCount} results)`
+                    : `✗ ${testResults.classes.error}`
+                }}
               </div>
             </div>
 
@@ -188,7 +208,11 @@
               <div class="query-header">
                 <h4>Properties Query</h4>
                 <div class="query-actions">
-                  <button class="btn-link btn-small" @click="testQuery('properties')" :disabled="isTestingQuery">
+                  <button
+                    class="btn-link btn-small"
+                    @click="testQuery('properties')"
+                    :disabled="isTestingQuery"
+                  >
                     {{ isTestingQuery ? 'Testing...' : 'Test Query' }}
                   </button>
                   <button class="btn-link btn-small" @click="resetQuery('properties')">
@@ -202,8 +226,16 @@
                 rows="10"
                 spellcheck="false"
               ></textarea>
-              <div v-if="testResults.properties" class="test-result" :class="testResults.properties.valid ? 'success' : 'error'">
-                {{ testResults.properties.valid ? `✓ Valid (${testResults.properties.resultCount} results)` : `✗ ${testResults.properties.error}` }}
+              <div
+                v-if="testResults.properties"
+                class="test-result"
+                :class="testResults.properties.valid ? 'success' : 'error'"
+              >
+                {{
+                  testResults.properties.valid
+                    ? `✓ Valid (${testResults.properties.resultCount} results)`
+                    : `✗ ${testResults.properties.error}`
+                }}
               </div>
             </div>
 
@@ -212,7 +244,11 @@
               <div class="query-header">
                 <h4>Individuals Query</h4>
                 <div class="query-actions">
-                  <button class="btn-link btn-small" @click="testQuery('individuals')" :disabled="isTestingQuery">
+                  <button
+                    class="btn-link btn-small"
+                    @click="testQuery('individuals')"
+                    :disabled="isTestingQuery"
+                  >
                     {{ isTestingQuery ? 'Testing...' : 'Test Query' }}
                   </button>
                   <button class="btn-link btn-small" @click="resetQuery('individuals')">
@@ -226,8 +262,16 @@
                 rows="10"
                 spellcheck="false"
               ></textarea>
-              <div v-if="testResults.individuals" class="test-result" :class="testResults.individuals.valid ? 'success' : 'error'">
-                {{ testResults.individuals.valid ? `✓ Valid (${testResults.individuals.resultCount} results)` : `✗ ${testResults.individuals.error}` }}
+              <div
+                v-if="testResults.individuals"
+                class="test-result"
+                :class="testResults.individuals.valid ? 'success' : 'error'"
+              >
+                {{
+                  testResults.individuals.valid
+                    ? `✓ Valid (${testResults.individuals.resultCount} results)`
+                    : `✗ ${testResults.individuals.error}`
+                }}
               </div>
             </div>
           </div>
@@ -241,9 +285,7 @@
             <span class="element-count">({{ cacheStats.totalCount }} total)</span>
           </button>
           <div v-show="expandedSections.browser" class="section-content">
-            <p class="section-description">
-              Click any element to copy its IRI to the clipboard.
-            </p>
+            <p class="section-description">Click any element to copy its IRI to the clipboard.</p>
 
             <!-- Browser Controls -->
             <div class="browser-controls">
@@ -267,7 +309,11 @@
                     {{ type.icon }} {{ type.label }} ({{ getTypeCount(type.value) }})
                   </button>
                 </div>
-                <div v-if="browserCopyMessage" class="copy-notification" :class="browserCopyMessageType">
+                <div
+                  v-if="browserCopyMessage"
+                  class="copy-notification"
+                  :class="browserCopyMessageType"
+                >
                   {{ browserCopyMessage }}
                 </div>
               </div>
@@ -275,9 +321,7 @@
 
             <!-- Browser Results -->
             <div class="browser-results">
-              <div v-if="isBrowserLoading" class="browser-loading">
-                Loading elements...
-              </div>
+              <div v-if="isBrowserLoading" class="browser-loading">Loading elements...</div>
               <div v-else-if="browserElements.length === 0" class="browser-empty">
                 No elements found matching your search.
               </div>
@@ -290,7 +334,9 @@
                 >
                   <div class="element-header">
                     <span class="element-icon">{{ getElementIcon(element.type) }}</span>
-                    <span class="element-label">{{ element.label || element.localName || 'Unnamed' }}</span>
+                    <span class="element-label">{{
+                      element.label || element.localName || 'Unnamed'
+                    }}</span>
                     <span class="element-type">{{ element.type }}</span>
                   </div>
                   <div class="element-iri">{{ element.iri }}</div>
@@ -308,19 +354,18 @@
                       range: {{ (element as any).range.length }}
                     </span>
                   </div>
-                  <div v-if="element.type === 'individual' && (element as any).classes?.length" class="element-meta">
-                    <span class="meta-tag">
-                      types: {{ (element as any).classes.length }}
-                    </span>
+                  <div
+                    v-if="element.type === 'individual' && (element as any).classes?.length"
+                    class="element-meta"
+                  >
+                    <span class="meta-tag"> types: {{ (element as any).classes.length }} </span>
                   </div>
                 </div>
               </div>
 
               <!-- Load More Button -->
               <div v-if="hasMoreElements" class="load-more">
-                <button class="btn-secondary btn-small" @click="loadMoreElements">
-                  Load More
-                </button>
+                <button class="btn-secondary btn-small" @click="loadMoreElements">Load More</button>
               </div>
             </div>
           </div>
@@ -344,8 +389,19 @@
 import { ref, computed, onMounted } from 'vue'
 import { useConnectionStore } from '@/stores/connection'
 import { useOntologyCacheStore } from '@/stores/ontologyCache'
-import { getCacheSettings, saveCacheSettings, type GlobalCacheSettings } from '@/services/preferences/appSettings'
-import { DEFAULT_CACHE_CONFIG, type CacheConfig, type CacheStats, type CacheMetadata, type AnyOntologyElement, type OntologyElementType } from '@/types/ontologyCache'
+import {
+  getCacheSettings,
+  saveCacheSettings,
+  type GlobalCacheSettings,
+} from '@/services/preferences/appSettings'
+import {
+  DEFAULT_CACHE_CONFIG,
+  type CacheConfig,
+  type CacheStats,
+  type CacheMetadata,
+  type AnyOntologyElement,
+  type OntologyElementType,
+} from '@/types/ontologyCache'
 
 const connectionStore = useConnectionStore()
 const cacheStore = useOntologyCacheStore()
@@ -365,14 +421,16 @@ const isRefreshing = ref(false)
 const isTestingQuery = ref(false)
 const cacheStats = ref<CacheStats | null>(null)
 const cacheMetadata = ref<CacheMetadata | null>(null)
-const testResults = ref<Record<string, { valid: boolean; error?: string; resultCount?: number }>>({})
+const testResults = ref<Record<string, { valid: boolean; error?: string; resultCount?: number }>>(
+  {}
+)
 
 // Collapsible sections state
 const expandedSections = ref({
   config: true,
   queries: false,
   browser: false,
-  global: false
+  global: false,
 })
 
 // Browser state
@@ -387,21 +445,21 @@ const browserCopyMessageType = ref<'success' | 'error'>('success')
 const elementTypes = [
   { value: 'class' as const, label: 'Classes', icon: '📦' },
   { value: 'property' as const, label: 'Properties', icon: '🔗' },
-  { value: 'individual' as const, label: 'Individuals', icon: '🎯' }
+  { value: 'individual' as const, label: 'Individuals', icon: '🎯' },
 ]
 
 // Computed
 const backends = computed(() => connectionStore.backends)
 const selectedBackend = computed(() => {
   if (!selectedBackendId.value) return null
-  return backends.value.find(b => b.id === selectedBackendId.value) || null
+  return backends.value.find((b) => b.id === selectedBackendId.value) || null
 })
 
 const refreshIntervalMinutes = computed({
   get: () => Math.round(globalSettings.value.refreshCheckInterval / 60000),
   set: (val) => {
     globalSettings.value.refreshCheckInterval = val * 60000
-  }
+  },
 })
 
 const hasMoreElements = computed(() => {
@@ -439,7 +497,7 @@ function getTypeCount(type: OntologyElementType): number {
 }
 
 function getElementIcon(type: OntologyElementType): string {
-  const typeObj = elementTypes.find(t => t.value === type)
+  const typeObj = elementTypes.find((t) => t.value === type)
   return typeObj?.icon || '❓'
 }
 
@@ -453,10 +511,10 @@ async function loadBrowserElements() {
       types: browserFilter.value.length > 0 ? browserFilter.value : undefined,
       limit: browserLimit.value,
       caseSensitive: false,
-      prefixOnly: false
+      prefixOnly: false,
     })
 
-    browserElements.value = results.map(r => r.element)
+    browserElements.value = results.map((r) => r.element)
   } catch (error) {
     console.error('Failed to load browser elements:', error)
     browserElements.value = []
@@ -610,7 +668,7 @@ async function testQuery(type: 'classes' | 'properties' | 'individuals') {
   const queryMap = {
     classes: classesQuery.value,
     properties: propertiesQuery.value,
-    individuals: individualsQuery.value
+    individuals: individualsQuery.value,
   }
 
   isTestingQuery.value = true
@@ -620,7 +678,7 @@ async function testQuery(type: 'classes' | 'properties' | 'individuals') {
   } catch (error) {
     testResults.value[type] = {
       valid: false,
-      error: error instanceof Error ? error.message : 'Unknown error'
+      error: error instanceof Error ? error.message : 'Unknown error',
     }
   } finally {
     isTestingQuery.value = false
@@ -654,13 +712,13 @@ function saveSettings() {
         queries: {
           classes: classesQuery.value,
           properties: propertiesQuery.value,
-          individuals: individualsQuery.value
-        }
+          individuals: individualsQuery.value,
+        },
       }
 
       // Update backend config via connectionStore
       connectionStore.updateBackend(selectedBackend.value.id, {
-        cacheConfig
+        cacheConfig,
       })
     }
 
@@ -685,7 +743,7 @@ function resetToDefaults() {
     defaultTtl: 24 * 60 * 60 * 1000,
     defaultMaxElements: 50000,
     autoRefresh: true,
-    refreshCheckInterval: 5 * 60 * 1000
+    refreshCheckInterval: 5 * 60 * 1000,
   }
 
   if (selectedBackend.value) {
@@ -1046,12 +1104,12 @@ onMounted(() => {
   cursor: pointer;
 }
 
-.checkbox-label input[type="checkbox"] {
+.checkbox-label input[type='checkbox'] {
   margin: 0;
   cursor: pointer;
 }
 
-.form-group input[type="number"],
+.form-group input[type='number'],
 .form-group select {
   width: 100%;
   padding: 8px 12px;
@@ -1063,7 +1121,7 @@ onMounted(() => {
   font-family: inherit;
 }
 
-.form-group input[type="number"]:focus,
+.form-group input[type='number']:focus,
 .form-group select:focus {
   outline: none;
   border-color: var(--color-primary);

@@ -86,9 +86,8 @@ const DEFAULT_CACHE_SETTINGS: GlobalCacheSettings = {
   defaultTtl: 24 * 60 * 60 * 1000, // 24 hours
   defaultMaxElements: 50000,
   autoRefresh: true,
-  refreshCheckInterval: 5 * 60 * 1000 // 5 minutes
+  refreshCheckInterval: 5 * 60 * 1000, // 5 minutes
 }
-
 
 const DEFAULT_SPARQL_FORMATTING_SETTINGS: SparqlFormattingSettings = {
   indentSize: 2,
@@ -124,7 +123,7 @@ const DEFAULT_PREFIX_SETTINGS: PrefixManagementSettings = {
     { prefix: 'skos', namespace: 'http://www.w3.org/2004/02/skos/core#' },
     { prefix: 'dcterms', namespace: 'http://purl.org/dc/terms/' },
     { prefix: 'foaf', namespace: 'http://xmlns.com/foaf/0.1/' },
-  ]
+  ],
 }
 
 /**
@@ -225,7 +224,9 @@ export async function fetchAIModels(
     })
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ error: { message: response.statusText } }))
+      const errorData = await response
+        .json()
+        .catch(() => ({ error: { message: response.statusText } }))
       return {
         success: false,
         error: `Failed to fetch models from ${modelsUrl}: ${errorData.error?.message || `HTTP ${response.status}: ${response.statusText}`}`,
@@ -280,7 +281,9 @@ export async function testAIConnection(settings: AIConnectionSettings): Promise<
     })
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ error: { message: response.statusText } }))
+      const errorData = await response
+        .json()
+        .catch(() => ({ error: { message: response.statusText } }))
       return {
         success: false,
         error: `${errorData.error?.message || `HTTP ${response.status}: ${response.statusText}`}`,

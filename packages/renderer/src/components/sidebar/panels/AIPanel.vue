@@ -28,13 +28,17 @@
     </div>
 
     <AICannedActions
-      :disabled="!aiChatStore.isConfigured || aiChatStore.isLoading || aiChatStore.hasPendingToolCalls"
+      :disabled="
+        !aiChatStore.isConfigured || aiChatStore.isLoading || aiChatStore.hasPendingToolCalls
+      "
       @action="handleQuickAction"
     />
 
     <AIChatInput
       ref="chatInputRef"
-      :disabled="!aiChatStore.isConfigured || aiChatStore.isLoading || aiChatStore.hasPendingToolCalls"
+      :disabled="
+        !aiChatStore.isConfigured || aiChatStore.isLoading || aiChatStore.hasPendingToolCalls
+      "
       :placeholder="inputPlaceholder"
       @send="handleSendMessage"
     />
@@ -78,7 +82,7 @@ function openAISettings() {
   } else {
     tabsStore.createTab({
       isSettings: true,
-      settingsType: 'ai'
+      settingsType: 'ai',
     })
   }
 }
@@ -171,10 +175,7 @@ async function handleRejectToolCall(messageId: string, toolCallId: string) {
   aiChatStore.updateToolCallStatus(messageId, toolCallId, 'rejected')
 
   // Add a tool result message indicating rejection
-  aiChatStore.addToolMessage(
-    toolCallId,
-    JSON.stringify({ error: 'Tool call rejected by user' })
-  )
+  aiChatStore.addToolMessage(toolCallId, JSON.stringify({ error: 'Tool call rejected by user' }))
 
   // Check if we should continue (no more pending approvals)
   if (aiChatStore.pendingToolCalls.length === 0) {
