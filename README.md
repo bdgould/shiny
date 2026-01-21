@@ -4,6 +4,9 @@ A modern, secure Electron-based SPARQL client built with Vue 3 and TypeScript. F
 
 A SPARQL utility knife for navigating the world of Enterprise Knowledge Graph.
 
+![Shiny - Extensible SPARQL Client](docs/shiny.png)
+
+
 ## Features
 
 ### Core Capabilities ✅
