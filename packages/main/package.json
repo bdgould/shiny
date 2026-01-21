@@ -1,6 +1,6 @@
 {
   "name": "@shiny/main",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "description": "Shiny Electron main process",
   "main": "dist/index.js",
   "private": true,
