@@ -28,36 +28,36 @@
         </div>
       </div>
       <div class="entities-container">
-      <div v-for="(entity, index) in entities" :key="index" class="entity-card">
-        <div class="entity-header" @click="toggleEntity(index)">
-          <button class="collapse-button" :class="{ collapsed: collapsedEntities.has(index) }">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-              <path d="M8 11L3 6h10l-5 5z" />
-            </svg>
-          </button>
-          <CellValue :value="entity.subject" :type="entity.subjectType" class="entity-subject" />
-          <span class="triple-count"
-            >{{ entity.triples.length }} triple{{ entity.triples.length !== 1 ? 's' : '' }}</span
-          >
+        <div v-for="(entity, index) in entities" :key="index" class="entity-card">
+          <div class="entity-header" @click="toggleEntity(index)">
+            <button class="collapse-button" :class="{ collapsed: collapsedEntities.has(index) }">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                <path d="M8 11L3 6h10l-5 5z" />
+              </svg>
+            </button>
+            <CellValue :value="entity.subject" :type="entity.subjectType" class="entity-subject" />
+            <span class="triple-count"
+              >{{ entity.triples.length }} triple{{ entity.triples.length !== 1 ? 's' : '' }}</span
+            >
+          </div>
+          <table v-show="!collapsedEntities.has(index)" class="entity-table">
+            <tbody>
+              <tr v-for="(triple, tIndex) in entity.triples" :key="tIndex">
+                <td class="predicate-cell">
+                  <CellValue :value="triple.predicate" type="uri" />
+                </td>
+                <td class="object-cell">
+                  <CellValue
+                    :value="triple.object"
+                    :type="triple.objectType"
+                    :datatype="triple.datatype"
+                    :language="triple.language"
+                  />
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
-        <table v-show="!collapsedEntities.has(index)" class="entity-table">
-          <tbody>
-            <tr v-for="(triple, tIndex) in entity.triples" :key="tIndex">
-              <td class="predicate-cell">
-                <CellValue :value="triple.predicate" type="uri" />
-              </td>
-              <td class="object-cell">
-                <CellValue
-                  :value="triple.object"
-                  :type="triple.objectType"
-                  :datatype="triple.datatype"
-                  :language="triple.language"
-                />
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
       </div>
     </div>
     <div v-else class="empty">No RDF triples found</div>

@@ -3,8 +3,8 @@
     <div class="settings-header">
       <h2>Query Connection Settings</h2>
       <p class="settings-description">
-        Configure connection timeouts and query execution parameters. These settings will be applied to all
-        backend connections.
+        Configure connection timeouts and query execution parameters. These settings will be applied
+        to all backend connections.
       </p>
     </div>
 
@@ -50,7 +50,14 @@
 
         <div class="form-group">
           <label for="max-retries">Maximum Retries</label>
-          <input id="max-retries" v-model.number="settings.maxRetries" type="number" min="0" max="10" step="1" />
+          <input
+            id="max-retries"
+            v-model.number="settings.maxRetries"
+            type="number"
+            min="0"
+            max="10"
+            step="1"
+          />
           <span class="help-text">Number of retry attempts for failed queries (0-10)</span>
         </div>
 
@@ -85,7 +92,11 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { getQuerySettings, saveQuerySettings, type QueryConnectionSettings } from '@/services/preferences/appSettings'
+import {
+  getQuerySettings,
+  saveQuerySettings,
+  type QueryConnectionSettings,
+} from '@/services/preferences/appSettings'
 
 const settings = ref<QueryConnectionSettings>({
   connectionTimeout: 30000,

@@ -90,7 +90,17 @@ export function getIndentLevel(line: string, useTabs: boolean, indentSize: numbe
  * Verify that all keywords in a query match the specified case
  */
 export function verifyKeywordCase(query: string, expectedCase: 'uppercase' | 'lowercase'): boolean {
-  const keywords = ['SELECT', 'WHERE', 'OPTIONAL', 'FILTER', 'BIND', 'UNION', 'CONSTRUCT', 'ASK', 'DESCRIBE']
+  const keywords = [
+    'SELECT',
+    'WHERE',
+    'OPTIONAL',
+    'FILTER',
+    'BIND',
+    'UNION',
+    'CONSTRUCT',
+    'ASK',
+    'DESCRIBE',
+  ]
 
   for (const keyword of keywords) {
     const expected = expectedCase === 'uppercase' ? keyword : keyword.toLowerCase()

@@ -66,6 +66,7 @@ npm run test:coverage
 Generates a coverage report showing which lines of code are tested.
 
 Coverage reports are generated in:
+
 - `packages/main/coverage/`
 - `packages/renderer/coverage/`
 - `packages/preload/coverage/`
@@ -183,9 +184,7 @@ describe('serializeToCSV', () => {
       data: {
         head: { vars: ['name', 'age'] },
         results: {
-          bindings: [
-            { name: { value: 'Alice' }, age: { value: '30' } },
-          ],
+          bindings: [{ name: { value: 'Alice' }, age: { value: '30' } }],
         },
       },
     }
@@ -206,6 +205,7 @@ describe('serializeToCSV', () => {
 ```
 
 **Key Points**:
+
 - Test happy path and edge cases
 - Test error handling
 - Use descriptive test names
@@ -250,6 +250,7 @@ describe('useConnectionStore', () => {
 ```
 
 **Key Points**:
+
 - Create fresh Pinia instance for each test
 - Mock electron API calls
 - Test state mutations and computed properties
@@ -304,6 +305,7 @@ describe('AskBadgeView', () => {
 ```
 
 **Key Points**:
+
 - Use `mount()` or `shallowMount()` from `@vue/test-utils`
 - Test component rendering
 - Test props and reactivity
@@ -358,6 +360,7 @@ describe('CredentialService', () => {
 ```
 
 **Key Points**:
+
 - Mock Electron APIs (`safeStorage`, `electron-store`, etc.)
 - Test encryption/decryption logic
 - Test error handling for security-critical code
@@ -519,6 +522,7 @@ npm run test:coverage
 ### 1. Test Behavior, Not Implementation
 
 ❌ **Bad**: Testing internal implementation details
+
 ```typescript
 it('should call internal helper function', () => {
   expect(component._internalHelper).toHaveBeenCalled()
@@ -526,6 +530,7 @@ it('should call internal helper function', () => {
 ```
 
 ✅ **Good**: Testing observable behavior
+
 ```typescript
 it('should display error message when input is invalid', () => {
   wrapper.find('input').setValue('invalid')
@@ -536,12 +541,14 @@ it('should display error message when input is invalid', () => {
 ### 2. Use Descriptive Test Names
 
 ❌ **Bad**:
+
 ```typescript
 it('works', () => { ... })
 it('test 1', () => { ... })
 ```
 
 ✅ **Good**:
+
 ```typescript
 it('should serialize SELECT results to CSV format', () => { ... })
 it('should throw error when credentials are missing', () => { ... })
@@ -568,6 +575,7 @@ it('should do something', () => {
 Each test should be able to run independently in any order.
 
 ❌ **Bad**: Tests depend on each other
+
 ```typescript
 let sharedState: any
 
@@ -581,6 +589,7 @@ it('test 2', () => {
 ```
 
 ✅ **Good**: Tests are independent
+
 ```typescript
 it('test 1', () => {
   const localState = doSomething()
@@ -616,6 +625,7 @@ describe('serializeToCSV', () => {
 **Problem**: `Error: Cannot find module 'vitest'`
 
 **Solution**:
+
 ```bash
 npm install
 ```
@@ -641,6 +651,7 @@ vi.mock('../myModule')
 **Problem**: No coverage files created
 
 **Solution**:
+
 ```bash
 # Install coverage provider
 npm install --save-dev @vitest/coverage-v8

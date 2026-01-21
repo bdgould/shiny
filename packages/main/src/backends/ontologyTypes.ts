@@ -231,6 +231,6 @@ WHERE {
   BIND(COALESCE(?dcTitle, ?rdfsLabel) AS ?label)
   BIND(COALESCE(?dcDesc, ?rdfsComment) AS ?description)
 }
-LIMIT 10000`
-  }
+LIMIT 10000`,
+  },
 }

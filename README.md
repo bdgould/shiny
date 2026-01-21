@@ -2,7 +2,10 @@
 
 A modern, secure Electron-based SPARQL client built with Vue 3 and TypeScript. Features a VS Code-style interface, multi-backend support, comprehensive authentication, and encrypted credential storage.
 
-A SPARQL utility knife for navigating the world of Enterprise Knowledge Grpah.
+A SPARQL utility knife for navigating the world of Enterprise Knowledge Graph.
+
+![Shiny - Extensible SPARQL Client](docs/shiny.png)
+
 
 ## Features
 
@@ -14,7 +17,9 @@ A SPARQL utility knife for navigating the world of Enterprise Knowledge Grpah.
 - Switch between backends with a dropdown selector
 - Extensible provider system supporting multiple backend types:
   - Generic SPARQL 1.1 (fully implemented)
-  - Altair Graph Studio (stub for future implementation)
+  - Altair Graph Studio (fully implemented - graphmart/layer selection)
+  - Mobi (fully implemented - catalogs, repositories, records, branches)
+  - Ontotext GraphDB (fully implemented - GDB token auth, inference control)
   - AWS Neptune (stub for future implementation)
   - Stardog (stub for future implementation)
 
@@ -42,14 +47,62 @@ A SPARQL utility knife for navigating the world of Enterprise Knowledge Grpah.
 - Keyboard shortcuts (Cmd/Ctrl+Enter to execute)
 - Automatic dark mode support
 
+**Query History**
+
+- Full implementation with persistence
+- Search and replay past queries
+- Session restoration on app restart
+
+**AI-Assisted Query Generation**
+
+- Chat agent with tool calling support
+- Context-aware query suggestions
+- Natural language to SPARQL conversion
+
+**Export Capabilities**
+
+- JSON, CSV export for tabular data
+- RDF serialization: Turtle, N-Triples, N-Quads, JSON-LD
+- Copy to clipboard support
+
+**Results Visualization**
+
+- Tabular view with sorting and filtering
+- Entity view for exploring individual resources
+- Multiple format display options
+
+**Tab Management**
+
+- Multi-tab editor interface
+- Session restoration (tabs persist across restarts)
+- Cmd/Ctrl+W to close current tab
+- Tab reordering and management
+
+**File Operations**
+
+- Open .rq/.sparql files from disk
+- Save queries to files (Cmd/Ctrl+S)
+- Drag-and-drop file support
+
+**Ontology Cache System**
+
+- Caching with configurable queries
+- Manual refresh controls
+- Backend-specific cache management
+
+**Settings & Configuration**
+
+- Query settings (timeout, result limits)
+- Prefix management for common namespaces
+- SPARQL formatting preferences
+- AI configuration options
+
 ### Planned Features
 
-- SPARQL editor enhancements (autocomplete, syntax validation, query templates)
-- Results visualization (tables, charts, network graphs, RDF graph viewer)
-- Query history with search and replay
-- AI-assisted query generation (OpenAI integration)
-- Export capabilities (JSON, CSV, RDF formats, Markdown/HTML reports)
-- Advanced features (query profiling, namespace management, federated queries)
+- SPARQL editor enhancements (autocomplete, syntax validation)
+- Network graph visualization for RDF data
+- Query profiling and performance metrics
+- Federated query support
 - Plugin system for extensibility
 
 ## Screenshots
@@ -65,15 +118,27 @@ shiny/
 │   │   ├── src/
 │   │   │   ├── backends/          # Backend provider system
 │   │   │   │   ├── providers/     # BaseProvider, Sparql11Provider, etc.
+│   │   │   │   │   ├── BaseProvider.ts
+│   │   │   │   │   ├── Sparql11Provider.ts
+│   │   │   │   │   ├── GraphStudioProvider.ts
+│   │   │   │   │   ├── MobiProvider.ts
+│   │   │   │   │   └── GraphDBProvider.ts
 │   │   │   │   ├── BackendFactory.ts
 │   │   │   │   └── types.ts
 │   │   │   ├── services/          # Business logic
 │   │   │   │   ├── BackendService.ts      # Backend CRUD
 │   │   │   │   ├── CredentialService.ts   # Encrypted storage
-│   │   │   │   └── MigrationService.ts    # Data migrations
+│   │   │   │   ├── MigrationService.ts    # Data migrations
+│   │   │   │   ├── FileService.ts         # File operations
+│   │   │   │   └── OntologyCacheService.ts # Ontology caching
 │   │   │   ├── ipc/               # IPC handlers
 │   │   │   │   ├── backends.ts    # Backend management
-│   │   │   │   └── query.ts       # Query execution
+│   │   │   │   ├── query.ts       # Query execution
+│   │   │   │   ├── files.ts       # File operations
+│   │   │   │   ├── graphstudio.ts # Graph Studio API
+│   │   │   │   ├── mobi.ts        # Mobi API
+│   │   │   │   ├── graphdb.ts     # GraphDB API
+│   │   │   │   └── ontologyCache.ts # Cache management
 │   │   │   ├── index.ts           # Main entry point
 │   │   │   └── window.ts          # Window management
 │   │   └── package.json
@@ -91,17 +156,37 @@ shiny/
 │       │   │   │   ├── SidebarIconBar.vue
 │       │   │   │   ├── SidebarDrawer.vue
 │       │   │   │   ├── DrawerResizer.vue
-│       │   │   │   ├── icons/     # ConnectionIcon, AIIcon, HistoryIcon
-│       │   │   │   └── panels/    # ConnectionPanel, BackendList, ConnectionForm
-│       │   │   ├── editor/        # Monaco SPARQL editor
+│       │   │   │   ├── icons/     # ConnectionIcon, AIIcon, HistoryIcon, SettingsIcon
+│       │   │   │   └── panels/    # ConnectionPanel, HistoryPanel, AIPanel, SettingsPanel
+│       │   │   ├── editor/        # Monaco/CodeMirror SPARQL editor
+│       │   │   │   └── EditorTabs.vue
 │       │   │   ├── results/       # Query results display
+│       │   │   │   ├── ResultsView.vue
+│       │   │   │   ├── TableView.vue
+│       │   │   │   └── EntityView.vue
+│       │   │   ├── settings/      # Settings panels
+│       │   │   │   ├── QuerySettings.vue
+│       │   │   │   ├── PrefixSettings.vue
+│       │   │   │   ├── FormatSettings.vue
+│       │   │   │   └── AISettings.vue
 │       │   │   └── layout/        # TopBar, MainPane
 │       │   ├── stores/            # Pinia state management
 │       │   │   ├── connection.ts  # Backend management
 │       │   │   ├── sidebar.ts     # Sidebar UI state
-│       │   │   └── query.ts       # Query execution
+│       │   │   ├── query.ts       # Query execution
+│       │   │   ├── tabs.ts        # Tab management
+│       │   │   ├── history.ts     # Query history
+│       │   │   ├── aiChat.ts      # AI chat state
+│       │   │   └── ontologyCache.ts # Cache state
 │       │   ├── types/             # TypeScript definitions
 │       │   ├── composables/       # Reusable Vue logic
+│       │   │   ├── useFileDragDrop.ts
+│       │   │   ├── useFileOperations.ts
+│       │   │   ├── useResultsSave.ts
+│       │   │   ├── useCacheRefresh.ts
+│       │   │   ├── useGraphStudio.ts
+│       │   │   ├── useMobi.ts
+│       │   │   └── useGraphDB.ts
 │       │   └── App.vue
 │       └── package.json
 │
@@ -162,12 +247,35 @@ npm run build
 
 This will create distributable packages in the `dist/` directory using electron-builder.
 
+**macOS Users**: The builds are not code-signed with an Apple Developer ID. When you first open the app, macOS Gatekeeper will show a "damaged" error. To open the app:
+
+1. Right-click (or Control-click) on the app in Finder
+2. Select "Open" from the context menu
+3. Click "Open" in the dialog that appears
+
+Alternatively, you can allow the app via System Settings:
+
+```bash
+# Remove quarantine attribute
+xattr -d com.apple.quarantine /Applications/Shiny.app
+```
+
+After the first time, the app will open normally.
+
 ### Other Commands
 
 ```bash
-npm run lint        # Lint TypeScript and Vue files
-npm run type-check  # Type check without emitting files
-npm run clean       # Remove all build artifacts
+npm run lint           # Lint TypeScript and Vue files
+npm run lint:fix       # Lint and auto-fix issues
+npm run type-check     # Type check without emitting files
+npm run clean          # Remove all build artifacts
+npm run format         # Format code with Prettier
+npm run format:check   # Check formatting without changes
+npm test               # Run all tests
+npm run test:run       # Run tests once (no watch)
+npm run test:ui        # Run tests with Vitest UI
+npm run test:coverage  # Run tests with coverage report
+npm run bump-version   # Bump version across all packages
 ```
 
 ## Architecture
@@ -290,16 +398,21 @@ Results returned to renderer and displayed
 
 **Key Libraries**
 
-- **Code Editor**: Monaco Editor (VS Code's editor)
+- **Code Editors**: Monaco Editor, CodeMirror 6
 - **HTTP Client**: Axios (with auth interceptors)
+- **Session Management**: axios-cookiejar-support, tough-cookie
 - **SPARQL Parser**: sparqljs (query type detection)
+- **RDF Processing**: @rdfjs/dataset, @rdfjs/parser-n3, @rdfjs/serializer-jsonld, @rdfjs/serializer-turtle, @rdfjs/serializer-ntriples, rdf-ext
 - **Storage**: electron-store (persistent configuration)
 - **Encryption**: Electron safeStorage (OS keychain/DPAPI)
+- **UUID Generation**: uuid
 
 **Development Tools**
 
 - **Type Checking**: TypeScript strict mode
 - **Linting**: ESLint + @typescript-eslint
+- **Formatting**: Prettier
+- **Testing**: Vitest, @vue/test-utils, happy-dom, @vitest/coverage-v8, @vitest/ui
 - **Build**: electron-builder (packaging and distribution)
 - **Process Management**: Concurrently (parallel dev processes)
 
@@ -329,37 +442,54 @@ Results returned to renderer and displayed
 - Smooth animations and transitions
 - Backend selection dropdown in query interface
 
-### 🚧 Phase 4: Editor Enhancements (In Progress)
+### ✅ Phase 4: Enterprise Backend Support (Complete)
 
-- SPARQL syntax highlighting and validation
-- Auto-completion for keywords and prefixes
-- Query formatting and beautification
-- Example query templates
-- Query snippets library
+- Altair Graph Studio provider (graphmart/layer selection)
+- Mobi provider (catalogs, repositories, records, branches)
+- Ontotext GraphDB provider (GDB token auth, inference control)
+- Backend-specific configuration forms
 
-### 📋 Phase 5: Results & Visualization (Planned)
+### ✅ Phase 5: Editor & Tab System (Complete)
+
+- Multi-tab editor interface with session persistence
+- File operations (open, save, drag-and-drop)
+- SPARQL formatting and beautification
+- Keyboard shortcuts (Cmd/Ctrl+W, Cmd/Ctrl+S, Cmd/Ctrl+O)
+
+### ✅ Phase 6: Results & Export (Complete)
 
 - Tabular results view with sorting and filtering
-- Chart visualizations (bar, line, pie)
-- RDF graph network visualization
-- Export to multiple formats (JSON, CSV, RDF/XML, Turtle)
-- Result pagination for large datasets
+- Entity view for exploring individual resources
+- RDF serialization (Turtle, N-Triples, N-Quads, JSON-LD)
+- Export to multiple formats (JSON, CSV)
 
-### 📋 Phase 6: Advanced Features (Planned)
+### ✅ Phase 7: History & AI (Complete)
 
-- Query history with search and replay
-- AI-assisted query generation (OpenAI/Anthropic integration)
+- Query history with persistence and search
+- AI chat assistant with tool calling support
+- Natural language to SPARQL conversion
+- Context-aware query suggestions
+
+### ✅ Phase 8: Settings & Configuration (Complete)
+
+- Settings panels system
+- Query settings (timeout, result limits)
+- Prefix management for common namespaces
+- AI configuration options
+
+### 🚧 Phase 9: Advanced Features (In Progress)
+
+- AWS Neptune provider implementation
+- Stardog provider implementation
+- Network graph visualization for RDF data
 - Query profiling and performance metrics
-- Namespace/prefix management
 - Federated query support
-- Plugin system for extensibility
 
-### 📋 Phase 7: Polish & Distribution (Planned)
+### 📋 Phase 10: Polish & Distribution (Planned)
 
 - Comprehensive documentation
 - User guides and tutorials
-- Automated testing (unit, integration, e2e)
-- CI/CD pipeline
+- CI/CD pipeline improvements
 - Code signing and notarization
 - Public releases (GitHub, website)
 
@@ -400,8 +530,10 @@ On first launch, Shiny automatically creates a default backend pointing to DBped
 
 ### Keyboard Shortcuts
 
-- `Cmd+Enter` (Mac) / `Ctrl+Enter` (Windows/Linux): Execute query
-- More shortcuts coming in Phase 4
+- `Cmd/Ctrl+Enter`: Execute query
+- `Cmd/Ctrl+W`: Close current tab
+- `Cmd/Ctrl+S`: Save current file
+- `Cmd/Ctrl+O`: Open file
 
 ## Contributing
 

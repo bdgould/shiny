@@ -323,7 +323,10 @@ ipcMain.handle(
           },
         })
 
-        console.log('[GraphDB] Raw REST repositories response:', JSON.stringify(response.data, null, 2))
+        console.log(
+          '[GraphDB] Raw REST repositories response:',
+          JSON.stringify(response.data, null, 2)
+        )
 
         // REST API returns detailed repository info
         const data = Array.isArray(response.data) ? response.data : []
@@ -352,7 +355,10 @@ ipcMain.handle(
           },
         })
 
-        console.log('[GraphDB] Raw RDF4J repositories response:', JSON.stringify(response.data, null, 2))
+        console.log(
+          '[GraphDB] Raw RDF4J repositories response:',
+          JSON.stringify(response.data, null, 2)
+        )
 
         // RDF4J endpoint returns SPARQL results format
         const bindings = response.data?.results?.bindings || []
@@ -448,7 +454,9 @@ ipcMain.handle(
           namespace: binding.namespace?.value || '',
         }))
 
-        console.log(`[GraphDB] Fetched ${namespaces.length} namespaces for repository ${repositoryId}`)
+        console.log(
+          `[GraphDB] Fetched ${namespaces.length} namespaces for repository ${repositoryId}`
+        )
       } catch (error) {
         console.warn('[GraphDB] Failed to fetch namespaces:', error)
       }

@@ -43,7 +43,6 @@ import type { Tab } from '@/stores/tabs'
 import { useKeyboardShortcuts } from '@/composables/useKeyboardShortcuts'
 import SettingsIcon from '@/components/sidebar/icons/SettingsIcon.vue'
 
-
 const tabsStore = useTabsStore()
 
 // Register keyboard shortcut: Cmd+W (Mac) or Ctrl+W (Win/Linux) to close active tab

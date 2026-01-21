@@ -350,13 +350,19 @@ describe('formatSparqlQuery', () => {
       })
 
       it('should respect keywordCase for "a"', () => {
-        const settingsUpper = createSettings({ useRdfTypeShorthand: true, keywordCase: 'uppercase' })
+        const settingsUpper = createSettings({
+          useRdfTypeShorthand: true,
+          keywordCase: 'uppercase',
+        })
         const resultUpper = formatSparqlQuery(queries.SIMPLE_SELECT_WITH_TYPE, settingsUpper)
         // Should have uppercase A
         expect(resultUpper).toMatch(/\bA\b/)
         expect(resultUpper).not.toContain('<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>')
 
-        const settingsLower = createSettings({ useRdfTypeShorthand: true, keywordCase: 'lowercase' })
+        const settingsLower = createSettings({
+          useRdfTypeShorthand: true,
+          keywordCase: 'lowercase',
+        })
         const resultLower = formatSparqlQuery(queries.SIMPLE_SELECT_WITH_TYPE, settingsLower)
         // Should have lowercase a
         expect(resultLower).toMatch(/\ba\b/)

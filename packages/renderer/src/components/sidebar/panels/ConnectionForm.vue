@@ -26,8 +26,8 @@
           <option value="graphstudio">Altair Graph Studio</option>
           <option value="mobi">Mobi</option>
           <option value="graphdb">GraphDB</option>
-          <option value="neptune">AWS Neptune</option>
-          <option value="stardog">Stardog</option>
+          <option value="neptune" disabled>AWS Neptune (coming soon)</option>
+          <option value="stardog" disabled>Stardog (coming soon)</option>
         </select>
       </div>
 
@@ -468,9 +468,7 @@
               :disabled="!canLoadGraphDBRepositories || graphdbAPI.isLoadingRepositories.value"
               @click="loadGraphDBRepositoriesFromServer"
             >
-              {{
-                graphdbAPI.isLoadingRepositories.value ? 'Loading...' : 'Load Repositories'
-              }}
+              {{ graphdbAPI.isLoadingRepositories.value ? 'Loading...' : 'Load Repositories' }}
             </button>
 
             <button
@@ -492,11 +490,7 @@
             @change="onGraphDBRepositorySelected"
           >
             <option value="">Select a repository...</option>
-            <option
-              v-for="repo in graphdbAPI.repositories.value"
-              :key="repo.id"
-              :value="repo.id"
-            >
+            <option v-for="repo in graphdbAPI.repositories.value" :key="repo.id" :value="repo.id">
               {{ repo.title }}
             </option>
           </select>
@@ -1309,7 +1303,8 @@ onMounted(async () => {
             }
           }
         } catch (error) {
-          const message = error instanceof Error ? error.message : 'Failed to load graphmart details'
+          const message =
+            error instanceof Error ? error.message : 'Failed to load graphmart details'
           graphmartDetailsError.value = message
           console.error('Failed to load graphmart details:', error)
         } finally {

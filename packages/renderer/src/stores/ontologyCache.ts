@@ -12,7 +12,7 @@ import type {
   CacheSearchOptions,
   CacheSearchResult,
   AnyOntologyElement,
-  OntologyElementType
+  OntologyElementType,
 } from '../types/ontologyCache'
 
 import { ontologyCacheService } from '../services/cache/ontologyCacheService'
@@ -64,7 +64,10 @@ export const useOntologyCacheStore = defineStore('ontologyCache', () => {
   /**
    * Load cache for a backend (from IndexedDB or fetch from backend)
    */
-  async function loadCache(backendId: string, force: boolean = false): Promise<OntologyCache | null> {
+  async function loadCache(
+    backendId: string,
+    force: boolean = false
+  ): Promise<OntologyCache | null> {
     try {
       // Set loading status
       loadingStatus.value.set(backendId, 'loading')
@@ -97,18 +100,23 @@ export const useOntologyCacheStore = defineStore('ontologyCache', () => {
   /**
    * Refresh cache from backend
    */
-  async function refreshCache(backendId: string, background: boolean = false): Promise<OntologyCache | null> {
+  async function refreshCache(
+    backendId: string,
+    background: boolean = false
+  ): Promise<OntologyCache | null> {
     try {
       // Set status
       loadingStatus.value.set(backendId, background ? 'refreshing' : 'loading')
       errors.value.delete(backendId)
 
       // Register progress listener
-      const removeProgressListener = window.electronAPI.cache.onProgress(({ backendId: id, progress }) => {
-        if (id === backendId) {
-          progressData.value.set(backendId, progress)
+      const removeProgressListener = window.electronAPI.cache.onProgress(
+        ({ backendId: id, progress }) => {
+          if (id === backendId) {
+            progressData.value.set(backendId, progress)
+          }
         }
-      })
+      )
 
       try {
         // Fetch from backend
@@ -303,6 +311,6 @@ export const useOntologyCacheStore = defineStore('ontologyCache', () => {
     validateCache,
     getStats,
     getAllCachedBackendIds,
-    clearAllCaches
+    clearAllCaches,
   }
 })

@@ -291,7 +291,10 @@ function compressIRI(iri: string, prefixes: Map<string, string>): string {
 /**
  * Detect context: are we in subject, predicate, or object position?
  */
-function detectContext(model: monaco.editor.ITextModel, position: monaco.Position): 'subject' | 'predicate' | 'object' | 'unknown' {
+function detectContext(
+  model: monaco.editor.ITextModel,
+  position: monaco.Position
+): 'subject' | 'predicate' | 'object' | 'unknown' {
   const lineContent = model.getLineContent(position.lineNumber)
   const beforeCursor = lineContent.substring(0, position.column - 1)
 
@@ -304,7 +307,10 @@ function detectContext(model: monaco.editor.ITextModel, position: monaco.Positio
   const lastPart = parts[parts.length - 1]
 
   // After 'a' or 'rdf:type' = class suggestion (object position for type)
-  if (parts.length >= 2 && (parts[parts.length - 2] === 'a' || parts[parts.length - 2].match(/rdf:type|<.*type>/))) {
+  if (
+    parts.length >= 2 &&
+    (parts[parts.length - 2] === 'a' || parts[parts.length - 2].match(/rdf:type|<.*type>/))
+  ) {
     return 'object' // Actually want classes here
   }
 
@@ -319,7 +325,10 @@ function detectContext(model: monaco.editor.ITextModel, position: monaco.Positio
 
   // Simple position detection based on elements in current statement
   const inCurrentStatement = triplePattern.split(/[.;]/).pop() || ''
-  const elementsInStatement = inCurrentStatement.trim().split(/\s+/).filter(e => e && !e.match(/^\{/))
+  const elementsInStatement = inCurrentStatement
+    .trim()
+    .split(/\s+/)
+    .filter((e) => e && !e.match(/^\{/))
 
   if (elementsInStatement.length === 0 || elementsInStatement.length === 1) {
     return 'subject'
@@ -759,10 +768,12 @@ monaco.languages.registerCompletionItemProvider('sparql', {
     ]
 
     // Combine static suggestions
-    const staticSuggestions = [...keywords, ...aggregates, ...functions, ...prefixes].map((item) => ({
-      ...item,
-      range,
-    }))
+    const staticSuggestions = [...keywords, ...aggregates, ...functions, ...prefixes].map(
+      (item) => ({
+        ...item,
+        range,
+      })
+    )
 
     // Get ontology suggestions from cache
     const ontologySuggestions = await getOntologySuggestions(model, position, range)
@@ -812,7 +823,7 @@ async function getOntologySuggestions(
     startLineNumber: position.lineNumber,
     startColumn: word.startColumn,
     endLineNumber: position.lineNumber,
-    endColumn: word.endColumn
+    endColumn: word.endColumn,
   })
 
   // Determine if user is typing full IRI or prefixed name
@@ -850,7 +861,7 @@ async function getOntologySuggestions(
       types,
       limit: 20,
       caseSensitive: false,
-      prefixOnly: false
+      prefixOnly: false,
     })
 
     // Convert search results to Monaco completion items
@@ -904,7 +915,7 @@ async function getOntologySuggestions(
         documentation: element.description || element.iri,
         insertText,
         range,
-        sortText: `${3 - result.score}_${displayLabel}` // Higher score = earlier in list
+        sortText: `${3 - result.score}_${displayLabel}`, // Higher score = earlier in list
       })
     }
   } catch (error) {

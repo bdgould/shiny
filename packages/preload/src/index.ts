@@ -338,7 +338,9 @@ export interface ElectronAPI {
   cache: {
     fetch: (backendId: string, onProgress?: boolean) => Promise<any>
     testQuery: (backendId: string, query: string) => Promise<TestQueryResult>
-    onProgress: (callback: (data: { backendId: string; progress: CacheProgress }) => void) => () => void
+    onProgress: (
+      callback: (data: { backendId: string; progress: CacheProgress }) => void
+    ) => () => void
   }
 }
 
@@ -704,7 +706,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
       if (!validateChannel('cache:progress', 'on')) {
         throw new Error('Unauthorized IPC channel')
       }
-      const listener = (_event: any, data: { backendId: string; progress: CacheProgress }) => callback(data)
+      const listener = (_event: any, data: { backendId: string; progress: CacheProgress }) =>
+        callback(data)
       ipcRenderer.on('cache:progress', listener)
       return () => {
         ipcRenderer.removeListener('cache:progress', listener)

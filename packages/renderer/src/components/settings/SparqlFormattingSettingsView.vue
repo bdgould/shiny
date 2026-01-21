@@ -3,8 +3,8 @@
     <div class="settings-header">
       <h2>SPARQL Formatting Settings</h2>
       <p class="settings-description">
-        Configure formatting preferences for SPARQL queries. These settings will be applied when you format a query
-        using Edit → Format Query (Ctrl+Shift+F / Cmd+Shift+F).
+        Configure formatting preferences for SPARQL queries. These settings will be applied when you
+        format a query using Edit → Format Query (Ctrl+Shift+F / Cmd+Shift+F).
       </p>
     </div>
 
@@ -33,7 +33,9 @@
             <input type="checkbox" v-model="settings.useTabs" />
             <span>Use tabs instead of spaces</span>
           </label>
-          <span class="help-text">When enabled, tabs will be used for indentation instead of spaces</span>
+          <span class="help-text"
+            >When enabled, tabs will be used for indentation instead of spaces</span
+          >
         </div>
       </div>
 
@@ -79,7 +81,9 @@
             <input type="checkbox" v-model="settings.useRdfTypeShorthand" />
             <span>Use 'a' shortcut for rdf:type</span>
           </label>
-          <span class="help-text">Use 'a' instead of rdf:type or full IRI (&lt;http://...#type&gt;)</span>
+          <span class="help-text"
+            >Use 'a' instead of rdf:type or full IRI (&lt;http://...#type&gt;)</span
+          >
         </div>
       </div>
 
@@ -123,7 +127,9 @@
             <input type="checkbox" v-model="settings.insertSpaces.beforeStatementSeparators" />
             <span>Space before statement separators</span>
           </label>
-          <span class="help-text">Insert space before . and ; separators (?s ?p ?o . vs ?s ?p ?o.)</span>
+          <span class="help-text"
+            >Insert space before . and ; separators (?s ?p ?o . vs ?s ?p ?o.)</span
+          >
         </div>
       </div>
 
@@ -143,7 +149,9 @@
             <input type="checkbox" v-model="settings.lineBreaks.betweenPrefixAndQuery" />
             <span>Blank line between PREFIXes and query</span>
           </label>
-          <span class="help-text">Insert blank line after PREFIX declarations and before the query</span>
+          <span class="help-text"
+            >Insert blank line after PREFIX declarations and before the query</span
+          >
         </div>
 
         <div class="form-group">
@@ -167,7 +175,9 @@
             <input type="checkbox" v-model="settings.lineBreaks.betweenClauses" />
             <span>Blank line between clauses</span>
           </label>
-          <span class="help-text">Insert blank line between major query clauses (WHERE, OPTIONAL, FILTER, etc.)</span>
+          <span class="help-text"
+            >Insert blank line between major query clauses (WHERE, OPTIONAL, FILTER, etc.)</span
+          >
         </div>
       </div>
 
@@ -187,7 +197,9 @@
             />
             <span class="unit">characters</span>
           </div>
-          <span class="help-text">Preferred maximum line length before wrapping (40-200 characters)</span>
+          <span class="help-text"
+            >Preferred maximum line length before wrapping (40-200 characters)</span
+          >
         </div>
       </div>
 
