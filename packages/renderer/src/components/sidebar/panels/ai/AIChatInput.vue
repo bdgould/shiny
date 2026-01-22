@@ -7,15 +7,15 @@
         class="chat-textarea"
         :placeholder="placeholder"
         :disabled="disabled"
+        rows="1"
         @keydown="handleKeydown"
         @input="autoResize"
-        rows="1"
       ></textarea>
       <button
         class="send-button"
         :disabled="disabled || !inputValue.trim()"
-        @click="sendMessage"
         :aria-label="'Send message'"
+        @click="sendMessage"
       >
         <svg
           width="20"

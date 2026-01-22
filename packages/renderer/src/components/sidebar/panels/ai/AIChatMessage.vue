@@ -10,8 +10,8 @@
       <div
         v-if="message.content"
         class="message-content markdown-content"
-        v-html="renderedContent"
         @click="handleContentClick"
+        v-html="renderedContent"
       ></div>
       <div v-if="message.isStreaming && !message.content" class="typing-indicator">
         <span></span>

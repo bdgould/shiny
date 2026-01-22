@@ -34,8 +34,8 @@
             <div class="actions-col">
               <button
                 class="btn-icon btn-delete"
-                @click="removePrefix(index)"
                 title="Remove prefix"
+                @click="removePrefix(index)"
               >
                 ×
               </button>
@@ -91,7 +91,7 @@
               prefixes with the same name will be replaced.
             </p>
             <div class="import-controls">
-              <button class="btn-secondary" @click="loadPrefixFile" style="margin-bottom: 8px">
+              <button class="btn-secondary" style="margin-bottom: 8px" @click="loadPrefixFile">
                 Load from File
               </button>
             </div>
@@ -101,7 +101,7 @@
               placeholder="@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .&#10;@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> ."
               rows="6"
             ></textarea>
-            <button class="btn-secondary" @click="importPrefixes" style="margin-top: 8px">
+            <button class="btn-secondary" style="margin-top: 8px" @click="importPrefixes">
               Import from Turtle
             </button>
             <span v-if="importError" class="error-text" style="margin-top: 8px">{{

@@ -8,8 +8,8 @@
       <button
         v-if="hasMessages"
         class="clear-button"
-        @click="$emit('clear')"
         title="Clear conversation"
+        @click="$emit('clear')"
       >
         <svg
           width="16"

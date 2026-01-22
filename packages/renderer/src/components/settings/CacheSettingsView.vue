@@ -18,7 +18,7 @@
         <div v-show="expandedSections.global" class="section-content">
           <div class="form-group">
             <label class="checkbox-label">
-              <input type="checkbox" v-model="globalSettings.enableAutocomplete" />
+              <input v-model="globalSettings.enableAutocomplete" type="checkbox" />
               <span>Enable autocomplete from cache</span>
             </label>
             <span class="help-text"
@@ -28,7 +28,7 @@
 
           <div class="form-group">
             <label class="checkbox-label">
-              <input type="checkbox" v-model="globalSettings.autoRefresh" />
+              <input v-model="globalSettings.autoRefresh" type="checkbox" />
               <span>Auto-refresh stale caches</span>
             </label>
             <span class="help-text">Automatically refresh expired caches in the background</span>
@@ -76,7 +76,7 @@
           <div v-show="expandedSections.config" class="section-content">
             <div class="form-group">
               <label class="checkbox-label">
-                <input type="checkbox" v-model="cacheEnabled" @change="onCacheEnabledChange" />
+                <input v-model="cacheEnabled" type="checkbox" @change="onCacheEnabledChange" />
                 <span>Enable caching for this backend</span>
               </label>
               <span class="help-text">When enabled, ontology elements will be cached locally</span>
@@ -141,8 +141,8 @@
                 <div class="cache-actions">
                   <button
                     class="btn-secondary btn-small"
-                    @click="refreshCache"
                     :disabled="isRefreshing"
+                    @click="refreshCache"
                   >
                     {{ isRefreshing ? 'Refreshing...' : 'Refresh Cache Now' }}
                   </button>
@@ -174,8 +174,8 @@
                 <div class="query-actions">
                   <button
                     class="btn-link btn-small"
-                    @click="testQuery('classes')"
                     :disabled="isTestingQuery"
+                    @click="testQuery('classes')"
                   >
                     {{ isTestingQuery ? 'Testing...' : 'Test Query' }}
                   </button>
@@ -210,8 +210,8 @@
                 <div class="query-actions">
                   <button
                     class="btn-link btn-small"
-                    @click="testQuery('properties')"
                     :disabled="isTestingQuery"
+                    @click="testQuery('properties')"
                   >
                     {{ isTestingQuery ? 'Testing...' : 'Test Query' }}
                   </button>
@@ -246,8 +246,8 @@
                 <div class="query-actions">
                   <button
                     class="btn-link btn-small"
-                    @click="testQuery('individuals')"
                     :disabled="isTestingQuery"
+                    @click="testQuery('individuals')"
                   >
                     {{ isTestingQuery ? 'Testing...' : 'Test Query' }}
                   </button>
