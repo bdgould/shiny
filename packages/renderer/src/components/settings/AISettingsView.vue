@@ -127,8 +127,8 @@
       <div class="settings-section">
         <h3>Query Context</h3>
         <p class="help-text">
-          Provide project-specific context (best practices, naming conventions, common patterns) that
-          the AI can retrieve on-demand when writing queries.
+          Provide project-specific context (best practices, naming conventions, common patterns)
+          that the AI can retrieve on-demand when writing queries.
         </p>
 
         <div class="form-group">

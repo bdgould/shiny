@@ -150,7 +150,10 @@ const renderedContent = computed(() => {
   border: 1px solid var(--color-border);
   border-radius: 4px;
   cursor: pointer;
-  transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+  transition:
+    background-color 0.2s,
+    color 0.2s,
+    border-color 0.2s;
 }
 
 .markdown-content :deep(.copy-code-btn:hover) {

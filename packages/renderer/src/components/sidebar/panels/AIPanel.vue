@@ -213,10 +213,17 @@ async function executeToolCallOnly(messageId: string, toolCallId: string) {
     const latencyMs = completedAt - startedAt
 
     if (result.success) {
-      aiChatStore.updateToolCallStatus(messageId, toolCallId, 'completed', result.result, undefined, {
-        completedAt,
-        latencyMs,
-      })
+      aiChatStore.updateToolCallStatus(
+        messageId,
+        toolCallId,
+        'completed',
+        result.result,
+        undefined,
+        {
+          completedAt,
+          latencyMs,
+        }
+      )
       aiChatStore.addToolMessage(toolCallId, JSON.stringify(result.result))
     } else {
       aiChatStore.updateToolCallStatus(messageId, toolCallId, 'error', undefined, result.error, {

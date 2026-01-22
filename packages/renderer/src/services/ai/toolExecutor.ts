@@ -410,9 +410,7 @@ async function executeRunSparqlQuery(
 /**
  * Refresh the ontology cache for a backend
  */
-async function executeRefreshOntologyCache(
-  backendId: string | null
-): Promise<ToolExecutionResult> {
+async function executeRefreshOntologyCache(backendId: string | null): Promise<ToolExecutionResult> {
   try {
     const ontologyCacheStore = useOntologyCacheStore()
 
@@ -504,7 +502,8 @@ async function executeGetQueryContext(): Promise<ToolExecutionResult> {
         success: true,
         result: {
           available: false,
-          message: 'Query context is not enabled. The user has not configured project-specific context.',
+          message:
+            'Query context is not enabled. The user has not configured project-specific context.',
         },
       }
     }

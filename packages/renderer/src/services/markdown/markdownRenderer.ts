@@ -90,14 +90,7 @@ const purifyConfig: DOMPurify.Config = {
     'th',
     'td',
   ],
-  ALLOWED_ATTR: [
-    'href',
-    'target',
-    'rel',
-    'title',
-    'class',
-    'data-code',
-  ],
+  ALLOWED_ATTR: ['href', 'target', 'rel', 'title', 'class', 'data-code'],
   ALLOW_DATA_ATTR: true,
 }
 

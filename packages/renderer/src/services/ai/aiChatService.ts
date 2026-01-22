@@ -11,7 +11,11 @@ import type {
   OpenAIStreamChunk,
   OpenAIToolCall,
 } from '../../types/aiChat'
-import { getAISettings, normalizeBaseUrl, getQueryContextSettings } from '../preferences/appSettings'
+import {
+  getAISettings,
+  normalizeBaseUrl,
+  getQueryContextSettings,
+} from '../preferences/appSettings'
 import { aiTools, requiresApproval } from './aiTools'
 
 /**
@@ -31,7 +35,9 @@ export function buildSystemPrompt(context: ConversationContext, maxTokens?: numb
 
   // Add query context tool info if enabled
   if (queryContextSettings.enabled) {
-    parts.push('- Retrieve project-specific query context and best practices (use getQueryContext tool)')
+    parts.push(
+      '- Retrieve project-specific query context and best practices (use getQueryContext tool)'
+    )
   }
 
   parts.push(
@@ -40,12 +46,14 @@ export function buildSystemPrompt(context: ConversationContext, maxTokens?: numb
     '- Explain concepts clearly',
     '- Suggest improvements and best practices',
     '- Point out potential issues or errors',
-    '- Use the ontology search tools to find relevant classes and properties',
+    '- Use the ontology search tools to find relevant classes and properties'
   )
 
   // Add guidance to use query context tool
   if (queryContextSettings.enabled) {
-    parts.push('- Use the getQueryContext tool to check for project-specific conventions before writing queries')
+    parts.push(
+      '- Use the getQueryContext tool to check for project-specific conventions before writing queries'
+    )
   }
 
   parts.push(
@@ -58,14 +66,16 @@ export function buildSystemPrompt(context: ConversationContext, maxTokens?: numb
     '- Use bullet points or numbered lists for steps/options',
     '- Use code blocks with `sparql` language tag for SPARQL queries',
     '- Use inline code (`backticks`) for property/class names',
-    '- Use **bold** for emphasis, blockquotes (>) for notes/warnings',
+    '- Use **bold** for emphasis, blockquotes (>) for notes/warnings'
   )
 
   // Add response length guidance
   if (maxTokens) {
     parts.push('')
     parts.push('RESPONSE LENGTH:')
-    parts.push(`- Your response is limited to approximately ${maxTokens} tokens (~${Math.round(maxTokens * 0.75)} words)`)
+    parts.push(
+      `- Your response is limited to approximately ${maxTokens} tokens (~${Math.round(maxTokens * 0.75)} words)`
+    )
     parts.push('- Be concise and prioritize the most important information')
     parts.push('- For complex topics, focus on the key points and offer to elaborate if needed')
   }

@@ -6,7 +6,6 @@ A SPARQL utility knife for navigating the world of Enterprise Knowledge Graph.
 
 ![Shiny - Extensible SPARQL Client](docs/shiny.png)
 
-
 ## Features
 
 ### Core Capabilities ✅
