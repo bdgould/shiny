@@ -11,13 +11,19 @@ import type {
   OpenAIStreamChunk,
   OpenAIToolCall,
 } from '../../types/aiChat'
-import { getAISettings, normalizeBaseUrl } from '../preferences/appSettings'
+import {
+  getAISettings,
+  normalizeBaseUrl,
+  getQueryContextSettings,
+} from '../preferences/appSettings'
 import { aiTools, requiresApproval } from './aiTools'
 
 /**
  * Build the system prompt with context
  */
-export function buildSystemPrompt(context: ConversationContext): string {
+export function buildSystemPrompt(context: ConversationContext, maxTokens?: number): string {
+  const queryContextSettings = getQueryContextSettings()
+
   const parts: string[] = [
     'You are a helpful SPARQL query assistant. You help users write, understand, optimize, and debug SPARQL queries.',
     '',
@@ -25,15 +31,54 @@ export function buildSystemPrompt(context: ConversationContext): string {
     '- Search the ontology for classes, properties, and individuals',
     '- Get details about specific ontology elements',
     '- Execute SPARQL queries (requires user approval)',
+  ]
+
+  // Add query context tool info if enabled
+  if (queryContextSettings.enabled) {
+    parts.push(
+      '- Retrieve project-specific query context and best practices (use getQueryContext tool)'
+    )
+  }
+
+  parts.push(
     '',
     'When helping with queries:',
     '- Explain concepts clearly',
     '- Suggest improvements and best practices',
     '- Point out potential issues or errors',
-    '- Use the ontology search tools to find relevant classes and properties',
+    '- Use the ontology search tools to find relevant classes and properties'
+  )
+
+  // Add guidance to use query context tool
+  if (queryContextSettings.enabled) {
+    parts.push(
+      '- Use the getQueryContext tool to check for project-specific conventions before writing queries'
+    )
+  }
+
+  parts.push(
     '',
     'IMPORTANT: The runSparqlQuery tool requires user approval before execution. The user will see the query and can approve or reject it.',
-  ]
+    '',
+    'RESPONSE FORMATTING:',
+    '- Use Markdown formatting to structure responses clearly',
+    '- Use headers (## or ###) to organize sections in detailed explanations',
+    '- Use bullet points or numbered lists for steps/options',
+    '- Use code blocks with `sparql` language tag for SPARQL queries',
+    '- Use inline code (`backticks`) for property/class names',
+    '- Use **bold** for emphasis, blockquotes (>) for notes/warnings'
+  )
+
+  // Add response length guidance
+  if (maxTokens) {
+    parts.push('')
+    parts.push('RESPONSE LENGTH:')
+    parts.push(
+      `- Your response is limited to approximately ${maxTokens} tokens (~${Math.round(maxTokens * 0.75)} words)`
+    )
+    parts.push('- Be concise and prioritize the most important information')
+    parts.push('- For complex topics, focus on the key points and offer to elaborate if needed')
+  }
 
   // Add current query context
   if (context.currentQuery) {
@@ -142,7 +187,8 @@ export async function* streamChatCompletion(
   const baseUrl = normalizeBaseUrl(settings.endpoint)
   const url = `${baseUrl}/chat/completions`
 
-  const systemPrompt = buildSystemPrompt(context)
+  const maxTokens = settings.maxTokens ?? 2000
+  const systemPrompt = buildSystemPrompt(context, maxTokens)
   const openaiMessages = messagesToOpenAI(messages)
 
   const requestBody = {
@@ -151,7 +197,7 @@ export async function* streamChatCompletion(
     tools: aiTools,
     stream: true,
     temperature: settings.temperature ?? 0.7,
-    max_tokens: settings.maxTokens ?? 2000,
+    max_tokens: maxTokens,
   }
 
   try {

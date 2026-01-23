@@ -5,8 +5,8 @@
       <button
         v-if="historyStore.entries.length > 0"
         class="clear-button"
-        @click="handleClearHistory"
         title="Clear all history"
+        @click="handleClearHistory"
       >
         Clear All
       </button>
@@ -29,13 +29,13 @@
           <div class="entry-status">
             <span v-if="entry.success" class="status-icon success" title="Success">✓</span>
             <span v-else class="status-icon error" title="Failed">✗</span>
-            <span class="query-type" v-if="entry.queryType">{{ entry.queryType }}</span>
-            <span class="query-type unknown" v-else>FAILED</span>
+            <span v-if="entry.queryType" class="query-type">{{ entry.queryType }}</span>
+            <span v-else class="query-type unknown">FAILED</span>
           </div>
           <button
             class="delete-button"
-            @click.stop="handleDeleteEntry(entry.id)"
             title="Delete entry"
+            @click.stop="handleDeleteEntry(entry.id)"
           >
             ×
           </button>
@@ -54,15 +54,15 @@
             <span class="label">Time:</span>
             <span class="value">{{ formatTimestamp(entry.executedAt) }}</span>
           </div>
-          <div class="detail" v-if="entry.duration !== null">
+          <div v-if="entry.duration !== null" class="detail">
             <span class="label">Duration:</span>
             <span class="value">{{ formatDuration(entry.duration) }}</span>
           </div>
-          <div class="detail" v-if="entry.success && entry.resultCount !== null">
+          <div v-if="entry.success && entry.resultCount !== null" class="detail">
             <span class="label">Results:</span>
             <span class="value">{{ entry.resultCount }}</span>
           </div>
-          <div class="detail error-detail" v-if="!entry.success && entry.error">
+          <div v-if="!entry.success && entry.error" class="detail error-detail">
             <span class="label">Error:</span>
             <span class="value error-text">{{ truncateError(entry.error) }}</span>
           </div>

@@ -39,6 +39,7 @@ export default mergeConfig(
           'src/**/__tests__/helpers/**',
           'src/**/__tests__/**/fixtures/**',
           'src/**/__tests__/**/helpers/**',
+          'src/components/**/icons/**',
         ],
         thresholds: {
           lines: 50,

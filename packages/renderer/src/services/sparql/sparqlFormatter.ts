@@ -377,7 +377,7 @@ function applyIndentation(query: string, settings: SparqlFormattingSettings): st
 
   // First, fix any malformed spacing from the generator (e.g., " WHERE" with single leading space)
   // This handles the sparqljs generator bug where subquery WHERE gets a single leading space
-  let normalized = query.replace(
+  const normalized = query.replace(
     /\n\s+(WHERE|SELECT|CONSTRUCT|DESCRIBE|ASK|OPTIONAL|UNION|MINUS|GRAPH|FILTER|BIND|VALUES)\s/gi,
     '\n$1 '
   )

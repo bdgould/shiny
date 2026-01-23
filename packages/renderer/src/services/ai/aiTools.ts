@@ -156,6 +156,44 @@ export const runSparqlQueryTool: OpenAITool = {
 }
 
 /**
+ * Tool: Refresh the ontology cache for a backend
+ */
+export const refreshOntologyCacheTool: OpenAITool = {
+  type: 'function',
+  function: {
+    name: 'refreshOntologyCache',
+    description:
+      'Refresh the ontology cache for the current backend. ' +
+      'Use this when the ontology data might be stale or when you encounter missing classes/properties. ' +
+      'The refresh fetches fresh data from the knowledge graph backend.',
+    parameters: {
+      type: 'object',
+      properties: {},
+      required: [],
+    },
+  },
+}
+
+/**
+ * Tool: Get user-defined query context
+ */
+export const getQueryContextTool: OpenAITool = {
+  type: 'function',
+  function: {
+    name: 'getQueryContext',
+    description:
+      'Retrieve user-defined query context containing SPARQL best practices, ' +
+      'common patterns, naming conventions, and domain-specific guidance. ' +
+      'Use when you need project-specific conventions or recommended patterns.',
+    parameters: {
+      type: 'object',
+      properties: {},
+      required: [],
+    },
+  },
+}
+
+/**
  * All available tools for the AI assistant
  */
 export const aiTools: OpenAITool[] = [
@@ -164,6 +202,8 @@ export const aiTools: OpenAITool[] = [
   getClassDetailsTool,
   getPropertyDetailsTool,
   runSparqlQueryTool,
+  refreshOntologyCacheTool,
+  getQueryContextTool,
 ]
 
 /**

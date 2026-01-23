@@ -30,7 +30,7 @@
 
         <div class="form-group">
           <label class="checkbox-label">
-            <input type="checkbox" v-model="settings.useTabs" />
+            <input v-model="settings.useTabs" type="checkbox" />
             <span>Use tabs instead of spaces</span>
           </label>
           <span class="help-text"
@@ -62,7 +62,7 @@
 
         <div class="form-group">
           <label class="checkbox-label">
-            <input type="checkbox" v-model="settings.alignPrefixes" />
+            <input v-model="settings.alignPrefixes" type="checkbox" />
             <span>Align PREFIX declarations</span>
           </label>
           <span class="help-text">Align namespace IRIs in PREFIX statements for readability</span>
@@ -70,7 +70,7 @@
 
         <div class="form-group">
           <label class="checkbox-label">
-            <input type="checkbox" v-model="settings.alignPredicates" />
+            <input v-model="settings.alignPredicates" type="checkbox" />
             <span>Align predicates in triple patterns</span>
           </label>
           <span class="help-text">Align predicates and objects in triple patterns</span>
@@ -78,7 +78,7 @@
 
         <div class="form-group">
           <label class="checkbox-label">
-            <input type="checkbox" v-model="settings.useRdfTypeShorthand" />
+            <input v-model="settings.useRdfTypeShorthand" type="checkbox" />
             <span>Use 'a' shortcut for rdf:type</span>
           </label>
           <span class="help-text"
@@ -92,7 +92,7 @@
 
         <div class="form-group">
           <label class="checkbox-label">
-            <input type="checkbox" v-model="settings.insertSpaces.afterCommas" />
+            <input v-model="settings.insertSpaces.afterCommas" type="checkbox" />
             <span>Space after commas</span>
           </label>
           <span class="help-text">Insert space after commas in value lists</span>
@@ -100,7 +100,7 @@
 
         <div class="form-group">
           <label class="checkbox-label">
-            <input type="checkbox" v-model="settings.insertSpaces.beforeBraces" />
+            <input v-model="settings.insertSpaces.beforeBraces" type="checkbox" />
             <span>Space before opening braces</span>
           </label>
           <span class="help-text">Insert space before opening curly braces</span>
@@ -108,7 +108,7 @@
 
         <div class="form-group">
           <label class="checkbox-label">
-            <input type="checkbox" v-model="settings.insertSpaces.afterBraces" />
+            <input v-model="settings.insertSpaces.afterBraces" type="checkbox" />
             <span>Space after opening braces</span>
           </label>
           <span class="help-text">Insert space after opening curly braces</span>
@@ -116,7 +116,7 @@
 
         <div class="form-group">
           <label class="checkbox-label">
-            <input type="checkbox" v-model="settings.insertSpaces.beforeParentheses" />
+            <input v-model="settings.insertSpaces.beforeParentheses" type="checkbox" />
             <span>Space before opening parentheses</span>
           </label>
           <span class="help-text">Insert space before opening parentheses in function calls</span>
@@ -124,7 +124,7 @@
 
         <div class="form-group">
           <label class="checkbox-label">
-            <input type="checkbox" v-model="settings.insertSpaces.beforeStatementSeparators" />
+            <input v-model="settings.insertSpaces.beforeStatementSeparators" type="checkbox" />
             <span>Space before statement separators</span>
           </label>
           <span class="help-text"
@@ -138,7 +138,7 @@
 
         <div class="form-group">
           <label class="checkbox-label">
-            <input type="checkbox" v-model="settings.lineBreaks.afterPrefix" />
+            <input v-model="settings.lineBreaks.afterPrefix" type="checkbox" />
             <span>Line break after each PREFIX</span>
           </label>
           <span class="help-text">Place each PREFIX declaration on its own line</span>
@@ -146,7 +146,7 @@
 
         <div class="form-group">
           <label class="checkbox-label">
-            <input type="checkbox" v-model="settings.lineBreaks.betweenPrefixAndQuery" />
+            <input v-model="settings.lineBreaks.betweenPrefixAndQuery" type="checkbox" />
             <span>Blank line between PREFIXes and query</span>
           </label>
           <span class="help-text"
@@ -156,7 +156,7 @@
 
         <div class="form-group">
           <label class="checkbox-label">
-            <input type="checkbox" v-model="settings.lineBreaks.afterSelect" />
+            <input v-model="settings.lineBreaks.afterSelect" type="checkbox" />
             <span>Line break after SELECT clause</span>
           </label>
           <span class="help-text">Add line break after SELECT clause variables</span>
@@ -164,7 +164,7 @@
 
         <div class="form-group">
           <label class="checkbox-label">
-            <input type="checkbox" v-model="settings.lineBreaks.afterWhere" />
+            <input v-model="settings.lineBreaks.afterWhere" type="checkbox" />
             <span>Line break after WHERE clause</span>
           </label>
           <span class="help-text">Add line break after WHERE keyword</span>
@@ -172,7 +172,7 @@
 
         <div class="form-group">
           <label class="checkbox-label">
-            <input type="checkbox" v-model="settings.lineBreaks.betweenClauses" />
+            <input v-model="settings.lineBreaks.betweenClauses" type="checkbox" />
             <span>Blank line between clauses</span>
           </label>
           <span class="help-text"

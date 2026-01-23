@@ -194,7 +194,8 @@ export const useAIChatStore = defineStore('aiChat', () => {
     toolCallId: string,
     status: ToolCall['status'],
     result?: unknown,
-    errorMsg?: string
+    errorMsg?: string,
+    timing?: { startedAt?: number; completedAt?: number; latencyMs?: number }
   ) {
     const message = messages.value.find((m) => m.id === messageId)
     if (message?.toolCalls) {
@@ -206,6 +207,17 @@ export const useAIChatStore = defineStore('aiChat', () => {
         }
         if (errorMsg !== undefined) {
           toolCall.error = errorMsg
+        }
+        if (timing) {
+          if (timing.startedAt !== undefined) {
+            toolCall.startedAt = timing.startedAt
+          }
+          if (timing.completedAt !== undefined) {
+            toolCall.completedAt = timing.completedAt
+          }
+          if (timing.latencyMs !== undefined) {
+            toolCall.latencyMs = timing.latencyMs
+          }
         }
         persistConversation()
       }

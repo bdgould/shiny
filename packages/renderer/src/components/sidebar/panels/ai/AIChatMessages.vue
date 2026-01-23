@@ -1,5 +1,5 @@
 <template>
-  <div class="chat-messages" ref="messagesContainer">
+  <div ref="messagesContainer" class="chat-messages">
     <div v-if="messages.length === 0" class="empty-state">
       <div class="empty-icon">💬</div>
       <div class="empty-title">Ask me about your SPARQL query</div>

@@ -29,6 +29,12 @@ export interface ToolCall {
   result?: unknown
   /** Error message (if status is 'error') */
   error?: string
+  /** Timestamp when execution started (ms since epoch) */
+  startedAt?: number
+  /** Timestamp when execution completed (ms since epoch) */
+  completedAt?: number
+  /** Execution latency in milliseconds */
+  latencyMs?: number
 }
 
 /**

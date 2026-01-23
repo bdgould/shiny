@@ -10,6 +10,7 @@ import type {
   AnyOntologyElement,
 } from '../../types/ontologyCache'
 import { useOntologyCacheStore } from '../../stores/ontologyCache'
+import { getQueryContextSettings } from '../preferences/appSettings'
 
 /**
  * Result of a tool execution
@@ -50,6 +51,10 @@ export async function executeTool(
       return executeGetPropertyDetails(args, backendId)
     case 'runSparqlQuery':
       return executeRunSparqlQuery(args, backendId)
+    case 'refreshOntologyCache':
+      return executeRefreshOntologyCache(backendId)
+    case 'getQueryContext':
+      return executeGetQueryContext()
     default:
       return {
         success: false,
@@ -403,6 +408,62 @@ async function executeRunSparqlQuery(
 }
 
 /**
+ * Refresh the ontology cache for a backend
+ */
+async function executeRefreshOntologyCache(backendId: string | null): Promise<ToolExecutionResult> {
+  try {
+    const ontologyCacheStore = useOntologyCacheStore()
+
+    if (!backendId) {
+      return {
+        success: false,
+        error: 'No backend selected for the current query tab',
+      }
+    }
+
+    // Check if already refreshing
+    if (ontologyCacheStore.isLoading(backendId)) {
+      return {
+        success: true,
+        result: {
+          status: 'already_refreshing',
+          message: 'Cache refresh is already in progress for this backend',
+        },
+      }
+    }
+
+    // Perform the refresh
+    const cache = await ontologyCacheStore.refreshCache(backendId, false)
+
+    if (cache) {
+      return {
+        success: true,
+        result: {
+          status: 'refreshed',
+          message: 'Ontology cache refreshed successfully',
+          stats: {
+            classCount: cache.classes.length,
+            propertyCount: cache.properties.length,
+            individualCount: cache.individuals.length,
+          },
+        },
+      }
+    } else {
+      const error = ontologyCacheStore.getError(backendId)
+      return {
+        success: false,
+        error: error || 'Failed to refresh ontology cache',
+      }
+    }
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Cache refresh failed',
+    }
+  }
+}
+
+/**
  * Format an ontology element for AI consumption
  */
 function formatElement(element: AnyOntologyElement): Record<string, unknown> {
@@ -427,4 +488,47 @@ function formatElement(element: AnyOntologyElement): Record<string, unknown> {
   }
 
   return base
+}
+
+/**
+ * Get user-defined query context
+ */
+async function executeGetQueryContext(): Promise<ToolExecutionResult> {
+  try {
+    const settings = getQueryContextSettings()
+
+    if (!settings.enabled) {
+      return {
+        success: true,
+        result: {
+          available: false,
+          message:
+            'Query context is not enabled. The user has not configured project-specific context.',
+        },
+      }
+    }
+
+    if (!settings.content || settings.content.trim() === '') {
+      return {
+        success: true,
+        result: {
+          available: false,
+          message: 'Query context is enabled but no content has been provided yet.',
+        },
+      }
+    }
+
+    return {
+      success: true,
+      result: {
+        available: true,
+        content: settings.content,
+      },
+    }
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to retrieve query context',
+    }
+  }
 }

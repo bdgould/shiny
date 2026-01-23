@@ -19,10 +19,10 @@
           </div>
         </div>
         <div class="collapse-controls">
-          <button @click="expandAll" class="control-button" title="Expand all entities">
+          <button class="control-button" title="Expand all entities" @click="expandAll">
             Expand All
           </button>
-          <button @click="collapseAll" class="control-button" title="Collapse all entities">
+          <button class="control-button" title="Collapse all entities" @click="collapseAll">
             Collapse All
           </button>
         </div>
