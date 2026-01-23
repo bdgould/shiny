@@ -6,6 +6,7 @@ export default defineConfig({
     name: 'preload',
     environment: 'node',
     include: ['src/**/*.{test,spec}.ts', 'src/**/__tests__/**/*.ts'],
+    passWithNoTests: true,
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],

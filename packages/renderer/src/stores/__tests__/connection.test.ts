@@ -198,4 +198,316 @@ describe('useConnectionStore', () => {
       expect(store.selectedBackend).toBeNull()
     })
   })
+
+  describe('createBackend', () => {
+    const newBackendConfig = {
+      name: 'New Backend',
+      type: 'sparql11',
+      endpoint: 'http://localhost:8080/sparql',
+      authType: 'none',
+    }
+
+    const createdBackend = {
+      id: 'backend-new',
+      name: 'New Backend',
+      provider: 'sparql11' as const,
+      endpoint: 'http://localhost:8080/sparql',
+    }
+
+    it('should create a backend and add it to the list', async () => {
+      ;(global as any).electronAPI.backends.create = vi.fn().mockResolvedValue(createdBackend)
+      ;(global as any).electronAPI.backends.setSelected = vi.fn().mockResolvedValue(undefined)
+
+      const store = useConnectionStore()
+      const result = await store.createBackend(newBackendConfig)
+
+      expect(result).toEqual(createdBackend)
+      expect(store.backends).toHaveLength(1)
+      expect(store.backends[0]).toEqual(createdBackend)
+    })
+
+    it('should auto-select first created backend', async () => {
+      ;(global as any).electronAPI.backends.create = vi.fn().mockResolvedValue(createdBackend)
+      ;(global as any).electronAPI.backends.setSelected = vi.fn().mockResolvedValue(undefined)
+
+      const store = useConnectionStore()
+      await store.createBackend(newBackendConfig)
+
+      expect(store.selectedBackendId).toBe('backend-new')
+      expect((global as any).electronAPI.backends.setSelected).toHaveBeenCalledWith('backend-new')
+    })
+
+    it('should not auto-select if there are already backends', async () => {
+      ;(global as any).electronAPI.backends.create = vi.fn().mockResolvedValue(createdBackend)
+
+      const store = useConnectionStore()
+      store.backends = [...mockBackends]
+      store.selectedBackendId = 'backend-1'
+
+      await store.createBackend(newBackendConfig)
+
+      expect(store.selectedBackendId).toBe('backend-1')
+    })
+
+    it('should set loading state during creation', async () => {
+      let resolvePromise: any
+      const promise = new Promise((resolve) => {
+        resolvePromise = resolve
+      })
+
+      ;(global as any).electronAPI.backends.create = vi.fn().mockReturnValue(promise)
+      ;(global as any).electronAPI.backends.setSelected = vi.fn().mockResolvedValue(undefined)
+
+      const store = useConnectionStore()
+      const createPromise = store.createBackend(newBackendConfig)
+
+      expect(store.isLoading).toBe(true)
+
+      resolvePromise(createdBackend)
+      await createPromise
+
+      expect(store.isLoading).toBe(false)
+    })
+
+    it('should handle error when creating backend', async () => {
+      const errorMessage = 'Failed to create backend'
+      ;(global as any).electronAPI.backends.create = vi
+        .fn()
+        .mockRejectedValue(new Error(errorMessage))
+
+      const store = useConnectionStore()
+
+      await expect(store.createBackend(newBackendConfig)).rejects.toThrow(errorMessage)
+      expect(store.error).toBe(errorMessage)
+      expect(store.isLoading).toBe(false)
+    })
+
+    it('should pass credentials when provided', async () => {
+      ;(global as any).electronAPI.backends.create = vi.fn().mockResolvedValue(createdBackend)
+      ;(global as any).electronAPI.backends.setSelected = vi.fn().mockResolvedValue(undefined)
+
+      const store = useConnectionStore()
+      const credentials = { username: 'user', password: 'pass' }
+
+      await store.createBackend(newBackendConfig, credentials)
+
+      expect((global as any).electronAPI.backends.create).toHaveBeenCalledWith(
+        newBackendConfig,
+        credentials
+      )
+    })
+  })
+
+  describe('updateBackend', () => {
+    const updatedBackend = {
+      ...mockBackends[0],
+      name: 'Updated Backend Name',
+    }
+
+    it('should update backend and refresh local state', async () => {
+      ;(global as any).electronAPI.backends.update = vi.fn().mockResolvedValue(updatedBackend)
+
+      const store = useConnectionStore()
+      store.backends = [...mockBackends]
+
+      const result = await store.updateBackend('backend-1', { name: 'Updated Backend Name' })
+
+      expect(result).toEqual(updatedBackend)
+      expect(store.backends[0].name).toBe('Updated Backend Name')
+    })
+
+    it('should set loading state during update', async () => {
+      let resolvePromise: any
+      const promise = new Promise((resolve) => {
+        resolvePromise = resolve
+      })
+
+      ;(global as any).electronAPI.backends.update = vi.fn().mockReturnValue(promise)
+
+      const store = useConnectionStore()
+      store.backends = [...mockBackends]
+
+      const updatePromise = store.updateBackend('backend-1', { name: 'New Name' })
+
+      expect(store.isLoading).toBe(true)
+
+      resolvePromise(updatedBackend)
+      await updatePromise
+
+      expect(store.isLoading).toBe(false)
+    })
+
+    it('should handle error when updating backend', async () => {
+      const errorMessage = 'Failed to update backend'
+      ;(global as any).electronAPI.backends.update = vi
+        .fn()
+        .mockRejectedValue(new Error(errorMessage))
+
+      const store = useConnectionStore()
+      store.backends = [...mockBackends]
+
+      await expect(store.updateBackend('backend-1', { name: 'New Name' })).rejects.toThrow(
+        errorMessage
+      )
+      expect(store.error).toBe(errorMessage)
+      expect(store.isLoading).toBe(false)
+    })
+
+    it('should pass credentials when provided', async () => {
+      ;(global as any).electronAPI.backends.update = vi.fn().mockResolvedValue(updatedBackend)
+
+      const store = useConnectionStore()
+      store.backends = [...mockBackends]
+
+      const credentials = { username: 'newuser', password: 'newpass' }
+      await store.updateBackend('backend-1', { name: 'New Name' }, credentials)
+
+      expect((global as any).electronAPI.backends.update).toHaveBeenCalledWith(
+        'backend-1',
+        { name: 'New Name' },
+        credentials
+      )
+    })
+  })
+
+  describe('deleteBackend', () => {
+    it('should delete backend and remove from list', async () => {
+      ;(global as any).electronAPI.backends.delete = vi.fn().mockResolvedValue(undefined)
+
+      const store = useConnectionStore()
+      store.backends = [...mockBackends]
+
+      const result = await store.deleteBackend('backend-1')
+
+      expect(result).toBe(true)
+      expect(store.backends).toHaveLength(1)
+      expect(store.backends.find((b) => b.id === 'backend-1')).toBeUndefined()
+    })
+
+    it('should clear selection if deleted backend was selected', async () => {
+      ;(global as any).electronAPI.backends.delete = vi.fn().mockResolvedValue(undefined)
+
+      const store = useConnectionStore()
+      store.backends = [...mockBackends]
+      store.selectedBackendId = 'backend-1'
+
+      await store.deleteBackend('backend-1')
+
+      expect(store.selectedBackendId).toBeNull()
+    })
+
+    it('should not affect selection if different backend is deleted', async () => {
+      ;(global as any).electronAPI.backends.delete = vi.fn().mockResolvedValue(undefined)
+
+      const store = useConnectionStore()
+      store.backends = [...mockBackends]
+      store.selectedBackendId = 'backend-1'
+
+      await store.deleteBackend('backend-2')
+
+      expect(store.selectedBackendId).toBe('backend-1')
+    })
+
+    it('should set loading state during deletion', async () => {
+      let resolvePromise: any
+      const promise = new Promise((resolve) => {
+        resolvePromise = resolve
+      })
+
+      ;(global as any).electronAPI.backends.delete = vi.fn().mockReturnValue(promise)
+
+      const store = useConnectionStore()
+      store.backends = [...mockBackends]
+
+      const deletePromise = store.deleteBackend('backend-1')
+
+      expect(store.isLoading).toBe(true)
+
+      resolvePromise(undefined)
+      await deletePromise
+
+      expect(store.isLoading).toBe(false)
+    })
+
+    it('should handle error when deleting backend', async () => {
+      const errorMessage = 'Failed to delete backend'
+      ;(global as any).electronAPI.backends.delete = vi
+        .fn()
+        .mockRejectedValue(new Error(errorMessage))
+
+      const store = useConnectionStore()
+      store.backends = [...mockBackends]
+
+      await expect(store.deleteBackend('backend-1')).rejects.toThrow(errorMessage)
+      expect(store.error).toBe(errorMessage)
+      expect(store.isLoading).toBe(false)
+      // Backend should still be in list on error
+      expect(store.backends).toHaveLength(2)
+    })
+  })
+
+  describe('testConnection', () => {
+    it('should call testConnection API and return result', async () => {
+      const testResult = { success: true, message: 'Connection successful' }
+      ;(global as any).electronAPI.backends.testConnection = vi.fn().mockResolvedValue(testResult)
+
+      const store = useConnectionStore()
+
+      const result = await store.testConnection('backend-1')
+
+      expect(result).toEqual(testResult)
+      expect((global as any).electronAPI.backends.testConnection).toHaveBeenCalledWith('backend-1')
+    })
+
+    it('should handle error when testing connection', async () => {
+      const errorMessage = 'Connection test failed'
+      ;(global as any).electronAPI.backends.testConnection = vi
+        .fn()
+        .mockRejectedValue(new Error(errorMessage))
+
+      const store = useConnectionStore()
+
+      await expect(store.testConnection('backend-1')).rejects.toThrow(errorMessage)
+    })
+
+    it('should not set isLoading during connection test', async () => {
+      let resolvePromise: any
+      const promise = new Promise((resolve) => {
+        resolvePromise = resolve
+      })
+
+      ;(global as any).electronAPI.backends.testConnection = vi.fn().mockReturnValue(promise)
+
+      const store = useConnectionStore()
+      const testPromise = store.testConnection('backend-1')
+
+      // testConnection should not affect global loading state
+      expect(store.isLoading).toBe(false)
+
+      resolvePromise({ success: true })
+      await testPromise
+
+      expect(store.isLoading).toBe(false)
+    })
+  })
+
+  describe('clearError', () => {
+    it('should clear error message', () => {
+      const store = useConnectionStore()
+      store.error = 'Some error message'
+
+      store.clearError()
+
+      expect(store.error).toBeNull()
+    })
+
+    it('should do nothing when error is already null', () => {
+      const store = useConnectionStore()
+      store.error = null
+
+      store.clearError()
+
+      expect(store.error).toBeNull()
+    })
+  })
 })
