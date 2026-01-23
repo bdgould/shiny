@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { RDFProcessor } from '../rdfProcessor'
 import type { DatasetCore, Quad, Term } from '@rdfjs/types'
+import { Readable } from 'readable-stream'
 
 // Create mock RDF terms
 const createNamedNode = (value: string): Term => ({
@@ -59,7 +60,6 @@ const createMockDataset = (quads: Quad[]): DatasetCore => {
     match: vi.fn(),
     [Symbol.iterator]: () => quadSet.values(),
     toStream: () => {
-      const { Readable } = require('readable-stream')
       const stream = new Readable({ objectMode: true })
       quads.forEach((q) => stream.push(q))
       stream.push(null)
