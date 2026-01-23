@@ -27,7 +27,10 @@ const createMockStats = (): CacheStats => ({
   namespaceCount: 2,
 })
 
-const createMockMetadata = (backendId: string, overrides?: Partial<CacheMetadata>): CacheMetadata => ({
+const createMockMetadata = (
+  backendId: string,
+  overrides?: Partial<CacheMetadata>
+): CacheMetadata => ({
   backendId,
   lastUpdated: Date.now(),
   ttl: 24 * 60 * 60 * 1000,
@@ -42,7 +45,8 @@ const createMockClass = (iri: string, label?: string): OntologyClass => ({
   label,
   description: `Description for ${label || iri}`,
   localName: iri.split('/').pop() || iri.split('#').pop(),
-  namespace: iri.substring(0, iri.lastIndexOf('/') + 1) || iri.substring(0, iri.lastIndexOf('#') + 1),
+  namespace:
+    iri.substring(0, iri.lastIndexOf('/') + 1) || iri.substring(0, iri.lastIndexOf('#') + 1),
 })
 
 const createMockProperty = (iri: string, label?: string): OntologyProperty => ({
@@ -511,11 +515,7 @@ describe('OntologyCacheService - Element Retrieval', () => {
   })
 
   it('should search only properties store when type is property', async () => {
-    const result = await service.getElementByIri(
-      'backend-1',
-      'http://example.org/test',
-      'property'
-    )
+    const result = await service.getElementByIri('backend-1', 'http://example.org/test', 'property')
 
     expect(result).toBeNull()
   })
