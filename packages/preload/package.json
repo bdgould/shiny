@@ -1,6 +1,6 @@
 {
   "name": "@shiny/preload",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "description": "Shiny Electron preload scripts",
   "main": "dist/index.js",
   "private": true,
