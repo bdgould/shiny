@@ -34,7 +34,7 @@ function invoke(channel: string, event: any, args: any) {
 
 describe('graphstudio IPC handlers', () => {
   beforeAll(async () => {
-    await import('../graphstudio')
+    await import('../graphstudio.js')
   })
 
   beforeEach(() => {

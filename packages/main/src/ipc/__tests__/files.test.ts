@@ -29,7 +29,7 @@ const channels: Record<string, any[]> = {
 describe('files IPC handlers', () => {
   beforeAll(async () => {
     vi.spyOn(console, 'log').mockImplementation(() => {})
-    await import('../files')
+    await import('../files.js')
   })
 
   beforeEach(() => {

@@ -24,6 +24,7 @@ npm run test:e2e        # Playwright drives the real app (builds main + preload 
 
 - Unit tests live in `__tests__/` next to the code. Coverage is measured over all source files; the floors in each `vitest.config.ts` are ratchets. Raise them when coverage improves, never lower them.
 - Every `ipcMain.handle` must call `isAuthorizedSender` from `packages/main/src/ipc/security.ts` first.
+- Main compiles with `module: node20` (CommonJS output that can `require()` ESM-only packages). Relative imports, including dynamic `import()` in tests, need a `.js` extension.
 - Main and preload builds use `tsconfig.build.json` (excludes tests). The plain `tsconfig.json` is for type-checking and includes tests.
 - The renderer imports Monaco from `monaco-editor/editor/editor.api` plus `features/register.all`, not the package root, which bundles every language worker.
 - Settings getters in `renderer/src/services/preferences/appSettings.ts` return `structuredClone` of defaults; never hand out the shared default objects.

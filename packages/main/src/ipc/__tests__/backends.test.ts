@@ -47,7 +47,7 @@ const channelArgs: Record<string, any[]> = {
 
 describe('backends IPC handlers', () => {
   beforeAll(async () => {
-    await import('../backends')
+    await import('../backends.js')
   })
 
   beforeEach(() => {

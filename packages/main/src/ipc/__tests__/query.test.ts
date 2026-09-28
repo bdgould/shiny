@@ -27,7 +27,7 @@ function run(event: any, args: any) {
 
 describe('query:execute', () => {
   beforeAll(async () => {
-    await import('../query')
+    await import('../query.js')
   })
 
   beforeEach(() => {

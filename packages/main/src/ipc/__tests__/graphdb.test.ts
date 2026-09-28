@@ -35,7 +35,7 @@ function invoke(channel: string, event: any, args: any) {
 
 describe('graphdb IPC handlers', () => {
   beforeAll(async () => {
-    await import('../graphdb')
+    await import('../graphdb.js')
   })
 
   beforeEach(() => {

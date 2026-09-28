@@ -5,9 +5,9 @@
  */
 
 import axios, { AxiosInstance } from 'axios'
-// Both packages are ESM; Electron 41's Node loads them through require().
-import { wrapper } from 'axios-cookiejar-support'
+// tough-cookie and axios-cookiejar-support are ESM; Electron 41's Node loads them through require().
 import { CookieJar } from 'tough-cookie'
+import { withCookieJar } from '../../utils/cookieClient.js'
 import { Parser } from 'sparqljs'
 import { BaseProvider } from './BaseProvider.js'
 import { BackendConfig, BackendCredentials, ValidationResult, QueryResult } from '../types.js'
@@ -150,7 +150,7 @@ export class MobiProvider extends BaseProvider {
       )
     }
 
-    const client = wrapper(axios.create(axiosConfig))
+    const client = withCookieJar(axios.create(axiosConfig))
     ;(client.defaults as { jar?: any }).jar = jar
 
     // Authenticate if credentials provided
