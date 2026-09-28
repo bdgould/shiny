@@ -98,103 +98,43 @@ A SPARQL utility knife for navigating the world of Enterprise Knowledge Graph.
 
 ### Planned Features
 
-- SPARQL editor enhancements (autocomplete, syntax validation)
 - Network graph visualization for RDF data
 - Query profiling and performance metrics
 - Federated query support
 - Plugin system for extensibility
-
-## Screenshots
-
-_Coming soon_
 
 ## Project Structure
 
 ```
 shiny/
 ├── packages/
-│   ├── main/                      # Electron main process (Node.js)
-│   │   ├── src/
-│   │   │   ├── backends/          # Backend provider system
-│   │   │   │   ├── providers/     # BaseProvider, Sparql11Provider, etc.
-│   │   │   │   │   ├── BaseProvider.ts
-│   │   │   │   │   ├── Sparql11Provider.ts
-│   │   │   │   │   ├── GraphStudioProvider.ts
-│   │   │   │   │   ├── MobiProvider.ts
-│   │   │   │   │   └── GraphDBProvider.ts
-│   │   │   │   ├── BackendFactory.ts
-│   │   │   │   └── types.ts
-│   │   │   ├── services/          # Business logic
-│   │   │   │   ├── BackendService.ts      # Backend CRUD
-│   │   │   │   ├── CredentialService.ts   # Encrypted storage
-│   │   │   │   ├── MigrationService.ts    # Data migrations
-│   │   │   │   ├── FileService.ts         # File operations
-│   │   │   │   └── OntologyCacheService.ts # Ontology caching
-│   │   │   ├── ipc/               # IPC handlers
-│   │   │   │   ├── backends.ts    # Backend management
-│   │   │   │   ├── query.ts       # Query execution
-│   │   │   │   ├── files.ts       # File operations
-│   │   │   │   ├── graphstudio.ts # Graph Studio API
-│   │   │   │   ├── mobi.ts        # Mobi API
-│   │   │   │   ├── graphdb.ts     # GraphDB API
-│   │   │   │   └── ontologyCache.ts # Cache management
-│   │   │   ├── index.ts           # Main entry point
-│   │   │   └── window.ts          # Window management
-│   │   └── package.json
-│   │
-│   ├── preload/                   # Preload scripts (security bridge)
-│   │   ├── src/
-│   │   │   └── index.ts           # Secure IPC bridge
-│   │   └── package.json
-│   │
-│   └── renderer/                  # Vue 3 frontend application
-│       ├── src/
-│       │   ├── components/
-│       │   │   ├── sidebar/       # VS Code-style sidebar
-│       │   │   │   ├── IconSidebar.vue
-│       │   │   │   ├── SidebarIconBar.vue
-│       │   │   │   ├── SidebarDrawer.vue
-│       │   │   │   ├── DrawerResizer.vue
-│       │   │   │   ├── icons/     # ConnectionIcon, AIIcon, HistoryIcon, SettingsIcon
-│       │   │   │   └── panels/    # ConnectionPanel, HistoryPanel, AIPanel, SettingsPanel
-│       │   │   ├── editor/        # Monaco/CodeMirror SPARQL editor
-│       │   │   │   └── EditorTabs.vue
-│       │   │   ├── results/       # Query results display
-│       │   │   │   ├── ResultsView.vue
-│       │   │   │   ├── TableView.vue
-│       │   │   │   └── EntityView.vue
-│       │   │   ├── settings/      # Settings panels
-│       │   │   │   ├── QuerySettings.vue
-│       │   │   │   ├── PrefixSettings.vue
-│       │   │   │   ├── FormatSettings.vue
-│       │   │   │   └── AISettings.vue
-│       │   │   └── layout/        # TopBar, MainPane
-│       │   ├── stores/            # Pinia state management
-│       │   │   ├── connection.ts  # Backend management
-│       │   │   ├── sidebar.ts     # Sidebar UI state
-│       │   │   ├── query.ts       # Query execution
-│       │   │   ├── tabs.ts        # Tab management
-│       │   │   ├── history.ts     # Query history
-│       │   │   ├── aiChat.ts      # AI chat state
-│       │   │   └── ontologyCache.ts # Cache state
-│       │   ├── types/             # TypeScript definitions
-│       │   ├── composables/       # Reusable Vue logic
-│       │   │   ├── useFileDragDrop.ts
-│       │   │   ├── useFileOperations.ts
-│       │   │   ├── useResultsSave.ts
-│       │   │   ├── useCacheRefresh.ts
-│       │   │   ├── useGraphStudio.ts
-│       │   │   ├── useMobi.ts
-│       │   │   └── useGraphDB.ts
-│       │   └── App.vue
-│       └── package.json
-│
-├── scripts/                       # Build and development scripts
-│   ├── dev.js                     # Development server
-│   └── build.js                   # Production build
-│
-└── package.json                   # Root workspace configuration
+│   ├── main/                  # Electron main process (Node.js)
+│   │   └── src/
+│   │       ├── backends/      # Provider system: BaseProvider, SPARQL 1.1, GraphDB,
+│   │       │                  # Graph Studio, Mobi, plus BackendFactory
+│   │       ├── services/      # Backend CRUD, encrypted credentials, migrations,
+│   │       │                  # file I/O, ontology cache
+│   │       ├── ipc/           # IPC handlers; security.ts validates every sender
+│   │       ├── index.ts       # Entry point
+│   │       ├── menu.ts        # Application menu
+│   │       └── window.ts      # Window creation and security settings
+│   ├── preload/               # contextBridge API exposed to the renderer
+│   └── renderer/              # Vue 3 frontend
+│       └── src/
+│           ├── components/    # editor (Monaco), results, sidebar panels,
+│           │                  # settings views, tabs, layout, dialogs
+│           ├── stores/        # Pinia stores: tabs, query, connection, history,
+│           │                  # aiChat, ontologyCache, sidebar
+│           ├── composables/   # File operations, drag-drop, backend-specific APIs
+│           ├── services/      # AI chat and tools, SPARQL formatting and detection,
+│           │                  # RDF processing, preferences, markdown
+│           └── App.vue
+├── e2e/                       # Playwright smoke tests that drive the real app
+├── scripts/                   # dev, build, and version-bump scripts
+└── package.json               # Workspace root
 ```
+
+Unit tests live in `__tests__/` folders next to the code they cover.
 
 ## Getting Started
 
@@ -208,7 +148,7 @@ shiny/
 1. Clone the repository:
 
 ```bash
-git clone https://github.com/yourusername/shiny.git
+git clone https://github.com/bdgould/shiny.git
 cd shiny
 ```
 
@@ -270,7 +210,8 @@ npm run type-check     # Type check without emitting files
 npm run clean          # Remove all build artifacts
 npm run format         # Format code with Prettier
 npm run format:check   # Check formatting without changes
-npm test               # Run all tests
+npm test               # Run all unit tests
+npm run test:e2e       # Run Electron smoke tests (Playwright)
 npm run test:run       # Run tests once (no watch)
 npm run test:ui        # Run tests with Vitest UI
 npm run test:coverage  # Run tests with coverage report
@@ -389,15 +330,15 @@ Results returned to renderer and displayed
 
 **Core Technologies**
 
-- **Runtime**: Electron 29 (Chromium 122, Node.js 20)
+- **Runtime**: Electron 41 (Chromium 146, Node.js 24)
 - **Frontend Framework**: Vue 3 (Composition API + `<script setup>`)
-- **Language**: TypeScript 5.3
-- **State Management**: Pinia (Vue 3 native store)
-- **Build Tool**: Vite 5 (fast HMR, native ESM)
+- **Language**: TypeScript 5.9
+- **State Management**: Pinia 4
+- **Build Tool**: Vite 8 (Rolldown)
 
 **Key Libraries**
 
-- **Code Editors**: Monaco Editor, CodeMirror 6
+- **Code Editor**: Monaco Editor
 - **HTTP Client**: Axios (with auth interceptors)
 - **Session Management**: axios-cookiejar-support, tough-cookie
 - **SPARQL Parser**: sparqljs (query type detection)
@@ -409,9 +350,9 @@ Results returned to renderer and displayed
 **Development Tools**
 
 - **Type Checking**: TypeScript strict mode
-- **Linting**: ESLint + @typescript-eslint
+- **Linting**: ESLint 10 (flat config) + typescript-eslint
 - **Formatting**: Prettier
-- **Testing**: Vitest, @vue/test-utils, happy-dom, @vitest/coverage-v8, @vitest/ui
+- **Testing**: Vitest 5, @vue/test-utils, happy-dom, msw, Playwright (Electron)
 - **Build**: electron-builder (packaging and distribution)
 - **Process Management**: Concurrently (parallel dev processes)
 
@@ -488,7 +429,6 @@ Results returned to renderer and displayed
 
 - Comprehensive documentation
 - User guides and tutorials
-- CI/CD pipeline improvements
 - Code signing and notarization
 - Public releases (GitHub, website)
 
@@ -550,7 +490,8 @@ Contributions are welcome! Please follow these guidelines:
 - Use Vue 3 Composition API with `<script setup>`
 - Maintain security best practices (no credential leaks, input validation)
 - Add comments for complex logic
-- Update tests when adding features
+- Add tests with every change. CI enforces per-package coverage floors (see each `vitest.config.ts`); raise them when coverage improves, never lower them
+- Run `npm run type-check`, `npm run lint`, and `npm test` before opening a PR
 
 ## Troubleshooting
 
@@ -609,10 +550,7 @@ MIT License - see [LICENSE](LICENSE) for details
 
 ## Support
 
-- 📖 Documentation: [Coming soon]
-- 🐛 Bug Reports: [GitHub Issues](https://github.com/yourusername/shiny/issues)
-- 💬 Discussions: [GitHub Discussions](https://github.com/yourusername/shiny/discussions)
-- 📧 Email: [your-email]
+- 🐛 Bug reports and feature requests: [GitHub Issues](https://github.com/bdgould/shiny/issues)
 
 ---
 

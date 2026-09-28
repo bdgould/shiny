@@ -4,6 +4,9 @@
 
 import { ipcMain } from 'electron'
 import axios from 'axios'
+// Both packages are ESM; Electron 41's Node loads them through require().
+import { wrapper } from 'axios-cookiejar-support'
+import { CookieJar } from 'tough-cookie'
 import type {
   MobiCatalog,
   MobiRecord,
@@ -13,31 +16,11 @@ import type {
 } from '../backends/providers/mobi-types.js'
 import { isAuthorizedSender } from './security.js'
 
-// Lazy-loaded ESM modules
-let wrapperModule: any = null
-let CookieJarClass: any = null
-
-// Initialize ESM modules using dynamic import
-async function initEsmModules() {
-  if (!wrapperModule) {
-    // Use eval to prevent TypeScript from converting dynamic import to require
-    const dynamicImport = new Function('specifier', 'return import(specifier)')
-
-    const cookiejarSupport = await dynamicImport('axios-cookiejar-support')
-    wrapperModule = cookiejarSupport.wrapper
-    const toughCookie = await dynamicImport('tough-cookie')
-    CookieJarClass = toughCookie.CookieJar
-  }
-}
-
 /**
  * Create axios instance with SSL configuration and cookie jar support
  */
 async function createAxiosInstance(allowInsecure: boolean = false) {
-  // Initialize ESM modules if needed
-  await initEsmModules()
-
-  const jar = new CookieJarClass()
+  const jar = new CookieJar()
 
   // Note: axios-cookiejar-support doesn't support custom httpsAgent
   // If allowInsecure is needed, we'll need to configure it differently
@@ -55,7 +38,7 @@ async function createAxiosInstance(allowInsecure: boolean = false) {
     )
   }
 
-  const client = wrapperModule(axios.create(axiosConfig))
+  const client = wrapper(axios.create(axiosConfig))
   ;(client.defaults as { jar?: any }).jar = jar
   return { client, jar }
 }

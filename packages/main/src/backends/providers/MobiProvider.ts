@@ -5,6 +5,9 @@
  */
 
 import axios, { AxiosInstance } from 'axios'
+// Both packages are ESM; Electron 41's Node loads them through require().
+import { wrapper } from 'axios-cookiejar-support'
+import { CookieJar } from 'tough-cookie'
 import { Parser } from 'sparqljs'
 import { BaseProvider } from './BaseProvider.js'
 import { BackendConfig, BackendCredentials, ValidationResult, QueryResult } from '../types.js'
@@ -12,23 +15,6 @@ import type { MobiConfig } from './mobi-types.js'
 import { getStoreTypeForRecord } from './mobi-types.js'
 
 const parser = new Parser()
-
-// Lazy-loaded ESM modules
-let wrapperModule: any = null
-let CookieJarClass: any = null
-
-// Initialize ESM modules using dynamic import
-async function initEsmModules() {
-  if (!wrapperModule) {
-    // Use eval to prevent TypeScript from converting dynamic import to require
-    const dynamicImport = new Function('specifier', 'return import(specifier)')
-
-    const cookiejarSupport = await dynamicImport('axios-cookiejar-support')
-    wrapperModule = cookiejarSupport.wrapper
-    const toughCookie = await dynamicImport('tough-cookie')
-    CookieJarClass = toughCookie.CookieJar
-  }
-}
 
 // Cache for authenticated axios instances (to maintain session cookies)
 const sessionCache = new Map<string, { client: AxiosInstance; jar: any; timestamp: number }>()
@@ -138,9 +124,6 @@ export class MobiProvider extends BaseProvider {
     credentials?: BackendCredentials,
     forceRefresh = false
   ): Promise<AxiosInstance> {
-    // Initialize ESM modules if needed
-    await initEsmModules()
-
     // Create cache key based on endpoint and username
     const cacheKey = `${config.endpoint}-${credentials?.username || 'anonymous'}`
 
@@ -153,7 +136,7 @@ export class MobiProvider extends BaseProvider {
     }
 
     // Create new axios instance with cookie jar support
-    const jar = new CookieJarClass()
+    const jar = new CookieJar()
 
     // Note: axios-cookiejar-support doesn't support custom httpsAgent
     const axiosConfig: any = {
@@ -167,7 +150,7 @@ export class MobiProvider extends BaseProvider {
       )
     }
 
-    const client = wrapperModule(axios.create(axiosConfig))
+    const client = wrapper(axios.create(axiosConfig))
     ;(client.defaults as { jar?: any }).jar = jar
 
     // Authenticate if credentials provided

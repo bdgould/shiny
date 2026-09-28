@@ -443,6 +443,65 @@ describe('useTabsStore', () => {
       const tab = store.getTab(tabId)
       expect(tab?.isDirty).toBe(true)
     })
+
+    it('should clear dirty flag when switching back to the saved backend', () => {
+      const store = useTabsStore()
+      const tabId = store.createTab({
+        filePath: '/path/to/file.sparql',
+        savedContent: 'query',
+        query: 'query',
+        backendId: 'original',
+      })
+
+      store.setTabBackend(tabId, 'other')
+      expect(store.getTab(tabId)?.isDirty).toBe(true)
+
+      store.setTabBackend(tabId, 'original')
+      expect(store.getTab(tabId)?.isDirty).toBe(false)
+    })
+
+    it('should stay dirty after switching back if the query was edited', () => {
+      const store = useTabsStore()
+      const tabId = store.createTab({
+        filePath: '/path/to/file.sparql',
+        savedContent: 'query',
+        query: 'query',
+        backendId: 'original',
+      })
+
+      store.updateTabQuery(tabId, 'edited')
+      store.setTabBackend(tabId, 'other')
+      store.setTabBackend(tabId, 'original')
+
+      expect(store.getTab(tabId)?.isDirty).toBe(true)
+    })
+
+    it('should treat the current backend as saved for tabs restored without savedBackendId', () => {
+      const store = useTabsStore()
+      const tabId = store.createTab({
+        filePath: '/path/to/file.sparql',
+        savedContent: 'query',
+        query: 'query',
+        backendId: 'original',
+      })
+      delete store.getTab(tabId)!.savedBackendId
+
+      store.setTabBackend(tabId, 'other')
+      expect(store.getTab(tabId)?.isDirty).toBe(true)
+      store.setTabBackend(tabId, 'original')
+      expect(store.getTab(tabId)?.isDirty).toBe(false)
+    })
+
+    it('should record the backend when a tab is saved', () => {
+      const store = useTabsStore()
+      const tabId = store.createTab({ backendId: 'a', query: 'q' })
+
+      store.markTabSaved(tabId, '/path/to/q.rq', 'q.rq')
+      store.setTabBackend(tabId, 'b')
+      expect(store.getTab(tabId)?.isDirty).toBe(true)
+      store.setTabBackend(tabId, 'a')
+      expect(store.getTab(tabId)?.isDirty).toBe(false)
+    })
   })
 
   describe('markTabSaved', () => {

@@ -20,6 +20,7 @@ Shiny uses **Vitest** as the testing framework across all packages in the monore
 - **`packages/main`**: Main Electron process tests (Node.js environment)
 - **`packages/preload`**: Preload script tests (Node.js environment)
 - **`packages/renderer`**: Vue 3 UI tests (Browser environment with happy-dom)
+- **`e2e/`**: Playwright smoke tests that launch the real Electron app (`npm run test:e2e`)
 
 ### Why Vitest?
 
@@ -27,7 +28,7 @@ Shiny uses **Vitest** as the testing framework across all packages in the monore
 - **Vue 3 Compatible**: First-class support for Vue components
 - **Modern**: TypeScript support out of the box
 - **Familiar API**: Jest-compatible API for easy learning
-- **Monorepo-Friendly**: Workspace configuration for multi-package projects
+- **Monorepo-Friendly**: The root `vitest.config.ts` runs every package as a project
 
 ---
 
@@ -429,41 +430,20 @@ it('should handle API call', async () => {
 
 ### Current Thresholds
 
-Configured in `vitest.config.ts` for each package:
+Coverage is measured across **all** source files in a package, not just files a test imports. Each package's `vitest.config.ts` sets thresholds as ratchet floors just below the measured numbers:
 
-```typescript
-coverage: {
-  thresholds: {
-    lines: 50,      // 50% of lines must be covered
-    functions: 50,  // 50% of functions must be covered
-    branches: 50,   // 50% of branches must be covered
-    statements: 50, // 50% of statements must be covered
-  },
-}
-```
+| Package  | Lines | Functions | Branches | Statements |
+| -------- | ----- | --------- | -------- | ---------- |
+| main     | 94    | 92        | 90       | 94         |
+| preload  | 95    | 95        | 95       | 95         |
+| renderer | 85    | 84        | 82       | 84         |
 
-### Coverage Goals
+`npm run test:coverage` fails if any package drops below its floor. When coverage goes up, raise the floor in the same PR. Never lower one to make a PR pass.
 
-- **Short-term (Current)**: 50% coverage baseline
-- **Medium-term**: 70% coverage on critical paths
-- **Long-term**: 80%+ coverage across codebase
+### What Is Not Unit Tested
 
-### Priority Areas for Testing
-
-1. **High Priority** (Security & Data Integrity):
-   - `CredentialService` - Encryption/decryption
-   - `serializeResults` - Data export
-   - `rdfProcessor` - RDF parsing/serialization
-   - Backend providers - SPARQL query execution
-
-2. **Medium Priority** (Business Logic):
-   - Pinia stores - State management
-   - Composables - Reusable logic
-   - IPC handlers - Main/renderer communication
-
-3. **Lower Priority** (UI):
-   - Vue components - Visual feedback
-   - Icons and styling components
+- `MonacoSparqlEditor.vue` and `App.vue`: Monaco does not run under happy-dom. The e2e smoke tests cover them.
+- `main/src/index.ts`, `menu.ts`, `window.ts`: Electron app lifecycle, also covered by e2e.
 
 ### Viewing Coverage Reports
 
@@ -479,23 +459,13 @@ open packages/main/coverage/index.html
 
 ## Continuous Integration
 
-Tests run automatically in GitHub Actions on every push to `main`.
+**Pull requests** into `main` run `.github/workflows/pull-request.yml`:
 
-### CI Workflow
+- **Code Quality**: format check, lint, type-check
+- **Tests & Coverage**: `npm run test:coverage` with thresholds, plus a coverage comment on the PR
+- **E2E Smoke**: `npm run test:e2e` on Linux under xvfb
 
-See `.github/workflows/release.yml`:
-
-```yaml
-- name: Run linter
-  run: npm run lint
-
-- name: Run type check
-  run: npm run type-check
-
-# Tests can be added:
-- name: Run tests
-  run: npm run test:run
-```
+**Pushes to `main`** run `.github/workflows/release.yml`, which repeats lint, type-check, and `npm run test:coverage` before tagging and building a release.
 
 ### Local Pre-Push Checklist
 

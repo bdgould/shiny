@@ -86,61 +86,42 @@ const selectResult = { head: { vars: [] }, results: { bindings: [] } }
 const SELECT = 'SELECT * WHERE { ?s ?p ?o }'
 
 /**
- * MobiProvider loads its ESM-only cookie-jar dependencies (axios-cookiejar-support,
- * tough-cookie) through `new Function('specifier', 'return import(specifier)')`, which
- * Vitest's module runner cannot service. The real cookie agent also operates below the
- * layer msw intercepts, so it never sees mocked Set-Cookie headers. While the suite runs
- * we therefore route exactly that construct to fake modules: a minimal jar that stores the
- * session token from an `X-Set-Session` response header and replays it as `X-Session`.
- * Using a custom header (instead of Set-Cookie) keeps msw's own cookie store out of the way.
- * Every other use of the Function constructor is passed through untouched.
+ * The real cookie agent operates below the layer msw intercepts, so it never sees mocked
+ * Set-Cookie headers. The cookie libraries are therefore replaced with a minimal jar that
+ * stores the session token from an `X-Set-Session` response header and replays it as
+ * `X-Session`. A custom header (instead of Set-Cookie) keeps msw's own cookie store out
+ * of the way.
  */
-class FakeCookieJar {
-  token?: string
-}
-
-function fakeWrapper(instance: AxiosInstance): AxiosInstance {
-  instance.interceptors.request.use((cfg) => {
-    const jar = (instance.defaults as { jar?: FakeCookieJar }).jar
-    if (jar?.token) cfg.headers.set('X-Session', jar.token)
-    return cfg
-  })
-  instance.interceptors.response.use((res) => {
-    const jar = (instance.defaults as { jar?: FakeCookieJar }).jar
-    const token = res.headers['x-set-session']
-    if (jar && typeof token === 'string') jar.token = token
-    return res
-  })
-  return instance
-}
-
-const fakeModules: Record<string, unknown> = {
-  'axios-cookiejar-support': { wrapper: fakeWrapper },
-  'tough-cookie': { CookieJar: FakeCookieJar },
-}
-
-const OriginalFunction = globalThis.Function
-const dynamicImportShim: FunctionConstructor = new Proxy(OriginalFunction, {
-  construct(target, args): object {
-    if (args.length === 2 && args[0] === 'specifier' && args[1] === 'return import(specifier)') {
-      return async (specifier: string) => {
-        if (!(specifier in fakeModules)) throw new Error(`Unexpected import: ${specifier}`)
-        return fakeModules[specifier]
-      }
-    }
-    return Reflect.construct(target, args)
+vi.mock('tough-cookie', () => ({
+  CookieJar: class FakeCookieJar {
+    token?: string
   },
-})
+}))
+
+vi.mock('axios-cookiejar-support', () => ({
+  wrapper(instance: AxiosInstance): AxiosInstance {
+    instance.interceptors.request.use((cfg) => {
+      const jar = (instance.defaults as { jar?: { token?: string } }).jar
+      if (jar?.token) cfg.headers.set('X-Session', jar.token)
+      return cfg
+    })
+    instance.interceptors.response.use((res) => {
+      const jar = (instance.defaults as { jar?: { token?: string } }).jar
+      const token = res.headers['x-set-session']
+      if (jar && typeof token === 'string') jar.token = token
+      return res
+    })
+    return instance
+  },
+}))
 
 describe('MobiProvider', () => {
   const provider = new MobiProvider()
 
   beforeAll(() => {
-    globalThis.Function = dynamicImportShim
     server.listen({ onUnhandledRequest: 'error' })
   })
   afterAll(() => {
-    globalThis.Function = OriginalFunction
     server.close()
   })
   beforeEach(() => {

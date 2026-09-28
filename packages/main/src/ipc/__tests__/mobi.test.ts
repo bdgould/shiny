@@ -1,9 +1,7 @@
-import { describe, it, expect, vi, beforeEach, beforeAll, afterAll } from 'vitest'
+import { describe, it, expect, vi, beforeEach, beforeAll } from 'vitest'
 
-// mobi.ts loads axios-cookiejar-support and tough-cookie through
-// `new Function('specifier', 'return import(specifier)')`, which bypasses
-// vi.mock and has no dynamic-import callback inside Vitest's VM. We stub the
-// global Function constructor for that one call shape and serve fakes.
+// The cookie jar libraries are replaced with fakes so requests go through the
+// mocked axios client.
 const { handlers, client, create, wrapper, FakeCookieJar } = vi.hoisted(() => {
   const client = {
     get: vi.fn(),
@@ -20,17 +18,8 @@ const { handlers, client, create, wrapper, FakeCookieJar } = vi.hoisted(() => {
   }
 })
 
-const fakeModules: Record<string, unknown> = {
-  'axios-cookiejar-support': { wrapper },
-  'tough-cookie': { CookieJar: FakeCookieJar },
-}
-const RealFunction = Function
-function FunctionStub(...args: string[]) {
-  if (args.length === 2 && args[1] === 'return import(specifier)') {
-    return async (specifier: string) => fakeModules[specifier]
-  }
-  return RealFunction(...args)
-}
+vi.mock('axios-cookiejar-support', () => ({ wrapper }))
+vi.mock('tough-cookie', () => ({ CookieJar: FakeCookieJar }))
 
 vi.mock('electron', () => ({
   ipcMain: {
@@ -60,12 +49,7 @@ function invoke(channel: string, event: any, args: any) {
 
 describe('mobi IPC handlers', () => {
   beforeAll(async () => {
-    vi.stubGlobal('Function', FunctionStub)
     await import('../mobi')
-  })
-
-  afterAll(() => {
-    vi.unstubAllGlobals()
   })
 
   beforeEach(() => {
