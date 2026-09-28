@@ -5,8 +5,8 @@
   "main": "dist/index.js",
   "private": true,
   "scripts": {
-    "build": "tsc",
-    "watch": "tsc --watch"
+    "build": "rimraf dist && tsc -p tsconfig.build.json",
+    "watch": "tsc -p tsconfig.build.json --watch"
   },
   "dependencies": {
     "aws4": "^1.12.0",
@@ -14,14 +14,13 @@
     "axios-cookiejar-support": "^6.0.5",
     "electron-store": "^8.2.0",
     "sparqljs": "^3.7.3",
-    "tough-cookie": "^6.0.0",
-    "uuid": "^13.0.0"
+    "tough-cookie": "^6.0.0"
   },
   "devDependencies": {
-    "@types/node": "^20.11.0",
+    "@types/node": "^24.19.0",
     "@types/sparqljs": "^3.1.12",
     "@types/tough-cookie": "^4.0.5",
-    "electron": "^29.0.1",
+    "electron": "^41.7.1",
     "msw": "^2.12.4",
     "typescript": "^5.3.3"
   }

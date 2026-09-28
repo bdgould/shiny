@@ -221,18 +221,20 @@ ipcMain.handle(
         const statusCode = error.response?.status
 
         if (statusCode === 401) {
-          throw new Error('Authentication failed: Invalid username or password')
+          throw new Error('Authentication failed: Invalid username or password', { cause: error })
         }
 
         const message = error.response?.data?.message || error.message
-        throw new Error(`Authentication failed (${statusCode || 'network error'}): ${message}`)
+        throw new Error(`Authentication failed (${statusCode || 'network error'}): ${message}`, {
+          cause: error,
+        })
       }
 
       if (error instanceof Error) {
-        throw new Error(`Authentication failed: ${error.message}`)
+        throw new Error(`Authentication failed: ${error.message}`, { cause: error })
       }
 
-      throw new Error('Authentication failed: Unknown error')
+      throw new Error('Authentication failed: Unknown error', { cause: error })
     }
   }
 )
@@ -300,17 +302,19 @@ ipcMain.handle('mobi:listCatalogs', async (event, { baseUrl, credentials, allowI
       const message = error.response?.data?.message || error.message
 
       if (statusCode === 401 || statusCode === 403) {
-        throw new Error('Authentication failed. Please check your credentials.')
+        throw new Error('Authentication failed. Please check your credentials.', { cause: error })
       }
 
-      throw new Error(`Failed to fetch catalogs (${statusCode || 'network error'}): ${message}`)
+      throw new Error(`Failed to fetch catalogs (${statusCode || 'network error'}): ${message}`, {
+        cause: error,
+      })
     }
 
     if (error instanceof Error) {
-      throw new Error(`Failed to fetch catalogs: ${error.message}`)
+      throw new Error(`Failed to fetch catalogs: ${error.message}`, { cause: error })
     }
 
-    throw new Error('Failed to fetch catalogs: Unknown error')
+    throw new Error('Failed to fetch catalogs: Unknown error', { cause: error })
   }
 })
 
@@ -407,21 +411,23 @@ ipcMain.handle(
         const message = error.response?.data?.message || error.message
 
         if (statusCode === 401 || statusCode === 403) {
-          throw new Error('Authentication failed. Please check your credentials.')
+          throw new Error('Authentication failed. Please check your credentials.', { cause: error })
         }
 
         if (statusCode === 404) {
-          throw new Error('Catalog not found.')
+          throw new Error('Catalog not found.', { cause: error })
         }
 
-        throw new Error(`Failed to fetch records (${statusCode || 'network error'}): ${message}`)
+        throw new Error(`Failed to fetch records (${statusCode || 'network error'}): ${message}`, {
+          cause: error,
+        })
       }
 
       if (error instanceof Error) {
-        throw new Error(`Failed to fetch records: ${error.message}`)
+        throw new Error(`Failed to fetch records: ${error.message}`, { cause: error })
       }
 
-      throw new Error('Failed to fetch records: Unknown error')
+      throw new Error('Failed to fetch records: Unknown error', { cause: error })
     }
   }
 )
@@ -514,21 +520,23 @@ ipcMain.handle(
         const message = error.response?.data?.message || error.message
 
         if (statusCode === 401 || statusCode === 403) {
-          throw new Error('Authentication failed. Please check your credentials.')
+          throw new Error('Authentication failed. Please check your credentials.', { cause: error })
         }
 
         if (statusCode === 404) {
-          throw new Error('Record not found or does not have branches.')
+          throw new Error('Record not found or does not have branches.', { cause: error })
         }
 
-        throw new Error(`Failed to fetch branches (${statusCode || 'network error'}): ${message}`)
+        throw new Error(`Failed to fetch branches (${statusCode || 'network error'}): ${message}`, {
+          cause: error,
+        })
       }
 
       if (error instanceof Error) {
-        throw new Error(`Failed to fetch branches: ${error.message}`)
+        throw new Error(`Failed to fetch branches: ${error.message}`, { cause: error })
       }
 
-      throw new Error('Failed to fetch branches: Unknown error')
+      throw new Error('Failed to fetch branches: Unknown error', { cause: error })
     }
   }
 )
@@ -598,16 +606,19 @@ ipcMain.handle('mobi:listRepositories', async (event, { baseUrl, credentials, al
       const message = error.response?.data?.message || error.message
 
       if (statusCode === 401 || statusCode === 403) {
-        throw new Error('Authentication failed. Please check your credentials.')
+        throw new Error('Authentication failed. Please check your credentials.', { cause: error })
       }
 
-      throw new Error(`Failed to fetch repositories (${statusCode || 'network error'}): ${message}`)
+      throw new Error(
+        `Failed to fetch repositories (${statusCode || 'network error'}): ${message}`,
+        { cause: error }
+      )
     }
 
     if (error instanceof Error) {
-      throw new Error(`Failed to fetch repositories: ${error.message}`)
+      throw new Error(`Failed to fetch repositories: ${error.message}`, { cause: error })
     }
 
-    throw new Error('Failed to fetch repositories: Unknown error')
+    throw new Error('Failed to fetch repositories: Unknown error', { cause: error })
   }
 })

@@ -52,7 +52,7 @@ async function authenticateGraphDB(
       console.log('[GraphDB] Authenticated via /rest/login')
       return token
     }
-  } catch (error) {
+  } catch {
     console.log('[GraphDB] /rest/login failed, trying v9.x endpoint')
   }
 
@@ -70,7 +70,7 @@ async function authenticateGraphDB(
     }
   } catch (error) {
     if (axios.isAxiosError(error) && error.response?.status === 401) {
-      throw new Error('Authentication failed: Invalid username or password')
+      throw new Error('Authentication failed: Invalid username or password', { cause: error })
     }
     throw error
   }
@@ -171,7 +171,7 @@ ipcMain.handle(
       if (error instanceof Error) {
         throw error
       }
-      throw new Error('Authentication failed: Unknown error')
+      throw new Error('Authentication failed: Unknown error', { cause: error })
     }
   }
 )
@@ -221,7 +221,7 @@ ipcMain.handle(
           productVersion = productVersion['productVersion'] || ''
         }
         console.log('[GraphDB] Got version from /rest/info/version:', productVersion)
-      } catch (error) {
+      } catch {
         console.log('[GraphDB] /rest/info/version not available')
       }
 
@@ -267,11 +267,13 @@ ipcMain.handle(
       if (axios.isAxiosError(error)) {
         const statusCode = error.response?.status
         if (statusCode === 401 || statusCode === 403) {
-          throw new Error('Authentication required to access server information')
+          throw new Error('Authentication required to access server information', { cause: error })
         }
-        throw new Error(`Failed to get server info (${statusCode}): ${error.message}`)
+        throw new Error(`Failed to get server info (${statusCode}): ${error.message}`, {
+          cause: error,
+        })
       }
-      throw new Error('Failed to get server information')
+      throw new Error('Failed to get server information', { cause: error })
     }
   }
 )
@@ -339,7 +341,7 @@ ipcMain.handle(
         }))
 
         console.log('[GraphDB] Parsed repositories from REST API:', repositories.length)
-      } catch (restError) {
+      } catch {
         console.log('[GraphDB] REST API failed, trying RDF4J endpoint')
 
         // Fall back to RDF4J repositories endpoint
@@ -388,11 +390,13 @@ ipcMain.handle(
       if (axios.isAxiosError(error)) {
         const statusCode = error.response?.status
         if (statusCode === 401 || statusCode === 403) {
-          throw new Error('Authentication failed. Please check your credentials.')
+          throw new Error('Authentication failed. Please check your credentials.', { cause: error })
         }
-        throw new Error(`Failed to list repositories (${statusCode}): ${error.message}`)
+        throw new Error(`Failed to list repositories (${statusCode}): ${error.message}`, {
+          cause: error,
+        })
       }
-      throw new Error('Failed to list repositories')
+      throw new Error('Failed to list repositories', { cause: error })
     }
   }
 )
@@ -480,9 +484,11 @@ ipcMain.handle(
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
         const statusCode = error.response?.status
-        throw new Error(`Failed to get repository details (${statusCode}): ${error.message}`)
+        throw new Error(`Failed to get repository details (${statusCode}): ${error.message}`, {
+          cause: error,
+        })
       }
-      throw new Error('Failed to get repository details')
+      throw new Error('Failed to get repository details', { cause: error })
     }
   }
 )

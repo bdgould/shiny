@@ -21,7 +21,7 @@ export class GraphStudioProvider extends BaseProvider {
    */
   protected buildEndpointUrl(config: BackendConfig): string {
     // Parse provider config
-    let providerConfig: GraphStudioConfig | null = null
+    let providerConfig: GraphStudioConfig | null
     try {
       providerConfig = config.providerConfig ? JSON.parse(config.providerConfig) : null
     } catch {
@@ -38,14 +38,14 @@ export class GraphStudioProvider extends BaseProvider {
     const encodedGraphmart = this.encodeGraphmartUri(providerConfig.graphmartUri)
 
     // Build base SPARQL endpoint (without layer query params)
-    return `${config.endpoint}/sparql/graphmart/${encodedGraphmart}`
+    return `${this.getBaseUrl(config)}/sparql/graphmart/${encodedGraphmart}`
   }
 
   /**
    * Get selected layer URIs from config
    */
   private getSelectedLayers(config: BackendConfig): string[] | null {
-    let providerConfig: GraphStudioConfig | null = null
+    let providerConfig: GraphStudioConfig | null
     try {
       providerConfig = config.providerConfig ? JSON.parse(config.providerConfig) : null
     } catch {
@@ -87,7 +87,7 @@ export class GraphStudioProvider extends BaseProvider {
     }
 
     // Validate that graphmart is configured
-    let providerConfig: GraphStudioConfig | null = null
+    let providerConfig: GraphStudioConfig | null
     try {
       providerConfig = config.providerConfig ? JSON.parse(config.providerConfig) : null
     } catch {
@@ -182,7 +182,7 @@ export class GraphStudioProvider extends BaseProvider {
       return {
         data: response.data,
         queryType,
-        contentType: response.headers['content-type'] || 'unknown',
+        contentType: this.getContentType(response.headers),
       }
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
@@ -213,16 +213,16 @@ export class GraphStudioProvider extends BaseProvider {
           errorMsg += `\n\nServer response: ${JSON.stringify(responseData, null, 2).substring(0, 500)}`
         }
 
-        throw new Error(errorMsg)
+        throw new Error(errorMsg, { cause: error })
       }
 
       if (error instanceof Error) {
         console.error('[GraphStudio Query] Error:', error)
-        throw new Error(`Query execution failed: ${error.message}`)
+        throw new Error(`Query execution failed: ${error.message}`, { cause: error })
       }
 
       console.error('[GraphStudio Query] Unknown error:', error)
-      throw new Error('Query execution failed: Unknown error')
+      throw new Error('Query execution failed: Unknown error', { cause: error })
     }
   }
 
@@ -239,7 +239,7 @@ export class GraphStudioProvider extends BaseProvider {
     }
 
     // Check if graphmart is configured
-    let providerConfig: GraphStudioConfig | null = null
+    let providerConfig: GraphStudioConfig | null
     try {
       providerConfig = config.providerConfig ? JSON.parse(config.providerConfig) : null
     } catch {

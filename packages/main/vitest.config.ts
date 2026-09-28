@@ -8,7 +8,8 @@ export default defineConfig({
     include: ['src/**/*.{test,spec}.ts', 'src/**/__tests__/**/*.ts'],
     coverage: {
       provider: 'v8',
-      reporter: ['text', 'json', 'html'],
+      reporter: ['text', 'json', 'json-summary', 'html'],
+      include: ['src/**/*.ts'],
       exclude: [
         'dist/**',
         '**/*.d.ts',
@@ -16,11 +17,13 @@ export default defineConfig({
         '**/node_modules/**',
         'src/index.ts', // Entry point
       ],
+      // Ratchet floors: measured across all source files, not just files tests import.
+      // Raise these as coverage improves; never lower them.
       thresholds: {
-        lines: 50,
-        functions: 50,
-        branches: 50,
-        statements: 50,
+        lines: 94,
+        functions: 92,
+        branches: 90,
+        statements: 94,
       },
     },
   },

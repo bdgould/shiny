@@ -17,8 +17,16 @@ export function isAuthorizedSender(frame: Electron.WebFrameMain | null): boolean
     return false
   }
 
-  const url = frame.url
-  return url.startsWith('file://') || url.startsWith(DEV_SERVER_ORIGIN)
+  // Compare parsed protocol/origin rather than string prefixes, so lookalikes
+  // such as http://localhost:5173@evil.com or http://localhost:51730 fail.
+  let parsed: URL
+  try {
+    parsed = new URL(frame.url)
+  } catch {
+    return false
+  }
+
+  return parsed.protocol === 'file:' || parsed.origin === DEV_SERVER_ORIGIN
 }
 
 /**

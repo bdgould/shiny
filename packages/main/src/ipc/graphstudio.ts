@@ -160,7 +160,7 @@ async function fetchGraphmartStatus(
           ...authHeaders,
         },
       })
-    } catch (error) {
+    } catch {
       // Fallback to API v1
       response = await axiosInstance.get(`${baseUrl}/api/v1/graphmarts/${encodedUri}/status`, {
         headers: {
@@ -207,7 +207,7 @@ ipcMain.handle(
             ...authHeaders,
           },
         })
-      } catch (error) {
+      } catch {
         // Fallback to API v1 (older versions)
         response = await axiosInstance.get(`${baseUrl}/api/v1/graphmarts`, {
           headers: {
@@ -257,21 +257,24 @@ ipcMain.handle(
         const message = error.response?.data?.message || error.message
 
         if (statusCode === 401 || statusCode === 403) {
-          throw new Error('Authentication failed. Please check your credentials.')
+          throw new Error('Authentication failed. Please check your credentials.', { cause: error })
         }
 
         if (statusCode === 404) {
-          throw new Error('GraphStudio API not found. Please check the base URL.')
+          throw new Error('GraphStudio API not found. Please check the base URL.', { cause: error })
         }
 
-        throw new Error(`Failed to fetch graphmarts (${statusCode || 'network error'}): ${message}`)
+        throw new Error(
+          `Failed to fetch graphmarts (${statusCode || 'network error'}): ${message}`,
+          { cause: error }
+        )
       }
 
       if (error instanceof Error) {
-        throw new Error(`Failed to fetch graphmarts: ${error.message}`)
+        throw new Error(`Failed to fetch graphmarts: ${error.message}`, { cause: error })
       }
 
-      throw new Error('Failed to fetch graphmarts: Unknown error')
+      throw new Error('Failed to fetch graphmarts: Unknown error', { cause: error })
     }
   }
 )
@@ -311,7 +314,7 @@ ipcMain.handle(
             ...authHeaders,
           },
         })
-      } catch (error) {
+      } catch {
         // Fallback to API v1 (older versions)
         graphmartResponse = await axiosInstance.get(`${baseUrl}/api/v1/graphmarts/${encodedUri}`, {
           headers: {
@@ -339,7 +342,7 @@ ipcMain.handle(
               },
             }
           )
-        } catch (error) {
+        } catch {
           // Fallback to API v1
           layersResponse = await axiosInstance.get(
             `${baseUrl}/api/v1/graphmarts/${encodedUri}/layers`,
@@ -380,23 +383,24 @@ ipcMain.handle(
         const message = error.response?.data?.message || error.message
 
         if (statusCode === 401 || statusCode === 403) {
-          throw new Error('Authentication failed. Please check your credentials.')
+          throw new Error('Authentication failed. Please check your credentials.', { cause: error })
         }
 
         if (statusCode === 404) {
-          throw new Error('Graphmart not found.')
+          throw new Error('Graphmart not found.', { cause: error })
         }
 
         throw new Error(
-          `Failed to fetch graphmart details (${statusCode || 'network error'}): ${message}`
+          `Failed to fetch graphmart details (${statusCode || 'network error'}): ${message}`,
+          { cause: error }
         )
       }
 
       if (error instanceof Error) {
-        throw new Error(`Failed to fetch graphmart details: ${error.message}`)
+        throw new Error(`Failed to fetch graphmart details: ${error.message}`, { cause: error })
       }
 
-      throw new Error('Failed to fetch graphmart details: Unknown error')
+      throw new Error('Failed to fetch graphmart details: Unknown error', { cause: error })
     }
   }
 )

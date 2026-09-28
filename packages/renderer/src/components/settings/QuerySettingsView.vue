@@ -124,7 +124,7 @@ function saveSettings() {
     setTimeout(() => {
       saveMessage.value = ''
     }, 3000)
-  } catch (error) {
+  } catch {
     saveMessage.value = 'Failed to save settings'
     saveMessageType.value = 'error'
     setTimeout(() => {

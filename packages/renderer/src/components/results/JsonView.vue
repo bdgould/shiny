@@ -19,7 +19,7 @@ const props = defineProps<{
 const formattedData = computed(() => {
   try {
     return JSON.stringify(props.data, null, 2)
-  } catch (error) {
+  } catch {
     return String(props.data)
   }
 })

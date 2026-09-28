@@ -40,7 +40,7 @@ export const useConnectionStore = defineStore('connection', () => {
       const message = err instanceof Error ? err.message : 'Failed to load backends'
       error.value = message
       console.error('Failed to load backends:', err)
-      throw new Error(message)
+      throw new Error(message, { cause: err })
     } finally {
       isLoading.value = false
     }
@@ -64,7 +64,7 @@ export const useConnectionStore = defineStore('connection', () => {
       const message = err instanceof Error ? err.message : 'Failed to create backend'
       error.value = message
       console.error('Failed to create backend:', err)
-      throw new Error(message)
+      throw new Error(message, { cause: err })
     } finally {
       isLoading.value = false
     }
@@ -92,7 +92,7 @@ export const useConnectionStore = defineStore('connection', () => {
       const message = err instanceof Error ? err.message : 'Failed to update backend'
       error.value = message
       console.error('Failed to update backend:', err)
-      throw new Error(message)
+      throw new Error(message, { cause: err })
     } finally {
       isLoading.value = false
     }
@@ -118,7 +118,7 @@ export const useConnectionStore = defineStore('connection', () => {
       const message = err instanceof Error ? err.message : 'Failed to delete backend'
       error.value = message
       console.error('Failed to delete backend:', err)
-      throw new Error(message)
+      throw new Error(message, { cause: err })
     } finally {
       isLoading.value = false
     }
@@ -132,7 +132,7 @@ export const useConnectionStore = defineStore('connection', () => {
       const message = err instanceof Error ? err.message : 'Failed to select backend'
       error.value = message
       console.error('Failed to select backend:', err)
-      throw new Error(message)
+      throw new Error(message, { cause: err })
     }
   }
 
@@ -145,7 +145,7 @@ export const useConnectionStore = defineStore('connection', () => {
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to test connection'
       console.error('Failed to test connection:', err)
-      throw new Error(message)
+      throw new Error(message, { cause: err })
     }
   }
 

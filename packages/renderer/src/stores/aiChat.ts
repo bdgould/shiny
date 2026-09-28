@@ -13,7 +13,7 @@ import type {
 import { useTabsStore } from './tabs'
 import { useConnectionStore } from './connection'
 import { useOntologyCacheStore } from './ontologyCache'
-import { getAISettings } from '../services/preferences/appSettings'
+import { aiSettingsRevision, getAISettings } from '../services/preferences/appSettings'
 
 const STORAGE_KEY = 'shiny:ai:conversation'
 const MAX_MESSAGES = 100
@@ -36,6 +36,8 @@ export const useAIChatStore = defineStore('aiChat', () => {
   const hasMessages = computed(() => messages.value.length > 0)
 
   const isConfigured = computed(() => {
+    // Track saves; getAISettings() reads non-reactive localStorage.
+    void aiSettingsRevision.value
     const settings = getAISettings()
     return !!settings.apiKey && !!settings.endpoint
   })
