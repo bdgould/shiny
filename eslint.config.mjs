@@ -14,6 +14,8 @@ export default tseslint.config(
       '**/node_modules/**',
       '**/coverage/**',
       '**/.nyc_output/**',
+      'test-results/**',
+      'playwright-report/**',
       '**/*.tsbuildinfo',
       '.vscode/**',
       '.idea/**',
@@ -83,7 +85,7 @@ export default tseslint.config(
 
   // Tests - relaxed rules
   {
-    files: ['**/__tests__/**/*.ts', '**/*.test.ts', '**/*.spec.ts'],
+    files: ['**/__tests__/**/*.ts', '**/*.test.ts', '**/*.spec.ts', 'e2e/**/*.ts'],
     languageOptions: { globals: { ...globals.node, ...globals.vitest } },
     rules: {
       '@typescript-eslint/no-explicit-any': 'off',
