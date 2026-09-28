@@ -17,10 +17,10 @@ jobs:
     if: "!contains(github.event.head_commit.message, '[skip ci]')"
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: '24'
           cache: 'npm'
@@ -34,6 +34,9 @@ jobs:
       - name: Run type check
         run: npm run type-check
 
+      - name: Run tests with coverage thresholds
+        run: npm run test:coverage
+
   prepare-release:
     name: Prepare Release
     needs: validate
@@ -44,7 +47,7 @@ jobs:
       tag-exists: ${{ steps.check-tag.outputs.exists }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
@@ -85,10 +88,10 @@ jobs:
         arch: [x64, arm64]
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: '24'
           cache: 'npm'
@@ -108,7 +111,7 @@ jobs:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: macos-${{ matrix.arch }}
           path: |
@@ -127,10 +130,10 @@ jobs:
         arch: [x64, arm64]
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: '24'
           cache: 'npm'
@@ -147,7 +150,7 @@ jobs:
           EP_PRE_RELEASE: false
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: windows-${{ matrix.arch }}
           path: |
@@ -163,7 +166,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Download all artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           path: artifacts
 
@@ -171,7 +174,7 @@ jobs:
         run: ls -R artifacts
 
       - name: Create Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ needs.prepare-release.outputs.tag }}
           name: Release ${{ needs.prepare-release.outputs.tag }}
@@ -193,14 +196,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           ref: main
           fetch-depth: 0
           ssh-key: ${{ secrets.SSH_DEPLOY_KEY }}
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: '24'
           cache: 'npm'
@@ -225,4 +228,3 @@ jobs:
           git add package.json packages/*/package.json
           git commit -m "chore: bump version to v${{ steps.new-version.outputs.version }} [skip ci]"
           git push origin main
-

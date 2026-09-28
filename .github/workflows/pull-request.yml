@@ -22,10 +22,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: 24
           cache: 'npm'
@@ -49,10 +49,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: 24
           cache: 'npm'
@@ -64,77 +64,63 @@ jobs:
         run: npm run test:coverage
 
       - name: Upload coverage reports
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         if: always()
         with:
           name: coverage-reports
-          path: coverage/
+          path: packages/*/coverage/
           retention-days: 30
 
-      - name: Generate coverage summary
-        id: coverage
-        if: always()
-        run: |
-          if [ -f coverage/coverage-summary.json ]; then
-            TOTAL_STATEMENTS=$(jq -r '.total.statements.pct' coverage/coverage-summary.json)
-            TOTAL_BRANCHES=$(jq -r '.total.branches.pct' coverage/coverage-summary.json)
-            TOTAL_FUNCTIONS=$(jq -r '.total.functions.pct' coverage/coverage-summary.json)
-            TOTAL_LINES=$(jq -r '.total.lines.pct' coverage/coverage-summary.json)
-
-            echo "statements=${TOTAL_STATEMENTS}" >> $GITHUB_OUTPUT
-            echo "branches=${TOTAL_BRANCHES}" >> $GITHUB_OUTPUT
-            echo "functions=${TOTAL_FUNCTIONS}" >> $GITHUB_OUTPUT
-            echo "lines=${TOTAL_LINES}" >> $GITHUB_OUTPUT
-          fi
-
       - name: Comment coverage on PR
-        if: always() && steps.coverage.outputs.statements
-        uses: actions/github-script@v7
+        if: always()
+        uses: actions/github-script@v8
         with:
           script: |
-            const statements = '${{ steps.coverage.outputs.statements }}';
-            const branches = '${{ steps.coverage.outputs.branches }}';
-            const functions = '${{ steps.coverage.outputs.functions }}';
-            const lines = '${{ steps.coverage.outputs.lines }}';
+            const fs = require('fs');
+            const packages = ['main', 'preload', 'renderer'];
+            const rows = [];
+            for (const pkg of packages) {
+              const file = `packages/${pkg}/coverage/coverage-summary.json`;
+              if (!fs.existsSync(file)) {
+                rows.push(`| ${pkg} | n/a | n/a | n/a | n/a |`);
+                continue;
+              }
+              const t = JSON.parse(fs.readFileSync(file, 'utf8')).total;
+              rows.push(`| ${pkg} | ${t.statements.pct}% | ${t.branches.pct}% | ${t.functions.pct}% | ${t.lines.pct}% |`);
+            }
 
-            const body = `## Test Coverage Report
+            const body = [
+              '## Test Coverage Report',
+              '',
+              '| Package | Statements | Branches | Functions | Lines |',
+              '|---------|------------|----------|-----------|-------|',
+              ...rows,
+              '',
+              '_Measured across all source files. Thresholds live in each package\'s vitest.config.ts._',
+            ].join('\n');
 
-            | Metric | Coverage |
-            |--------|----------|
-            | Statements | ${statements}% |
-            | Branches | ${branches}% |
-            | Functions | ${functions}% |
-            | Lines | ${lines}% |
-
-            _Target threshold: 50% for all metrics_
-            `;
-
-            // Find existing comment
             const { data: comments } = await github.rest.issues.listComments({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.issue.number,
             });
 
-            const botComment = comments.find(comment =>
-              comment.user.type === 'Bot' &&
-              comment.body.includes('Test Coverage Report')
+            const botComment = comments.find(
+              (comment) => comment.user.type === 'Bot' && comment.body.includes('Test Coverage Report')
             );
 
             if (botComment) {
-              // Update existing comment
               await github.rest.issues.updateComment({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 comment_id: botComment.id,
-                body: body
+                body,
               });
             } else {
-              // Create new comment
               await github.rest.issues.createComment({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 issue_number: context.issue.number,
-                body: body
+                body,
               });
             }

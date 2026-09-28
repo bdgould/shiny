@@ -25,7 +25,8 @@ export default mergeConfig(
       setupFiles: [path.resolve(__dirname, './tests/setup.ts')],
       coverage: {
         provider: 'v8',
-        reporter: ['text', 'json', 'html'],
+        reporter: ['text', 'json', 'json-summary', 'html'],
+        include: ['src/**/*.{ts,vue}'],
         exclude: [
           'dist/**',
           '**/*.d.ts',
@@ -41,11 +42,13 @@ export default mergeConfig(
           'src/**/__tests__/**/helpers/**',
           'src/components/**/icons/**',
         ],
+        // Ratchet floors: measured across all source files, not just files tests import.
+        // Raise these as coverage improves; never lower them.
         thresholds: {
-          lines: 50,
-          functions: 50,
-          branches: 50,
-          statements: 50,
+          lines: 18,
+          functions: 21,
+          branches: 12,
+          statements: 18,
         },
       },
     },
