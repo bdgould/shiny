@@ -532,9 +532,11 @@ import { MOBI_RECORD_TYPE_IRIS } from '@/../../main/src/backends/providers/mobi-
 
 interface Props {
   backend?: BackendConfig
+  // Owned by the parent, which knows when the save finishes or fails.
+  saving?: boolean
 }
 
-const props = defineProps<Props>()
+const props = withDefaults(defineProps<Props>(), { saving: false })
 
 const emit = defineEmits<{
   save: [data: BackendFormData]
@@ -542,7 +544,7 @@ const emit = defineEmits<{
 }>()
 
 const isEditing = !!props.backend
-const isSaving = ref(false)
+const isSaving = computed(() => props.saving)
 
 // GraphStudio API composable
 const graphstudioAPI = useGraphStudioAPI()
@@ -1444,7 +1446,6 @@ function handleSubmit() {
   }
 
   console.log('[ConnectionForm] Validation passed, emitting save event')
-  isSaving.value = true
   emit('save', formData.value)
 }
 </script>

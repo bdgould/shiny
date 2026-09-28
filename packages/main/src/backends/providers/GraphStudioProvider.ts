@@ -38,7 +38,7 @@ export class GraphStudioProvider extends BaseProvider {
     const encodedGraphmart = this.encodeGraphmartUri(providerConfig.graphmartUri)
 
     // Build base SPARQL endpoint (without layer query params)
-    return `${config.endpoint}/sparql/graphmart/${encodedGraphmart}`
+    return `${this.getBaseUrl(config)}/sparql/graphmart/${encodedGraphmart}`
   }
 
   /**

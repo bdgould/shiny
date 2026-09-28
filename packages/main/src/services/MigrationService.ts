@@ -15,8 +15,10 @@ export class MigrationService {
   private currentSchemaVersion = 1
 
   constructor() {
+    // Must match the store CredentialService reads backends from. This used
+    // to be 'backends', so the default backend landed in a file nothing read.
     this.store = new Store<MigrationSchema>({
-      name: 'backends',
+      name: 'shiny-config',
     })
   }
 

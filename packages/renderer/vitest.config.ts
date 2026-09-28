@@ -45,10 +45,10 @@ export default mergeConfig(
         // Ratchet floors: measured across all source files, not just files tests import.
         // Raise these as coverage improves; never lower them.
         thresholds: {
-          lines: 17,
-          functions: 17,
-          branches: 9,
-          statements: 17,
+          lines: 85,
+          functions: 84,
+          branches: 82,
+          statements: 84,
         },
       },
     },

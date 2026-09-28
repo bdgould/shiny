@@ -701,7 +701,7 @@ function resetQuery(type: 'classes' | 'properties' | 'individuals') {
   testResults.value[type] = undefined as any
 }
 
-function saveSettings() {
+async function saveSettings() {
   try {
     // Save backend-specific config
     if (selectedBackend.value) {
@@ -717,7 +717,7 @@ function saveSettings() {
       }
 
       // Update backend config via connectionStore
-      connectionStore.updateBackend(selectedBackend.value.id, {
+      await connectionStore.updateBackend(selectedBackend.value.id, {
         cacheConfig,
       })
     }

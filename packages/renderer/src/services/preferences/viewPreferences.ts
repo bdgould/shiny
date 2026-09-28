@@ -29,7 +29,7 @@ export function getViewPreferences(): ViewPreferences {
   } catch (error) {
     console.error('Failed to load view preferences:', error)
   }
-  return DEFAULT_PREFERENCES
+  return { ...DEFAULT_PREFERENCES }
 }
 
 /**
