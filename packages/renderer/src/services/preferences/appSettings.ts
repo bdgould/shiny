@@ -286,7 +286,7 @@ export async function testAIConnection(settings: AIConnectionSettings): Promise<
             content: 'Tell me a short fun fact.',
           },
         ],
-        temperature: settings.temperature || 0.7,
+        temperature: settings.temperature ?? 0.7,
         max_tokens: settings.maxTokens || 1000,
       }),
     })

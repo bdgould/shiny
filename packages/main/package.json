@@ -5,8 +5,8 @@
   "main": "dist/index.js",
   "private": true,
   "scripts": {
-    "build": "tsc",
-    "watch": "tsc --watch"
+    "build": "rimraf dist && tsc -p tsconfig.build.json",
+    "watch": "tsc -p tsconfig.build.json --watch"
   },
   "dependencies": {
     "aws4": "^1.12.0",
