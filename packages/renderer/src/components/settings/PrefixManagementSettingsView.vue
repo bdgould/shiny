@@ -240,7 +240,7 @@ async function loadPrefixFile() {
     setTimeout(() => {
       saveMessage.value = ''
     }, 3000)
-  } catch (error) {
+  } catch {
     importError.value = 'Failed to load file. Please try again.'
   }
 }
@@ -290,7 +290,7 @@ function importPrefixes() {
     setTimeout(() => {
       saveMessage.value = ''
     }, 3000)
-  } catch (error) {
+  } catch {
     importError.value = 'Failed to parse prefix definitions. Please check the format.'
   }
 }
@@ -303,7 +303,7 @@ function saveSettings() {
     setTimeout(() => {
       saveMessage.value = ''
     }, 3000)
-  } catch (error) {
+  } catch {
     saveMessage.value = 'Failed to save settings'
     saveMessageType.value = 'error'
     setTimeout(() => {

@@ -43,7 +43,7 @@ export class MobiProvider extends BaseProvider {
    */
   protected buildEndpointUrl(config: BackendConfig): string {
     // Parse provider config
-    let providerConfig: MobiConfig | null = null
+    let providerConfig: MobiConfig | null
     try {
       providerConfig = config.providerConfig ? JSON.parse(config.providerConfig) : null
     } catch {
@@ -195,10 +195,11 @@ export class MobiProvider extends BaseProvider {
       } catch (error) {
         if (axios.isAxiosError(error)) {
           if (error.response?.status === 401) {
-            throw new Error('Authentication failed: Invalid username or password')
+            throw new Error('Authentication failed: Invalid username or password', { cause: error })
           }
           throw new Error(
-            `Authentication failed: ${error.response?.data?.message || error.message}`
+            `Authentication failed: ${error.response?.data?.message || error.message}`,
+            { cause: error }
           )
         }
         throw error
@@ -222,7 +223,7 @@ export class MobiProvider extends BaseProvider {
     }
 
     // Validate configuration
-    let providerConfig: MobiConfig | null = null
+    let providerConfig: MobiConfig | null
     try {
       providerConfig = config.providerConfig ? JSON.parse(config.providerConfig) : null
     } catch {
@@ -323,9 +324,11 @@ export class MobiProvider extends BaseProvider {
           } catch (retryError) {
             if (axios.isAxiosError(retryError)) {
               const message = retryError.response?.data?.message || retryError.message
-              throw new Error(`SPARQL query failed after re-authentication: ${message}`)
+              throw new Error(`SPARQL query failed after re-authentication: ${message}`, {
+                cause: retryError,
+              })
             }
-            throw new Error('SPARQL query failed after re-authentication')
+            throw new Error('SPARQL query failed after re-authentication', { cause: retryError })
           }
         }
 
@@ -341,14 +344,16 @@ export class MobiProvider extends BaseProvider {
         })
 
         const message = error.response?.data?.message || error.response?.data || error.message
-        throw new Error(`SPARQL query failed (${statusCode || 'network error'}): ${message}`)
+        throw new Error(`SPARQL query failed (${statusCode || 'network error'}): ${message}`, {
+          cause: error,
+        })
       }
 
       if (error instanceof Error) {
-        throw new Error(`Query execution failed: ${error.message}`)
+        throw new Error(`Query execution failed: ${error.message}`, { cause: error })
       }
 
-      throw new Error('Query execution failed: Unknown error')
+      throw new Error('Query execution failed: Unknown error', { cause: error })
     }
   }
 
@@ -365,7 +370,7 @@ export class MobiProvider extends BaseProvider {
     }
 
     // Check provider config
-    let providerConfig: MobiConfig | null = null
+    let providerConfig: MobiConfig | null
     try {
       providerConfig = config.providerConfig ? JSON.parse(config.providerConfig) : null
     } catch {

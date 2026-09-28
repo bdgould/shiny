@@ -168,7 +168,7 @@ export function useGraphStudioAPI() {
       return result
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to load graphmart details'
-      throw new Error(message)
+      throw new Error(message, { cause: err })
     }
   }
 

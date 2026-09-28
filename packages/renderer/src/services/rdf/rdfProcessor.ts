@@ -62,7 +62,7 @@ export class RDFProcessor {
       // Provide more context for debugging
       console.error('Turtle serialization error:', error)
       console.error('Dataset size:', dataset.size)
-      throw new Error(`Turtle serialization failed: ${error.message}`)
+      throw new Error(`Turtle serialization failed: ${error.message}`, { cause: error })
     }
   }
 
