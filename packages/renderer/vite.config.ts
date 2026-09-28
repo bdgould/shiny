@@ -7,23 +7,6 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
-      // Stub out unused Monaco features to reduce bundle size
-      'monaco-editor/esm/vs/language/typescript/ts.worker': path.resolve(
-        __dirname,
-        './src/utils/empty.ts'
-      ),
-      'monaco-editor/esm/vs/language/json/json.worker': path.resolve(
-        __dirname,
-        './src/utils/empty.ts'
-      ),
-      'monaco-editor/esm/vs/language/css/css.worker': path.resolve(
-        __dirname,
-        './src/utils/empty.ts'
-      ),
-      'monaco-editor/esm/vs/language/html/html.worker': path.resolve(
-        __dirname,
-        './src/utils/empty.ts'
-      ),
     },
   },
   server: {
@@ -41,16 +24,21 @@ export default defineConfig({
         drop_debugger: true,
       },
     },
-    // Code splitting strategy
-    rollupOptions: {
+    // Code splitting strategy (Rolldown, Vite 8+)
+    rolldownOptions: {
       output: {
-        manualChunks: {
-          // Separate Monaco editor into its own chunk
-          'monaco-editor': ['monaco-editor'],
-          // Separate Vue and Pinia into vendor chunk
-          'vue-vendor': ['vue', 'pinia'],
-          // SPARQL parser in separate chunk (loaded on demand)
-          'sparql-parser': ['sparqljs'],
+        codeSplitting: {
+          groups: [
+            // Separate Monaco editor into its own chunk
+            { name: 'monaco-editor', test: /[\\/]node_modules[\\/]monaco-editor[\\/]/ },
+            // Separate Vue and Pinia into vendor chunk
+            {
+              name: 'vue-vendor',
+              test: /[\\/]node_modules[\\/](@vue[\\/]|vue[\\/]|pinia[\\/])/,
+            },
+            // SPARQL parser in separate chunk
+            { name: 'sparql-parser', test: /[\\/]node_modules[\\/]sparqljs[\\/]/ },
+          ],
         },
         // Better chunk naming for debugging
         chunkFileNames: 'js/[name]-[hash].js',
@@ -68,6 +56,6 @@ export default defineConfig({
   base: './',
   // Optimize deps
   optimizeDeps: {
-    include: ['monaco-editor', 'sparqljs'],
+    include: ['monaco-editor/editor/editor.api', 'monaco-editor/features/register.all', 'sparqljs'],
   },
 })

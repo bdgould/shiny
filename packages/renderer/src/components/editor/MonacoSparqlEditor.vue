@@ -4,7 +4,11 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, watch } from 'vue'
-import * as monaco from 'monaco-editor'
+// Import the editor core and editor features only. The package root also
+// registers every built-in language and bundles their web workers (~11 MB),
+// none of which this SPARQL-only editor uses.
+import 'monaco-editor/features/register.all'
+import * as monaco from 'monaco-editor/editor/editor.api'
 import { useQueryStore } from '@/stores/query'
 import { useTabsStore } from '@/stores/tabs'
 import { useOntologyCacheStore } from '@/stores/ontologyCache'
