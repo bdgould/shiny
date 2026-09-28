@@ -4,13 +4,24 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, watch } from 'vue'
-import * as monaco from 'monaco-editor'
+// Import the editor core and editor features only. The package root also
+// registers every built-in language and bundles their web workers (~11 MB),
+// none of which this SPARQL-only editor uses.
+import 'monaco-editor/features/register.all'
+import * as monaco from 'monaco-editor/editor/editor.api'
+import EditorWorker from 'monaco-editor/editor/editor.worker?worker'
 import { useQueryStore } from '@/stores/query'
 import { useTabsStore } from '@/stores/tabs'
 import { useOntologyCacheStore } from '@/stores/ontologyCache'
 import { getCacheSettings, getSparqlFormattingSettings } from '@/services/preferences/appSettings'
 import { Parser } from 'sparqljs'
 import { formatSparqlQuery } from '@/services/sparql/sparqlFormatter'
+
+// Run Monaco's editor services in a bundled same-origin worker. Without this,
+// Monaco tries a blob: worker, which the page's Content Security Policy blocks.
+self.MonacoEnvironment = {
+  getWorker: () => new EditorWorker(),
+}
 
 const editorContainer = ref<HTMLElement | null>(null)
 const queryStore = useQueryStore()

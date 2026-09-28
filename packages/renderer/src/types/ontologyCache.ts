@@ -229,11 +229,7 @@ LIMIT 10000`,
  * Cache event types for event emitter
  */
 export type CacheEventType =
-  | 'cache:loaded'
-  | 'cache:refreshed'
-  | 'cache:invalidated'
-  | 'cache:error'
-  | 'cache:progress'
+  'cache:loaded' | 'cache:refreshed' | 'cache:invalidated' | 'cache:error' | 'cache:progress'
 
 /**
  * Cache event payload

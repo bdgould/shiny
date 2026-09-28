@@ -1,7 +1,13 @@
 <template>
   <div class="connection-panel">
     <BackendList v-if="!showForm" @add="handleAdd" @edit="handleEdit" />
-    <ConnectionForm v-else :backend="editingBackend" @save="handleSave" @cancel="handleCancel" />
+    <ConnectionForm
+      v-else
+      :backend="editingBackend"
+      :saving="isSaving"
+      @save="handleSave"
+      @cancel="handleCancel"
+    />
   </div>
 </template>
 
@@ -16,6 +22,7 @@ import type { BackendFormData } from '@/composables/useBackendValidation'
 const connectionStore = useConnectionStore()
 
 const showForm = ref(false)
+const isSaving = ref(false)
 const editingBackend = ref<BackendConfig | undefined>(undefined)
 
 function handleAdd() {
@@ -34,6 +41,7 @@ function handleCancel() {
 }
 
 async function handleSave(formData: BackendFormData) {
+  isSaving.value = true
   try {
     // Extract credentials only if user has provided values
     // When editing, only pass credentials if they've been changed/entered
@@ -159,6 +167,8 @@ async function handleSave(formData: BackendFormData) {
   } catch (error) {
     console.error('Failed to save backend:', error)
     alert(error instanceof Error ? error.message : 'Failed to save backend')
+  } finally {
+    isSaving.value = false
   }
 }
 </script>

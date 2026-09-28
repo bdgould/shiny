@@ -316,7 +316,7 @@ export function useMobiAPI() {
       await window.electronAPI.mobi.authenticate(baseUrl, username, password, allowInsecure)
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Authentication failed'
-      throw new Error(message)
+      throw new Error(message, { cause: err })
     }
   }
 

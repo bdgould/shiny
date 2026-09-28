@@ -224,7 +224,8 @@ export class OntologyCacheService {
     } catch (error) {
       console.error('Failed to fetch classes:', error)
       throw new Error(
-        `Failed to fetch classes: ${error instanceof Error ? error.message : 'Unknown error'}`
+        `Failed to fetch classes: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        { cause: error }
       )
     }
   }
@@ -284,7 +285,8 @@ export class OntologyCacheService {
     } catch (error) {
       console.error('Failed to fetch properties:', error)
       throw new Error(
-        `Failed to fetch properties: ${error instanceof Error ? error.message : 'Unknown error'}`
+        `Failed to fetch properties: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        { cause: error }
       )
     }
   }
@@ -338,7 +340,8 @@ export class OntologyCacheService {
     } catch (error) {
       console.error('Failed to fetch individuals:', error)
       throw new Error(
-        `Failed to fetch individuals: ${error instanceof Error ? error.message : 'Unknown error'}`
+        `Failed to fetch individuals: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        { cause: error }
       )
     }
   }

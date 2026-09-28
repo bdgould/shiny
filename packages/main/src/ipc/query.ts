@@ -55,8 +55,8 @@ ipcMain.handle('query:execute', async (event, { query, backendId }) => {
   } catch (error: unknown) {
     console.error('[Query] Query execution error:', error)
     if (error instanceof Error) {
-      throw new Error(`Query execution failed: ${error.message}`)
+      throw new Error(`Query execution failed: ${error.message}`, { cause: error })
     }
-    throw new Error('Query execution failed: Unknown error')
+    throw new Error('Query execution failed: Unknown error', { cause: error })
   }
 })

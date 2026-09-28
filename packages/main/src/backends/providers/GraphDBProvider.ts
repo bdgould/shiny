@@ -34,7 +34,7 @@ export class GraphDBProvider extends BaseProvider {
    * Format: {baseUrl}/repositories/{repositoryId}
    */
   protected buildEndpointUrl(config: BackendConfig): string {
-    let providerConfig: GraphDBConfig | null = null
+    let providerConfig: GraphDBConfig | null
     try {
       providerConfig = config.providerConfig ? JSON.parse(config.providerConfig) : null
     } catch {
@@ -92,7 +92,7 @@ export class GraphDBProvider extends BaseProvider {
         console.log('[GraphDBProvider] Authenticated successfully via /rest/login')
         return token
       }
-    } catch (error) {
+    } catch {
       // Fall through to alternative endpoint
       console.log('[GraphDBProvider] /rest/login failed, trying alternative endpoint')
     }
@@ -120,7 +120,7 @@ export class GraphDBProvider extends BaseProvider {
       }
     } catch (error) {
       if (axios.isAxiosError(error) && error.response?.status === 401) {
-        throw new Error('Authentication failed: Invalid username or password')
+        throw new Error('Authentication failed: Invalid username or password', { cause: error })
       }
       // For other errors, we'll fall back to Basic auth
       console.log('[GraphDBProvider] Token authentication failed, will use Basic auth')
@@ -176,7 +176,7 @@ export class GraphDBProvider extends BaseProvider {
   private buildQueryParams(config: BackendConfig): Record<string, string> {
     const params: Record<string, string> = {}
 
-    let providerConfig: GraphDBConfig | null = null
+    let providerConfig: GraphDBConfig | null
     try {
       providerConfig = config.providerConfig ? JSON.parse(config.providerConfig) : null
     } catch {
@@ -215,7 +215,7 @@ export class GraphDBProvider extends BaseProvider {
     }
 
     // Validate repository configuration
-    let providerConfig: GraphDBConfig | null = null
+    let providerConfig: GraphDBConfig | null
     try {
       providerConfig = config.providerConfig ? JSON.parse(config.providerConfig) : null
     } catch {
@@ -272,7 +272,7 @@ export class GraphDBProvider extends BaseProvider {
       return {
         data: response.data,
         queryType,
-        contentType: response.headers['content-type'] || 'unknown',
+        contentType: this.getContentType(response.headers),
       }
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
@@ -285,7 +285,8 @@ export class GraphDBProvider extends BaseProvider {
           tokenCache.delete(cacheKey)
 
           throw new Error(
-            `Authentication failed (${statusCode}): Please check your credentials or re-authenticate`
+            `Authentication failed (${statusCode}): Please check your credentials or re-authenticate`,
+            { cause: error }
           )
         }
 
@@ -296,14 +297,16 @@ export class GraphDBProvider extends BaseProvider {
         })
 
         const message = error.response?.data?.message || error.response?.data || error.message
-        throw new Error(`SPARQL query failed (${statusCode || 'network error'}): ${message}`)
+        throw new Error(`SPARQL query failed (${statusCode || 'network error'}): ${message}`, {
+          cause: error,
+        })
       }
 
       if (error instanceof Error) {
-        throw new Error(`Query execution failed: ${error.message}`)
+        throw new Error(`Query execution failed: ${error.message}`, { cause: error })
       }
 
-      throw new Error('Query execution failed: Unknown error')
+      throw new Error('Query execution failed: Unknown error', { cause: error })
     }
   }
 
@@ -320,7 +323,7 @@ export class GraphDBProvider extends BaseProvider {
     }
 
     // Check provider config
-    let providerConfig: GraphDBConfig | null = null
+    let providerConfig: GraphDBConfig | null
     try {
       providerConfig = config.providerConfig ? JSON.parse(config.providerConfig) : null
     } catch {

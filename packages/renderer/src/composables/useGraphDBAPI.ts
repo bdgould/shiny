@@ -250,7 +250,7 @@ export function useGraphDBAPI() {
       return result
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to load repository details'
-      throw new Error(message)
+      throw new Error(message, { cause: err })
     }
   }
 
@@ -312,7 +312,7 @@ export function useGraphDBAPI() {
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Authentication failed'
-      throw new Error(message)
+      throw new Error(message, { cause: err })
     }
   }
 

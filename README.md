@@ -200,8 +200,8 @@ shiny/
 
 ### Prerequisites
 
-- Node.js >= 18.0.0
-- npm >= 9.0.0
+- Node.js >= 22.12.0 (the repo pins v24 in .nvmrc)
+- npm >= 10.0.0
 
 ### Installation
 

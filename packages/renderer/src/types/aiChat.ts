@@ -6,12 +6,7 @@
  * Tool call status in the approval flow
  */
 export type ToolCallStatus =
-  | 'pending'
-  | 'approved'
-  | 'rejected'
-  | 'executing'
-  | 'completed'
-  | 'error'
+  'pending' | 'approved' | 'rejected' | 'executing' | 'completed' | 'error'
 
 /**
  * A tool call requested by the AI

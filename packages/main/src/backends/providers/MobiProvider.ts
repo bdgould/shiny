@@ -43,23 +43,23 @@ export class MobiProvider extends BaseProvider {
    */
   protected buildEndpointUrl(config: BackendConfig): string {
     // Parse provider config
-    let providerConfig: MobiConfig | null = null
+    let providerConfig: MobiConfig | null
     try {
       providerConfig = config.providerConfig ? JSON.parse(config.providerConfig) : null
     } catch {
       // If parsing fails, use base endpoint
-      return `${config.endpoint}/mobirest/sparql`
+      return `${this.getBaseUrl(config)}/mobirest/sparql`
     }
 
     // If no config, return base URL
     if (!providerConfig) {
-      return `${config.endpoint}/mobirest/sparql`
+      return `${this.getBaseUrl(config)}/mobirest/sparql`
     }
 
     // Handle repository-wide queries
     if (providerConfig.queryMode === 'repository') {
       if (!providerConfig.repositoryId) {
-        return `${config.endpoint}/mobirest/sparql`
+        return `${this.getBaseUrl(config)}/mobirest/sparql`
       }
 
       console.log('[MobiProvider] Building repository-wide endpoint URL:', {
@@ -69,7 +69,7 @@ export class MobiProvider extends BaseProvider {
 
       // Build repository SPARQL endpoint
       // Format: /mobirest/sparql/repository/{encodedRepositoryIRI}
-      let endpoint = `${config.endpoint}/mobirest/sparql/repository/${encodeURIComponent(providerConfig.repositoryId)}`
+      let endpoint = `${this.getBaseUrl(config)}/mobirest/sparql/repository/${encodeURIComponent(providerConfig.repositoryId)}`
 
       // Add query parameters
       const params: string[] = []
@@ -93,7 +93,7 @@ export class MobiProvider extends BaseProvider {
 
     // Handle record-specific queries (default mode)
     if (!providerConfig.recordId) {
-      return `${config.endpoint}/mobirest/sparql`
+      return `${this.getBaseUrl(config)}/mobirest/sparql`
     }
 
     // Determine store type based on record type
@@ -107,7 +107,7 @@ export class MobiProvider extends BaseProvider {
     })
 
     // Build base SPARQL endpoint
-    let endpoint = `${config.endpoint}/mobirest/sparql/${storeType}/${encodeURIComponent(providerConfig.recordId)}`
+    let endpoint = `${this.getBaseUrl(config)}/mobirest/sparql/${storeType}/${encodeURIComponent(providerConfig.recordId)}`
 
     // Add query parameters
     const params: string[] = []
@@ -174,7 +174,7 @@ export class MobiProvider extends BaseProvider {
     if (credentials?.username && credentials?.password) {
       try {
         await client.post(
-          `${config.endpoint}/mobirest/session`,
+          `${this.getBaseUrl(config)}/mobirest/session`,
           new URLSearchParams({
             username: credentials.username,
             password: credentials.password,
@@ -195,10 +195,11 @@ export class MobiProvider extends BaseProvider {
       } catch (error) {
         if (axios.isAxiosError(error)) {
           if (error.response?.status === 401) {
-            throw new Error('Authentication failed: Invalid username or password')
+            throw new Error('Authentication failed: Invalid username or password', { cause: error })
           }
           throw new Error(
-            `Authentication failed: ${error.response?.data?.message || error.message}`
+            `Authentication failed: ${error.response?.data?.message || error.message}`,
+            { cause: error }
           )
         }
         throw error
@@ -222,7 +223,7 @@ export class MobiProvider extends BaseProvider {
     }
 
     // Validate configuration
-    let providerConfig: MobiConfig | null = null
+    let providerConfig: MobiConfig | null
     try {
       providerConfig = config.providerConfig ? JSON.parse(config.providerConfig) : null
     } catch {
@@ -282,14 +283,14 @@ export class MobiProvider extends BaseProvider {
       console.log('[MobiProvider] Query executed successfully:', {
         statusCode: response.status,
         contentType: response.headers['content-type'],
-        dataSize: JSON.stringify(response.data).length,
+        dataSize: JSON.stringify(response.data ?? '').length,
       })
 
       // Return structured response with metadata
       return {
         data: response.data,
         queryType,
-        contentType: response.headers['content-type'] || 'unknown',
+        contentType: this.getContentType(response.headers),
       }
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
@@ -318,14 +319,16 @@ export class MobiProvider extends BaseProvider {
             return {
               data: response.data,
               queryType,
-              contentType: response.headers['content-type'] || 'unknown',
+              contentType: this.getContentType(response.headers),
             }
           } catch (retryError) {
             if (axios.isAxiosError(retryError)) {
               const message = retryError.response?.data?.message || retryError.message
-              throw new Error(`SPARQL query failed after re-authentication: ${message}`)
+              throw new Error(`SPARQL query failed after re-authentication: ${message}`, {
+                cause: retryError,
+              })
             }
-            throw new Error('SPARQL query failed after re-authentication')
+            throw new Error('SPARQL query failed after re-authentication', { cause: retryError })
           }
         }
 
@@ -341,14 +344,16 @@ export class MobiProvider extends BaseProvider {
         })
 
         const message = error.response?.data?.message || error.response?.data || error.message
-        throw new Error(`SPARQL query failed (${statusCode || 'network error'}): ${message}`)
+        throw new Error(`SPARQL query failed (${statusCode || 'network error'}): ${message}`, {
+          cause: error,
+        })
       }
 
       if (error instanceof Error) {
-        throw new Error(`Query execution failed: ${error.message}`)
+        throw new Error(`Query execution failed: ${error.message}`, { cause: error })
       }
 
-      throw new Error('Query execution failed: Unknown error')
+      throw new Error('Query execution failed: Unknown error', { cause: error })
     }
   }
 
@@ -365,7 +370,7 @@ export class MobiProvider extends BaseProvider {
     }
 
     // Check provider config
-    let providerConfig: MobiConfig | null = null
+    let providerConfig: MobiConfig | null
     try {
       providerConfig = config.providerConfig ? JSON.parse(config.providerConfig) : null
     } catch {
