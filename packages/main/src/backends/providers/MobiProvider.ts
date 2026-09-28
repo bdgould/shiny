@@ -289,7 +289,7 @@ export class MobiProvider extends BaseProvider {
       return {
         data: response.data,
         queryType,
-        contentType: response.headers['content-type'] || 'unknown',
+        contentType: this.getContentType(response.headers),
       }
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
@@ -318,7 +318,7 @@ export class MobiProvider extends BaseProvider {
             return {
               data: response.data,
               queryType,
-              contentType: response.headers['content-type'] || 'unknown',
+              contentType: this.getContentType(response.headers),
             }
           } catch (retryError) {
             if (axios.isAxiosError(retryError)) {

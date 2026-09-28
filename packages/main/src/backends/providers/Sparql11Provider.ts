@@ -55,7 +55,7 @@ export class Sparql11Provider extends BaseProvider {
       return {
         data: response.data,
         queryType,
-        contentType: response.headers['content-type'] || 'unknown',
+        contentType: this.getContentType(response.headers),
       }
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {

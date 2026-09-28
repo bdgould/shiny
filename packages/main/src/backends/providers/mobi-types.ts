@@ -128,10 +128,7 @@ export interface MobiAuthResponse {
  * Based on Mobi REST API SparqlRestImpl.java
  */
 export type MobiStoreType =
-  | 'repository'
-  | 'dataset-record'
-  | 'ontology-record'
-  | 'shapes-graph-record'
+  'repository' | 'dataset-record' | 'ontology-record' | 'shapes-graph-record'
 
 /**
  * Get appropriate store type based on record type IRI
