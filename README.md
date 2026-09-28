@@ -201,11 +201,11 @@ xattr -d com.apple.quarantine /Applications/Shiny.app
 
 After the first time, the app will open normally.
 
-**Linux Users**: Download the `.AppImage` for your architecture, make it executable, and run it:
+**Linux Users**: Download the `.AppImage` for your architecture (`x86_64` or `arm64`), make it executable, and run it:
 
 ```bash
-chmod +x Shiny-*-x64.AppImage
-./Shiny-*-x64.AppImage
+chmod +x Shiny-*-x86_64.AppImage
+./Shiny-*-x86_64.AppImage
 ```
 
 On Ubuntu 22.04 and later, AppImages need `libfuse2` (`sudo apt install libfuse2`).
