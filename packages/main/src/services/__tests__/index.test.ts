@@ -24,7 +24,7 @@ describe('services/index', () => {
   })
 
   it('getters throw before initialization', async () => {
-    const services = await import('../index')
+    const services = await import('../index.js')
     const msg = 'Services not initialized. Call initializeServices() first.'
     expect(() => services.getCredentialService()).toThrow(msg)
     expect(() => services.getBackendService()).toThrow(msg)
@@ -32,7 +32,7 @@ describe('services/index', () => {
   })
 
   it('wires services together and returns the same singletons', async () => {
-    const services = await import('../index')
+    const services = await import('../index.js')
     services.initializeServices()
 
     const creds = services.getCredentialService()

@@ -1,0 +1,16 @@
+{
+  "backends": [
+    {
+      "id": "3f2b8c1e-0000-4000-8000-000000000001",
+      "name": "Team GraphDB",
+      "type": "sparql-1.1",
+      "endpoint": "https://example.org/sparql",
+      "authType": "none",
+      "createdAt": 1767225600000,
+      "updatedAt": 1767225600000
+    }
+  ],
+  "credentials": {},
+  "selectedBackendId": "3f2b8c1e-0000-4000-8000-000000000001",
+  "schemaVersion": 1
+}

@@ -49,7 +49,7 @@ function invoke(channel: string, event: any, args: any) {
 
 describe('mobi IPC handlers', () => {
   beforeAll(async () => {
-    await import('../mobi')
+    await import('../mobi.js')
   })
 
   beforeEach(() => {

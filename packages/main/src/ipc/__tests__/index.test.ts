@@ -15,7 +15,7 @@ vi.mock('../../backends/BackendFactory.js', () => ({ BackendFactory: {} }))
 describe('ipc/index', () => {
   it('registers handlers from every IPC module', async () => {
     vi.spyOn(console, 'log').mockImplementation(() => {})
-    await import('../index')
+    await import('../index.js')
     const prefixes = new Set(channels.map((c) => c.split(':')[0]))
     expect([...prefixes].sort()).toEqual(
       ['backends', 'cache', 'files', 'graphdb', 'graphstudio', 'mobi', 'query'].sort()

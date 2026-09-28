@@ -18,7 +18,7 @@ function okEvent() {
 
 describe('ontology cache IPC handlers', () => {
   beforeAll(async () => {
-    await import('../ontologyCache')
+    await import('../ontologyCache.js')
   })
 
   beforeEach(() => {

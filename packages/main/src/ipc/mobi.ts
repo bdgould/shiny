@@ -4,9 +4,9 @@
 
 import { ipcMain } from 'electron'
 import axios from 'axios'
-// Both packages are ESM; Electron 41's Node loads them through require().
-import { wrapper } from 'axios-cookiejar-support'
+// tough-cookie and axios-cookiejar-support are ESM; Electron 41's Node loads them through require().
 import { CookieJar } from 'tough-cookie'
+import { withCookieJar } from '../utils/cookieClient.js'
 import type {
   MobiCatalog,
   MobiRecord,
@@ -38,7 +38,7 @@ async function createAxiosInstance(allowInsecure: boolean = false) {
     )
   }
 
-  const client = wrapper(axios.create(axiosConfig))
+  const client = withCookieJar(axios.create(axiosConfig))
   ;(client.defaults as { jar?: any }).jar = jar
   return { client, jar }
 }

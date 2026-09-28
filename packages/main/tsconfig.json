@@ -5,8 +5,8 @@
     "outDir": "./dist",
     "rootDir": "./src",
     "types": ["node"],
-    "module": "CommonJS",
-    "moduleResolution": "node"
+    "module": "node20",
+    "moduleResolution": "node16"
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]

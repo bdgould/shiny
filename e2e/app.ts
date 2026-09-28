@@ -1,5 +1,5 @@
 import { _electron as electron, type ElectronApplication, type Page } from '@playwright/test'
-import { mkdtempSync, realpathSync, rmSync } from 'fs'
+import { copyFileSync, mkdtempSync, realpathSync, rmSync } from 'fs'
 import { tmpdir } from 'os'
 import { join, resolve } from 'path'
 
@@ -24,8 +24,16 @@ export interface LaunchedApp {
  * or credentials. `--use-mock-keychain` keeps macOS from prompting for
  * keychain access when safeStorage initialises.
  */
-export async function launchApp(): Promise<LaunchedApp> {
+export interface LaunchOptions {
+  /** Files copied into the profile before launch: { 'shiny-config.json': '/path/to/fixture' } */
+  seedFiles?: Record<string, string>
+}
+
+export async function launchApp(options: LaunchOptions = {}): Promise<LaunchedApp> {
   const userDataDir = realpathSync(mkdtempSync(join(tmpdir(), 'shiny-e2e-')))
+  for (const [name, source] of Object.entries(options.seedFiles ?? {})) {
+    copyFileSync(source, join(userDataDir, name))
+  }
   const args = [`--user-data-dir=${userDataDir}`, '--use-mock-keychain']
   if (!packagedExecutable) args.unshift(repoRoot)
   if (process.platform === 'linux') {
