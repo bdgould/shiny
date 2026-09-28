@@ -67,7 +67,6 @@ async function handleCloseTab(tabId: string) {
   const tab = tabsStore.getTab(tabId)
   if (!tab) return
 
-  // TODO: In Phase 9, add unsaved changes warning here
   if (tab.isDirty) {
     const confirmed = confirm(`"${tab.name}" has unsaved changes. Do you want to close it anyway?`)
     if (!confirmed) return

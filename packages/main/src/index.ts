@@ -5,6 +5,7 @@ import { createApplicationMenu } from './menu.js'
 import { initializeServices } from './services/index.js'
 import { getMigrationService } from './services/MigrationService.js'
 import { fileService } from './services/FileService.js'
+import { initAutoUpdates } from './updater.js'
 import './ipc'
 
 // Track the main window for file opening
@@ -32,8 +33,11 @@ app.whenReady().then(async () => {
 
   mainWindow = createMainWindow()
 
+  // Auto-updates run only in packaged builds; see updater.ts.
+  const updates = initAutoUpdates(() => mainWindow)
+
   // Create the application menu
-  createApplicationMenu(mainWindow)
+  createApplicationMenu(mainWindow, updates?.checkManually)
 
   // If a file was opened before the app was ready, handle it now
   if (pendingFileToOpen) {

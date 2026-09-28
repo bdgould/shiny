@@ -1,6 +1,9 @@
 import { Menu, BrowserWindow, app, shell, dialog } from 'electron'
 
-export function createApplicationMenu(mainWindow: BrowserWindow) {
+export function createApplicationMenu(
+  mainWindow: BrowserWindow,
+  checkForUpdates?: () => Promise<void>
+) {
   const isMac = process.platform === 'darwin'
 
   // Custom About handler
@@ -21,6 +24,11 @@ export function createApplicationMenu(mainWindow: BrowserWindow) {
     }
   }
 
+  // Only present in packaged builds, where updates are enabled.
+  const updateItems: Electron.MenuItemConstructorOptions[] = checkForUpdates
+    ? [{ label: 'Check for Updates…', click: () => void checkForUpdates() }]
+    : []
+
   const template: Electron.MenuItemConstructorOptions[] = [
     // App menu (macOS only)
     ...(isMac
@@ -32,6 +40,7 @@ export function createApplicationMenu(mainWindow: BrowserWindow) {
                 label: 'About Shiny',
                 click: showAboutDialog,
               },
+              ...updateItems,
               { type: 'separator' as const },
               { role: 'services' as const },
               { type: 'separator' as const },
@@ -167,6 +176,7 @@ export function createApplicationMenu(mainWindow: BrowserWindow) {
           ? []
           : [
               { type: 'separator' as const },
+              ...updateItems,
               {
                 label: 'About Shiny',
                 click: showAboutDialog,

@@ -37,6 +37,8 @@ export async function launchApp(): Promise<LaunchedApp> {
   const app = await electron.launch({
     args,
     cwd: repoRoot,
+    // Packaged builds check GitHub for updates on launch; tests must not.
+    env: { ...process.env, SHINY_DISABLE_UPDATES: '1' },
     ...(packagedExecutable ? { executablePath: resolve(repoRoot, packagedExecutable) } : {}),
   })
 

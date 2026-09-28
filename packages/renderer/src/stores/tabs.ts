@@ -15,6 +15,9 @@ export interface Tab {
   isDirty: boolean
   backendId: string | null
   savedContent: string | null // For dirty checking
+  // Backend recorded with the saved file. Optional so sessions restored from
+  // older versions still load; see setTabBackend.
+  savedBackendId?: string | null
   createdAt: number
   lastExecutedAt: number | null
   isSettings?: boolean // True if this is a settings tab
@@ -86,6 +89,10 @@ export const useTabsStore = defineStore('tabs', () => {
       settingsType: options?.settingsType || undefined,
     }
 
+    if (tab.savedContent !== null) {
+      tab.savedBackendId = tab.backendId
+    }
+
     tabs.value.push(tab)
 
     // Increment untitled counter if this was an untitled tab (not settings or named)
@@ -141,13 +148,18 @@ export const useTabsStore = defineStore('tabs', () => {
     if (!tab) return
 
     tab.query = newQuery
+    updateDirtyFlag(tab)
+  }
 
-    // Update dirty flag
+  // A saved file is dirty when its query or backend differs from what was
+  // saved. A never-saved tab is dirty once it has any content.
+  function updateDirtyFlag(tab: Tab) {
     if (tab.filePath && tab.savedContent !== null) {
-      tab.isDirty = newQuery !== tab.savedContent
+      const backendChanged =
+        tab.savedBackendId !== undefined && tab.backendId !== tab.savedBackendId
+      tab.isDirty = tab.query !== tab.savedContent || backendChanged
     } else {
-      // New unsaved file - dirty if not empty
-      tab.isDirty = newQuery.trim() !== ''
+      tab.isDirty = tab.query.trim() !== ''
     }
   }
 
@@ -183,13 +195,14 @@ export const useTabsStore = defineStore('tabs', () => {
     const tab = getTab(tabId)
     if (!tab) return
 
-    tab.backendId = backendId
-
-    // Mark as dirty if we had a saved backend different from the new one
-    if (tab.filePath && tab.savedContent !== null) {
-      // TODO: More sophisticated dirty checking that includes backend
-      tab.isDirty = true
+    // Tabs restored from sessions saved before savedBackendId existed: treat
+    // the backend in use until now as the saved one.
+    if (tab.savedContent !== null && tab.savedBackendId === undefined) {
+      tab.savedBackendId = tab.backendId
     }
+
+    tab.backendId = backendId
+    updateDirtyFlag(tab)
   }
 
   // Save tab - update file path and clear dirty flag
@@ -200,6 +213,7 @@ export const useTabsStore = defineStore('tabs', () => {
     tab.filePath = filePath
     tab.name = fileName
     tab.savedContent = tab.query
+    tab.savedBackendId = tab.backendId
     tab.isDirty = false
   }
 
