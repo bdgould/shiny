@@ -87,6 +87,13 @@ export abstract class BaseProvider {
    * Validate URL format
    */
   /**
+   * The configured endpoint without trailing slashes, safe to append paths to.
+   */
+  protected getBaseUrl(config: BackendConfig): string {
+    return config.endpoint.replace(/\/+$/, '')
+  }
+
+  /**
    * Read the Content-Type header from an HTTP response, falling back to
    * 'unknown' when it is missing or not a plain string.
    */
