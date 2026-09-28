@@ -3,6 +3,8 @@
  * Manages query connection settings, AI configuration, and cache settings
  */
 
+import { readonly, ref } from 'vue'
+
 const STORAGE_KEY_QUERY_SETTINGS = 'shiny:settings:query'
 const STORAGE_KEY_AI_SETTINGS = 'shiny:settings:ai'
 const STORAGE_KEY_CACHE_SETTINGS = 'shiny:settings:cache'
@@ -168,7 +170,7 @@ export function getQuerySettings(): QueryConnectionSettings {
   } catch (error) {
     console.warn('Failed to load query settings from localStorage:', error)
   }
-  return { ...DEFAULT_QUERY_SETTINGS }
+  return structuredClone(DEFAULT_QUERY_SETTINGS)
 }
 
 /**
@@ -196,15 +198,23 @@ export function getAISettings(): AIConnectionSettings {
   } catch (error) {
     console.warn('Failed to load AI settings from localStorage:', error)
   }
-  return { ...DEFAULT_AI_SETTINGS }
+  return structuredClone(DEFAULT_AI_SETTINGS)
 }
 
 /**
  * Save AI connection settings
  */
+/**
+ * Incremented whenever AI settings are saved. localStorage is not reactive, so
+ * computed values that depend on AI settings read this to re-evaluate.
+ */
+const aiSettingsRevisionRef = ref(0)
+export const aiSettingsRevision = readonly(aiSettingsRevisionRef)
+
 export function saveAISettings(settings: AIConnectionSettings): void {
   try {
     localStorage.setItem(STORAGE_KEY_AI_SETTINGS, JSON.stringify(settings))
+    aiSettingsRevisionRef.value++
   } catch (error) {
     console.warn('Failed to save AI settings to localStorage:', error)
     throw error
@@ -332,7 +342,7 @@ export function getCacheSettings(): GlobalCacheSettings {
   } catch (error) {
     console.warn('Failed to load cache settings from localStorage:', error)
   }
-  return { ...DEFAULT_CACHE_SETTINGS }
+  return structuredClone(DEFAULT_CACHE_SETTINGS)
 }
 
 /**
@@ -372,7 +382,7 @@ export function getSparqlFormattingSettings(): SparqlFormattingSettings {
   } catch (error) {
     console.warn('Failed to load SPARQL formatting settings from localStorage:', error)
   }
-  return { ...DEFAULT_SPARQL_FORMATTING_SETTINGS }
+  return structuredClone(DEFAULT_SPARQL_FORMATTING_SETTINGS)
 }
 
 /**
@@ -400,7 +410,7 @@ export function getPrefixSettings(): PrefixManagementSettings {
   } catch (error) {
     console.warn('Failed to load prefix settings from localStorage:', error)
   }
-  return { ...DEFAULT_PREFIX_SETTINGS }
+  return structuredClone(DEFAULT_PREFIX_SETTINGS)
 }
 
 /**
@@ -428,7 +438,7 @@ export function getQueryContextSettings(): QueryContextSettings {
   } catch (error) {
     console.warn('Failed to load query context settings from localStorage:', error)
   }
-  return { ...DEFAULT_QUERY_CONTEXT_SETTINGS }
+  return structuredClone(DEFAULT_QUERY_CONTEXT_SETTINGS)
 }
 
 /**
