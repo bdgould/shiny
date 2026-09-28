@@ -3,6 +3,8 @@
  * These mirror the main process types but are used in Vue components
  */
 
+import type { CacheConfig } from './ontologyCache'
+
 export type BackendType = 'sparql-1.1' | 'graphstudio' | 'neptune' | 'stardog' | 'mobi' | 'graphdb'
 export type AuthType = 'none' | 'basic' | 'bearer' | 'custom'
 
@@ -20,6 +22,7 @@ export interface BackendConfig {
   updatedAt: number
   providerConfig?: string
   allowInsecure?: boolean
+  cacheConfig?: CacheConfig
 }
 
 /**

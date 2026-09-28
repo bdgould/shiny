@@ -84,17 +84,14 @@ export const useQueryStore = defineStore('query', () => {
 
       tabsStore.setTabResults(activeTab.id, response, response.queryType as QueryType)
 
-      // Calculate result count
+      // Calculate result count from the SPARQL JSON payload in response.data.
+      // CONSTRUCT/DESCRIBE return Turtle text rather than a countable structure, so
+      // they stay null - the history UI omits the count when it is null.
       let resultCount: number | null = null
-      if (response.queryType === 'SELECT' && response.bindings) {
-        resultCount = response.bindings.length
+      if (response.queryType === 'SELECT') {
+        resultCount = response.data?.results?.bindings?.length ?? null
       } else if (response.queryType === 'ASK') {
         resultCount = 1
-      } else if (response.queryType === 'CONSTRUCT' || response.queryType === 'DESCRIBE') {
-        // For CONSTRUCT/DESCRIBE, count triples if available
-        if (response.triples) {
-          resultCount = response.triples.length
-        }
       }
 
       // Add to history

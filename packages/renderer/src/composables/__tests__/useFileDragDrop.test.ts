@@ -3,6 +3,7 @@ import { setActivePinia, createPinia } from 'pinia'
 import { useFileDragDrop } from '../useFileDragDrop'
 import { useTabsStore } from '../../stores/tabs'
 import { useConnectionStore } from '../../stores/connection'
+import { DEFAULT_CACHE_CONFIG } from '../../types/ontologyCache'
 
 // Create mock toast functions that will be reused across all tests
 const mockToastFunctions = {
@@ -36,18 +37,16 @@ describe('useFileDragDrop', () => {
       {
         id: 'backend-1',
         name: 'Test Backend',
-        type: 'sparql11',
+        type: 'sparql-1.1',
         endpoint: 'http://example.org/sparql',
         authType: 'none',
         createdAt: Date.now(),
         updatedAt: Date.now(),
         cacheConfig: {
+          ...DEFAULT_CACHE_CONFIG,
           enabled: true,
           maxElements: 10000,
           ttl: 86400000,
-          includeClasses: true,
-          includeProperties: true,
-          includeIndividuals: true,
         },
       },
     ]

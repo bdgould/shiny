@@ -24,8 +24,6 @@ import {
   type NamespaceEntry,
 } from '../../types/ontologyCache'
 
-import { CACHE_SCHEMA_VERSION } from '../../../../main/src/backends/ontologyTypes'
-
 /**
  * Service for managing ontology cache in IndexedDB
  */

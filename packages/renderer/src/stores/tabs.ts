@@ -44,8 +44,8 @@ export const useTabsStore = defineStore('tabs', () => {
   function createTab(options?: {
     query?: string
     name?: string
-    filePath?: string
-    backendId?: string
+    filePath?: string | null
+    backendId?: string | null
     savedContent?: string
     isSettings?: boolean
     settingsType?: 'query' | 'ai' | 'cache' | 'prefix' | 'sparql-formatting'
@@ -206,7 +206,8 @@ export const useTabsStore = defineStore('tabs', () => {
   // Open file in new tab
   function openFileInNewTab(fileData: {
     content: string
-    filePath: string
+    // null for drag-and-dropped files, which have no path until explicitly saved
+    filePath: string | null
     fileName: string
     backendId: string | null
   }): string {

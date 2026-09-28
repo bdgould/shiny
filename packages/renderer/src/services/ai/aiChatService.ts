@@ -9,7 +9,6 @@ import type {
   ConversationContext,
   OpenAIMessage,
   OpenAIStreamChunk,
-  OpenAIToolCall,
 } from '../../types/aiChat'
 import {
   getAISettings,

@@ -4,7 +4,7 @@
  */
 
 import { marked, type Tokens } from 'marked'
-import DOMPurify from 'dompurify'
+import DOMPurify, { type Config as DOMPurifyConfig } from 'dompurify'
 
 /**
  * Custom renderer for marked that adds copy buttons to code blocks
@@ -57,7 +57,7 @@ function escapeForDataAttribute(text: string): string {
 /**
  * DOMPurify configuration with explicit allowlist
  */
-const purifyConfig: DOMPurify.Config = {
+const purifyConfig: DOMPurifyConfig = {
   ALLOWED_TAGS: [
     'p',
     'br',

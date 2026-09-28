@@ -348,7 +348,6 @@ export function saveCacheSettings(settings: GlobalCacheSettings): void {
 }
 
 /**
-<<<<<<< HEAD
  * Get SPARQL formatting settings
  */
 export function getSparqlFormattingSettings(): SparqlFormattingSettings {

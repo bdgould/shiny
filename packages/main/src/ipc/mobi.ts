@@ -11,6 +11,7 @@ import type {
   MobiRepository,
   MobiAuthResponse,
 } from '../backends/providers/mobi-types.js'
+import { isAuthorizedSender } from './security.js'
 
 // Lazy-loaded ESM modules
 let wrapperModule: any = null
@@ -27,12 +28,6 @@ async function initEsmModules() {
     const toughCookie = await dynamicImport('tough-cookie')
     CookieJarClass = toughCookie.CookieJar
   }
-}
-
-// Validate sender is authorized
-function isAuthorizedSender(frame: Electron.WebFrameMain): boolean {
-  const url = frame.url
-  return url.startsWith('file://') || url.startsWith('http://localhost:5173')
 }
 
 /**

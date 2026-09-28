@@ -35,7 +35,6 @@
     />
 
     <AIChatInput
-      ref="chatInputRef"
       :disabled="
         !aiChatStore.isConfigured || aiChatStore.isLoading || aiChatStore.hasPendingToolCalls
       "
@@ -46,7 +45,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { computed } from 'vue'
 import { useAIChatStore } from '@/stores/aiChat'
 import { useTabsStore } from '@/stores/tabs'
 import { streamChatCompletion, continueWithToolResults } from '@/services/ai/aiChatService'
@@ -60,7 +59,6 @@ import AIChatInput from './ai/AIChatInput.vue'
 
 const aiChatStore = useAIChatStore()
 const tabsStore = useTabsStore()
-const chatInputRef = ref<InstanceType<typeof AIChatInput> | null>(null)
 
 const inputPlaceholder = computed(() => {
   if (!aiChatStore.isConfigured) {

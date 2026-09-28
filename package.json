@@ -26,7 +26,10 @@
     "lint:fix": "eslint . --ext .ts,.vue --fix",
     "format": "prettier --write \"**/*.{ts,vue,js,json,css,md}\"",
     "format:check": "prettier --check \"**/*.{ts,vue,js,json,css,md}\"",
-    "type-check": "tsc --noEmit",
+    "type-check": "npm run type-check:main && npm run type-check:preload && npm run type-check:renderer",
+    "type-check:main": "tsc --noEmit -p packages/main/tsconfig.json",
+    "type-check:preload": "tsc --noEmit -p packages/preload/tsconfig.json",
+    "type-check:renderer": "cd packages/renderer && npx vue-tsc --noEmit",
     "clean": "rimraf dist packages/*/dist",
     "bump-version": "node scripts/bump-version.js"
   },

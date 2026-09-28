@@ -103,7 +103,6 @@ export function verifyKeywordCase(query: string, expectedCase: 'uppercase' | 'lo
   ]
 
   for (const keyword of keywords) {
-    const expected = expectedCase === 'uppercase' ? keyword : keyword.toLowerCase()
     const opposite = expectedCase === 'uppercase' ? keyword.toLowerCase() : keyword
 
     // If the query contains this keyword

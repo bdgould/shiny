@@ -1,20 +1,27 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 import { useConnectionStore } from '../connection'
+import type { BackendConfig, BackendConfigInput } from '../../types/backends'
 
 // Mock window.electronAPI
-const mockBackends = [
+const mockBackends: BackendConfig[] = [
   {
     id: 'backend-1',
     name: 'Test Backend 1',
-    provider: 'sparql11' as const,
+    type: 'sparql-1.1',
     endpoint: 'http://localhost:3030/dataset/query',
+    authType: 'none',
+    createdAt: 0,
+    updatedAt: 0,
   },
   {
     id: 'backend-2',
     name: 'Test Backend 2',
-    provider: 'graphstudio' as const,
+    type: 'graphstudio',
     endpoint: 'http://localhost:7200',
+    authType: 'none',
+    createdAt: 0,
+    updatedAt: 0,
   },
 ]
 
@@ -200,9 +207,9 @@ describe('useConnectionStore', () => {
   })
 
   describe('createBackend', () => {
-    const newBackendConfig = {
+    const newBackendConfig: BackendConfigInput = {
       name: 'New Backend',
-      type: 'sparql11',
+      type: 'sparql-1.1',
       endpoint: 'http://localhost:8080/sparql',
       authType: 'none',
     }

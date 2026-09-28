@@ -10,11 +10,9 @@ import {
   createSettings,
   queriesAreEquivalent,
   verifyKeywordCase,
-  hasConsistentIndentation,
   arePrefixesAligned,
   endsWithNewline,
   getMaxConsecutiveNewlines,
-  countOccurrences,
   getPrefixLines,
 } from './helpers/formatTestHelpers'
 

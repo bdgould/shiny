@@ -211,7 +211,7 @@ class MockIDBDatabase {
     }
   })
 
-  transaction = vi.fn().mockImplementation((storeNames) => {
+  transaction = vi.fn().mockImplementation(() => {
     const tx = new MockIDBTransaction()
     // Auto-complete transactions after a short delay
     setTimeout(() => tx.triggerComplete(), 10)

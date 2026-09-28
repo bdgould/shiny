@@ -102,9 +102,9 @@
         :turtle-data="results.data"
       />
       <RdfSerializationView
-        v-else-if="isConstruct && currentView !== 'entity-table'"
+        v-else-if="isConstruct && constructSerializationFormat"
         :turtle-data="results.data"
-        :format="currentView"
+        :format="constructSerializationFormat"
       />
 
       <!-- ASK views -->
@@ -147,6 +147,20 @@ const currentView = computed(() => {
 const isConstruct = computed(() => {
   return queryType.value === 'CONSTRUCT' || queryType.value === 'DESCRIBE'
 })
+
+/**
+ * The current view narrowed to an RDF serialization format, or null when the
+ * active CONSTRUCT/DESCRIBE view is the entity table rather than a serialization.
+ */
+const constructSerializationFormat = computed<'turtle' | 'ntriples' | 'nquads' | 'jsonld' | null>(
+  () => {
+    const view = currentView.value
+    if (view === 'turtle' || view === 'ntriples' || view === 'nquads' || view === 'jsonld') {
+      return view
+    }
+    return null
+  }
+)
 </script>
 
 <style scoped>

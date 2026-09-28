@@ -8,7 +8,6 @@ import * as monaco from 'monaco-editor'
 import { useQueryStore } from '@/stores/query'
 import { useTabsStore } from '@/stores/tabs'
 import { useOntologyCacheStore } from '@/stores/ontologyCache'
-import { useConnectionStore } from '@/stores/connection'
 import { getCacheSettings, getSparqlFormattingSettings } from '@/services/preferences/appSettings'
 import { Parser } from 'sparqljs'
 import { formatSparqlQuery } from '@/services/sparql/sparqlFormatter'
@@ -17,7 +16,6 @@ const editorContainer = ref<HTMLElement | null>(null)
 const queryStore = useQueryStore()
 const tabsStore = useTabsStore()
 const cacheStore = useOntologyCacheStore()
-const connectionStore = useConnectionStore()
 
 let editor: monaco.editor.IStandaloneCodeEditor | null = null
 const modelCache = new Map<string, monaco.editor.ITextModel>()
@@ -261,21 +259,6 @@ function parsePrefixes(queryText: string): Map<string, string> {
 }
 
 /**
- * Expand prefixed name to full IRI
- */
-function expandPrefixedName(prefixedName: string, prefixes: Map<string, string>): string | null {
-  const colonIndex = prefixedName.indexOf(':')
-  if (colonIndex === -1) return null
-
-  const prefix = prefixedName.substring(0, colonIndex)
-  const localName = prefixedName.substring(colonIndex + 1)
-  const namespace = prefixes.get(prefix)
-
-  if (!namespace) return null
-  return namespace + localName
-}
-
-/**
  * Compress full IRI to prefixed name if possible
  */
 function compressIRI(iri: string, prefixes: Map<string, string>): string {
@@ -304,7 +287,6 @@ function detectContext(
   // Count elements (subject predicate object .)
   // Simple heuristic: count spaces and special characters
   const parts = triplePattern.split(/\s+/)
-  const lastPart = parts[parts.length - 1]
 
   // After 'a' or 'rdf:type' = class suggestion (object position for type)
   if (
@@ -313,10 +295,6 @@ function detectContext(
   ) {
     return 'object' // Actually want classes here
   }
-
-  // Count semicolons and periods for more complex patterns
-  const semicolons = (triplePattern.match(/;/g) || []).length
-  const periods = (triplePattern.match(/\./g) || []).length
 
   // After opening brace or period = subject position
   if (triplePattern.match(/\{\s*$/) || triplePattern.match(/\.\s*$/)) {
@@ -767,13 +745,18 @@ monaco.languages.registerCompletionItemProvider('sparql', {
       },
     ]
 
-    // Combine static suggestions
-    const staticSuggestions = [...keywords, ...aggregates, ...functions, ...prefixes].map(
-      (item) => ({
-        ...item,
-        range,
-      })
-    )
+    // Combine static suggestions. Monaco requires insertText on every completion
+    // item; entries that don't define a snippet just insert their own label.
+    const staticSuggestions: monaco.languages.CompletionItem[] = [
+      ...keywords,
+      ...aggregates,
+      ...functions,
+      ...prefixes,
+    ].map((item) => ({
+      ...item,
+      insertText: 'insertText' in item && item.insertText ? item.insertText : item.label,
+      range,
+    }))
 
     // Get ontology suggestions from cache
     const ontologySuggestions = await getOntologySuggestions(model, position, range)
@@ -828,7 +811,6 @@ async function getOntologySuggestions(
 
   // Determine if user is typing full IRI or prefixed name
   const isTypingFullIRI = wordText.startsWith('<')
-  const isTypingPrefixed = wordText.includes(':') && !isTypingFullIRI
 
   // Search cache based on context
   try {
@@ -991,24 +973,52 @@ monaco.editor.onDidCreateModel((model) => {
 
 // Function to get or create model for a tab
 function getOrCreateModel(tabId: string, query: string): monaco.editor.ITextModel {
-  let model = modelCache.get(tabId)
-
-  if (!model) {
-    // Create new model for this tab
-    model = monaco.editor.createModel(query, 'sparql')
-
-    // Set up validation for this model
-    model.onDidChangeContent(() => {
-      const markers = validateSparql(model)
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      monaco.editor.setModelMarkers(model!, 'sparql', markers)
-    })
-
-    modelCache.set(tabId, model)
+  const cached = modelCache.get(tabId)
+  if (cached) {
+    return cached
   }
+
+  // Create new model for this tab
+  const model = monaco.editor.createModel(query, 'sparql')
+
+  // Set up validation for this model
+  model.onDidChangeContent(() => {
+    const markers = validateSparql(model)
+    monaco.editor.setModelMarkers(model, 'sparql', markers)
+  })
+
+  modelCache.set(tabId, model)
 
   return model
 }
+
+// Keep the model cache in step with the tabs store:
+//   - dispose models whose tab has been closed, so they don't accumulate
+//   - pull in query changes made outside the editor (AI assistant, history
+//     replay, file load) that would otherwise never reach an existing model
+watch(
+  () => tabsStore.tabs.map((tab) => ({ id: tab.id, query: tab.query })),
+  (tabStates) => {
+    const liveTabIds = new Set(tabStates.map((tab) => tab.id))
+
+    for (const [tabId, model] of modelCache) {
+      if (!liveTabIds.has(tabId)) {
+        model.dispose()
+        modelCache.delete(tabId)
+      }
+    }
+
+    for (const { id, query } of tabStates) {
+      const model = modelCache.get(id)
+      // An equal value means the change originated in this editor, so there is
+      // nothing to apply and no risk of an update loop.
+      if (model && model.getValue() !== query) {
+        model.setValue(query)
+      }
+    }
+  },
+  { deep: true }
+)
 
 // Function to switch to a tab's model
 function switchToTabModel(tabId: string) {

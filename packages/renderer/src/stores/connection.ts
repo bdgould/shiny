@@ -5,7 +5,7 @@
 
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import type { BackendConfig, BackendCredentialsInput } from '../types/backends'
+import type { BackendConfig, BackendConfigInput, BackendCredentialsInput } from '../types/backends'
 
 export const useConnectionStore = defineStore('connection', () => {
   // State
@@ -46,15 +46,7 @@ export const useConnectionStore = defineStore('connection', () => {
     }
   }
 
-  async function createBackend(
-    config: {
-      name: string
-      type: string
-      endpoint: string
-      authType: string
-    },
-    credentials?: BackendCredentialsInput
-  ) {
+  async function createBackend(config: BackendConfigInput, credentials?: BackendCredentialsInput) {
     isLoading.value = true
     error.value = null
 

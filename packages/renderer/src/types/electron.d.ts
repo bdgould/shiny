@@ -1,19 +1,12 @@
+import type { BackendConfig } from './backends'
+import type { CacheProgress, OntologyCache } from './ontologyCache'
+
+export type { BackendConfig }
+
 export interface QueryResult {
   data: any
   queryType: string
   contentType?: string
-}
-
-export interface BackendConfig {
-  id: string
-  name: string
-  type: string
-  endpoint: string
-  authType: string
-  createdAt: number
-  updatedAt: number
-  providerConfig?: string
-  allowInsecure?: boolean
 }
 
 export interface BackendCredentials {
@@ -144,6 +137,14 @@ export interface SaveResultsResult {
   error?: string
 }
 
+export type OpenPrefixFileResult = { content: string } | { error: string }
+
+export interface TestQueryResult {
+  valid: boolean
+  error?: string
+  resultCount?: number
+}
+
 export interface ElectronAPI {
   query: {
     execute: (query: string, backendId: string) => Promise<QueryResult>
@@ -249,11 +250,21 @@ export interface ElectronAPI {
     openQuery: () => Promise<OpenQueryResult>
     onFileOpened: (callback: (data: QueryFileData) => void) => () => void
     saveResults: (content: string, queryType: string, format: string) => Promise<SaveResultsResult>
+    openPrefixFile: () => Promise<OpenPrefixFileResult>
   }
   menu: {
+    onNewQuery: (callback: () => void) => () => void
     onSaveQuery: (callback: () => void) => () => void
     onOpenQuery: (callback: () => void) => () => void
     onSaveResults: (callback: () => void) => () => void
+    onFormatQuery: (callback: () => void) => () => void
+  }
+  cache: {
+    fetch: (backendId: string, onProgress?: boolean) => Promise<OntologyCache>
+    testQuery: (backendId: string, query: string) => Promise<TestQueryResult>
+    onProgress: (
+      callback: (data: { backendId: string; progress: CacheProgress }) => void
+    ) => () => void
   }
 }
 

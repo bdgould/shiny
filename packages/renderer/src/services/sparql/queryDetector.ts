@@ -12,10 +12,17 @@ const parser = new Parser()
 export function detectQueryType(query: string): QueryType | null {
   try {
     const parsed = parser.parse(query)
+
+    // parse() returns Query | Update | SparqlGeneratorOptions; only a Query
+    // carries a queryType, so narrow before reading it.
+    if (!('queryType' in parsed)) {
+      return null
+    }
+
     const type = parsed.queryType?.toUpperCase()
 
     if (type === 'SELECT' || type === 'CONSTRUCT' || type === 'DESCRIBE' || type === 'ASK') {
-      return type as QueryType
+      return type
     }
 
     return null

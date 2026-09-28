@@ -692,7 +692,7 @@ function resetQuery(type: 'classes' | 'properties' | 'individuals') {
       classesQuery.value = defaults.classes
       break
     case 'properties':
-      classesQuery.value = defaults.properties
+      propertiesQuery.value = defaults.properties
       break
     case 'individuals':
       individualsQuery.value = defaults.individuals

@@ -55,10 +55,8 @@
 
 <script setup lang="ts">
 import { useTabsStore } from '@/stores/tabs'
-import { useSidebarStore } from '@/stores/sidebar'
 
 const tabsStore = useTabsStore()
-const sidebarStore = useSidebarStore()
 
 function openQuerySettings() {
   // Create a new tab for query settings

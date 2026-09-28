@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 import { useOntologyCacheStore } from '../ontologyCache'
-import type { OntologyCache, CacheProgress } from '../../types/ontologyCache'
+import type { OntologyCache } from '../../types/ontologyCache'
 
 // Mock the ontologyCacheService module at module level
 // The factory function is hoisted, so we define the mock inline
@@ -301,7 +301,7 @@ describe('useOntologyCacheStore', () => {
         expiresAt: now + 86400000,
       }
 
-      mockOntologyCacheService.validateCache.mockResolvedValue(validation)
+      vi.mocked(mockOntologyCacheService.validateCache).mockResolvedValue(validation)
 
       const store = useOntologyCacheStore()
       const result = await store.validateCache('backend-1')
@@ -320,7 +320,7 @@ describe('useOntologyCacheStore', () => {
         ttl: 86400000,
       }
 
-      mockOntologyCacheService.validateCache.mockResolvedValue(validation)
+      vi.mocked(mockOntologyCacheService.validateCache).mockResolvedValue(validation)
 
       const store = useOntologyCacheStore()
       const result = await store.validateCache('backend-1')
@@ -336,7 +336,7 @@ describe('useOntologyCacheStore', () => {
         stale: false,
       }
 
-      mockOntologyCacheService.validateCache.mockResolvedValue(validation)
+      vi.mocked(mockOntologyCacheService.validateCache).mockResolvedValue(validation)
 
       const store = useOntologyCacheStore()
       const result = await store.validateCache('backend-1')
@@ -396,7 +396,7 @@ describe('useOntologyCacheStore', () => {
         },
       ]
 
-      mockOntologyCacheService.searchElements.mockResolvedValue(mockResults)
+      vi.mocked(mockOntologyCacheService.searchElements).mockResolvedValue(mockResults)
 
       const store = useOntologyCacheStore()
       const results = await store.searchElements('backend-1', {
@@ -437,7 +437,7 @@ describe('useOntologyCacheStore', () => {
         namespaceCount: 2,
       }
 
-      mockOntologyCacheService.getStats.mockResolvedValue(stats)
+      vi.mocked(mockOntologyCacheService.getStats).mockResolvedValue(stats)
 
       const store = useOntologyCacheStore()
       const result = await store.getStats('backend-1')
@@ -446,7 +446,7 @@ describe('useOntologyCacheStore', () => {
     })
 
     it('should return null if cache does not exist', async () => {
-      mockOntologyCacheService.getStats.mockResolvedValue(null)
+      vi.mocked(mockOntologyCacheService.getStats).mockResolvedValue(null)
 
       const store = useOntologyCacheStore()
       const result = await store.getStats('backend-1')
@@ -477,12 +477,12 @@ describe('useOntologyCacheStore', () => {
         namespaces: {},
       }
 
-      mockOntologyCacheService.validateCache.mockResolvedValue({
+      vi.mocked(mockOntologyCacheService.validateCache).mockResolvedValue({
         exists: true,
         valid: true,
         stale: false,
       })
-      mockOntologyCacheService.getCache.mockResolvedValue(mockCache)
+      vi.mocked(mockOntologyCacheService.getCache).mockResolvedValue(mockCache)
 
       const store = useOntologyCacheStore()
       const result = await store.smartRefresh('backend-1')
@@ -519,12 +519,12 @@ describe('useOntologyCacheStore', () => {
         namespaces: {},
       }
 
-      mockOntologyCacheService.validateCache.mockResolvedValue({
+      vi.mocked(mockOntologyCacheService.validateCache).mockResolvedValue({
         exists: true,
         valid: false,
         stale: true,
       })
-      mockOntologyCacheService.getCache.mockResolvedValue(mockStaleCache)
+      vi.mocked(mockOntologyCacheService.getCache).mockResolvedValue(mockStaleCache)
       mockElectronAPI.cache.fetch.mockResolvedValue(mockStaleCache)
 
       const store = useOntologyCacheStore()
@@ -577,7 +577,7 @@ describe('useOntologyCacheStore', () => {
   describe('getAllCachedBackendIds', () => {
     it('should return all backend IDs with cached data', async () => {
       const backendIds = ['backend-1', 'backend-2', 'backend-3']
-      mockOntologyCacheService.getAllCachedBackendIds.mockResolvedValue(backendIds)
+      vi.mocked(mockOntologyCacheService.getAllCachedBackendIds).mockResolvedValue(backendIds)
 
       const store = useOntologyCacheStore()
       const result = await store.getAllCachedBackendIds()
@@ -586,7 +586,7 @@ describe('useOntologyCacheStore', () => {
     })
 
     it('should return empty array if no caches exist', async () => {
-      mockOntologyCacheService.getAllCachedBackendIds.mockResolvedValue([])
+      vi.mocked(mockOntologyCacheService.getAllCachedBackendIds).mockResolvedValue([])
 
       const store = useOntologyCacheStore()
       const result = await store.getAllCachedBackendIds()

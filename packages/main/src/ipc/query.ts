@@ -1,12 +1,7 @@
 import { ipcMain } from 'electron'
 import { getBackendService } from '../services/index.js'
 import { BackendFactory } from '../backends/BackendFactory.js'
-
-// Validate sender is authorized
-function isAuthorizedSender(frame: Electron.WebFrameMain): boolean {
-  const url = frame.url
-  return url.startsWith('file://') || url.startsWith('http://localhost:5173')
-}
+import { isAuthorizedSender } from './security.js'
 
 // Execute SPARQL query
 ipcMain.handle('query:execute', async (event, { query, backendId }) => {

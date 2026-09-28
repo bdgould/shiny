@@ -11,6 +11,12 @@ import type {
 } from '../../types/ontologyCache'
 import { useOntologyCacheStore } from '../../stores/ontologyCache'
 import { getQueryContextSettings } from '../preferences/appSettings'
+import { rdfProcessor } from '../rdf/rdfProcessor'
+
+/**
+ * Maximum characters of Turtle returned to the AI for CONSTRUCT/DESCRIBE results
+ */
+const TURTLE_PREVIEW_LIMIT = 4000
 
 /**
  * Result of a tool execution
@@ -354,40 +360,62 @@ async function executeRunSparqlQuery(
     // Note: API signature is (query, backendId) - query first, then backendId
     const result = await window.electronAPI.query.execute(query, backendId)
 
-    // Format result for AI consumption
-    if (result.type === 'select') {
+    // Format result for AI consumption.
+    // The main process returns { data, queryType, contentType } where queryType is
+    // one of SELECT / CONSTRUCT / DESCRIBE / ASK. SELECT and ASK carry SPARQL JSON
+    // in `data`; CONSTRUCT and DESCRIBE carry Turtle text.
+    const queryType = String(result.queryType || '').toUpperCase()
+
+    if (queryType === 'SELECT') {
+      const bindings: Array<Record<string, { value: string }>> =
+        result.data?.results?.bindings || []
+
       return {
         success: true,
         result: {
           type: 'select',
-          rowCount: result.data?.results?.bindings?.length || 0,
+          rowCount: bindings.length,
           columns: result.data?.head?.vars || [],
-          rows: (result.data?.results?.bindings || [])
-            .slice(0, 20)
-            .map((binding: Record<string, { value: string }>) => {
-              const row: Record<string, string> = {}
-              for (const [key, val] of Object.entries(binding)) {
-                row[key] = val.value
-              }
-              return row
-            }),
-          truncated: (result.data?.results?.bindings?.length || 0) > 20,
+          rows: bindings.slice(0, 20).map((binding) => {
+            const row: Record<string, string> = {}
+            for (const [key, val] of Object.entries(binding)) {
+              row[key] = val.value
+            }
+            return row
+          }),
+          truncated: bindings.length > 20,
         },
       }
-    } else if (result.type === 'construct' || result.type === 'describe') {
+    } else if (queryType === 'CONSTRUCT' || queryType === 'DESCRIBE') {
+      const turtle = typeof result.data === 'string' ? result.data : ''
+
+      // Parse to report an accurate triple count; fall back to the raw text if the
+      // backend returned something we can't parse.
+      let tripleCount: number | null = null
+      try {
+        const dataset = await rdfProcessor.parseTurtle(turtle)
+        tripleCount = dataset.size
+      } catch (parseError) {
+        console.warn('Failed to parse CONSTRUCT/DESCRIBE result as Turtle:', parseError)
+      }
+
       return {
         success: true,
         result: {
-          type: result.type,
-          tripleCount: Array.isArray(result.data) ? result.data.length : 0,
+          type: queryType.toLowerCase(),
+          tripleCount,
+          format: 'turtle',
+          data:
+            turtle.length > TURTLE_PREVIEW_LIMIT ? turtle.slice(0, TURTLE_PREVIEW_LIMIT) : turtle,
+          truncated: turtle.length > TURTLE_PREVIEW_LIMIT,
         },
       }
-    } else if (result.type === 'ask') {
+    } else if (queryType === 'ASK') {
       return {
         success: true,
         result: {
           type: 'ask',
-          answer: result.data,
+          answer: result.data?.boolean ?? result.data,
         },
       }
     }
@@ -395,7 +423,7 @@ async function executeRunSparqlQuery(
     return {
       success: true,
       result: {
-        type: result.type,
+        type: queryType.toLowerCase() || 'unknown',
         data: result.data,
       },
     }

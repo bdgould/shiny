@@ -4,17 +4,60 @@ import { useCacheRefresh } from '../useCacheRefresh'
 import { useOntologyCacheStore } from '../../stores/ontologyCache'
 import { useConnectionStore } from '../../stores/connection'
 import * as appSettings from '../../services/preferences/appSettings'
+import type { BackendConfig } from '../../types/backends'
+import { DEFAULT_CACHE_CONFIG } from '../../types/ontologyCache'
 
 // Mock window.setInterval and clearInterval
 vi.useFakeTimers()
 
-// Mock app settings
+// Mock app settings. The factory is hoisted, so this literal is spelled out
+// rather than built with the cacheSettings() helper below.
 vi.mock('../../services/preferences/appSettings', () => ({
   getCacheSettings: vi.fn(() => ({
+    enableAutocomplete: true,
+    defaultTtl: 24 * 60 * 60 * 1000,
+    defaultMaxElements: 50000,
     autoRefresh: true,
-    refreshCheckInterval: 300000, // 5 minutes
+    refreshCheckInterval: 300000,
   })),
 }))
+
+/**
+ * Full GlobalCacheSettings object - the composable reads every field, so partial
+ * literals are not assignable.
+ */
+function cacheSettings(
+  overrides: Partial<appSettings.GlobalCacheSettings> = {}
+): appSettings.GlobalCacheSettings {
+  return {
+    enableAutocomplete: true,
+    defaultTtl: 24 * 60 * 60 * 1000,
+    defaultMaxElements: 50000,
+    autoRefresh: true,
+    refreshCheckInterval: 300000,
+    ...overrides,
+  }
+}
+
+/** A valid BackendConfig with ontology caching enabled. */
+function makeBackend(overrides: Partial<BackendConfig> = {}): BackendConfig {
+  return {
+    id: 'backend-1',
+    name: 'Backend 1',
+    type: 'sparql-1.1',
+    endpoint: 'http://example.org/sparql',
+    authType: 'none',
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+    cacheConfig: {
+      ...DEFAULT_CACHE_CONFIG,
+      enabled: true,
+      maxElements: 10000,
+      ttl: 86400000,
+    },
+    ...overrides,
+  }
+}
 
 describe('useCacheRefresh', () => {
   let cacheStore: ReturnType<typeof useOntologyCacheStore>
@@ -48,10 +91,9 @@ describe('useCacheRefresh', () => {
 
   describe('initialization', () => {
     it('should not auto-start if autoRefresh is disabled', () => {
-      vi.mocked(appSettings.getCacheSettings).mockReturnValue({
-        autoRefresh: false,
-        refreshCheckInterval: 300000,
-      })
+      vi.mocked(appSettings.getCacheSettings).mockReturnValue(
+        cacheSettings({ autoRefresh: false, refreshCheckInterval: 300000 })
+      )
 
       const { isRunning, start } = useCacheRefresh()
 
@@ -65,10 +107,9 @@ describe('useCacheRefresh', () => {
     })
 
     it('should auto-start if autoRefresh is enabled', () => {
-      vi.mocked(appSettings.getCacheSettings).mockReturnValue({
-        autoRefresh: true,
-        refreshCheckInterval: 300000,
-      })
+      vi.mocked(appSettings.getCacheSettings).mockReturnValue(
+        cacheSettings({ autoRefresh: true, refreshCheckInterval: 300000 })
+      )
 
       const { isRunning, start } = useCacheRefresh()
 
@@ -84,10 +125,9 @@ describe('useCacheRefresh', () => {
 
   describe('start and stop', () => {
     it('should start background refresh', () => {
-      vi.mocked(appSettings.getCacheSettings).mockReturnValue({
-        autoRefresh: true, // Must be true for checkAndRefreshCaches to actually run
-        refreshCheckInterval: 300000,
-      })
+      vi.mocked(appSettings.getCacheSettings).mockReturnValue(
+        cacheSettings({ autoRefresh: true, refreshCheckInterval: 300000 })
+      )
 
       const { start, isRunning } = useCacheRefresh()
 
@@ -100,10 +140,9 @@ describe('useCacheRefresh', () => {
     })
 
     it('should stop background refresh', () => {
-      vi.mocked(appSettings.getCacheSettings).mockReturnValue({
-        autoRefresh: false,
-        refreshCheckInterval: 300000,
-      })
+      vi.mocked(appSettings.getCacheSettings).mockReturnValue(
+        cacheSettings({ autoRefresh: false, refreshCheckInterval: 300000 })
+      )
 
       const { start, stop, isRunning } = useCacheRefresh()
 
@@ -115,10 +154,9 @@ describe('useCacheRefresh', () => {
     })
 
     it('should not start multiple times', () => {
-      vi.mocked(appSettings.getCacheSettings).mockReturnValue({
-        autoRefresh: true, // Need this to be true for start() to actually call getAllCachedBackendIds
-        refreshCheckInterval: 300000,
-      })
+      vi.mocked(appSettings.getCacheSettings).mockReturnValue(
+        cacheSettings({ autoRefresh: true, refreshCheckInterval: 300000 })
+      )
 
       const { start } = useCacheRefresh()
 
@@ -134,10 +172,9 @@ describe('useCacheRefresh', () => {
 
   describe('periodic checks', () => {
     it('should run checks at configured interval', async () => {
-      vi.mocked(appSettings.getCacheSettings).mockReturnValue({
-        autoRefresh: true,
-        refreshCheckInterval: 300000, // 5 minutes
-      })
+      vi.mocked(appSettings.getCacheSettings).mockReturnValue(
+        cacheSettings({ autoRefresh: true, refreshCheckInterval: 300000 })
+      )
 
       const { start } = useCacheRefresh()
 
@@ -160,10 +197,9 @@ describe('useCacheRefresh', () => {
 
   describe('checkAndRefreshCaches', () => {
     it('should skip if autoRefresh is disabled', async () => {
-      vi.mocked(appSettings.getCacheSettings).mockReturnValue({
-        autoRefresh: false,
-        refreshCheckInterval: 300000,
-      })
+      vi.mocked(appSettings.getCacheSettings).mockReturnValue(
+        cacheSettings({ autoRefresh: false, refreshCheckInterval: 300000 })
+      )
 
       const { triggerCheck } = useCacheRefresh()
 
@@ -173,29 +209,12 @@ describe('useCacheRefresh', () => {
     })
 
     it('should refresh stale caches', async () => {
-      vi.mocked(appSettings.getCacheSettings).mockReturnValue({
-        autoRefresh: true,
-        refreshCheckInterval: 300000,
-      })
+      vi.mocked(appSettings.getCacheSettings).mockReturnValue(
+        cacheSettings({ autoRefresh: true, refreshCheckInterval: 300000 })
+      )
 
       connectionStore.backends = [
-        {
-          id: 'backend-1',
-          name: 'Backend 1',
-          type: 'sparql11',
-          endpoint: 'http://example.org/sparql',
-          authType: 'none',
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-          cacheConfig: {
-            enabled: true,
-            maxElements: 10000,
-            ttl: 86400000,
-            includeClasses: true,
-            includeProperties: true,
-            includeIndividuals: true,
-          },
-        },
+        makeBackend({ cacheConfig: { ...DEFAULT_CACHE_CONFIG, enabled: true } }),
       ]
 
       vi.mocked(cacheStore.getAllCachedBackendIds).mockResolvedValue(['backend-1'])
@@ -215,29 +234,12 @@ describe('useCacheRefresh', () => {
     })
 
     it('should skip backends without cache enabled', async () => {
-      vi.mocked(appSettings.getCacheSettings).mockReturnValue({
-        autoRefresh: true,
-        refreshCheckInterval: 300000,
-      })
+      vi.mocked(appSettings.getCacheSettings).mockReturnValue(
+        cacheSettings({ autoRefresh: true, refreshCheckInterval: 300000 })
+      )
 
       connectionStore.backends = [
-        {
-          id: 'backend-1',
-          name: 'Backend 1',
-          type: 'sparql11',
-          endpoint: 'http://example.org/sparql',
-          authType: 'none',
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-          cacheConfig: {
-            enabled: false,
-            maxElements: 10000,
-            ttl: 86400000,
-            includeClasses: true,
-            includeProperties: true,
-            includeIndividuals: true,
-          },
-        },
+        makeBackend({ cacheConfig: { ...DEFAULT_CACHE_CONFIG, enabled: false } }),
       ]
 
       const { triggerCheck } = useCacheRefresh()
@@ -249,29 +251,12 @@ describe('useCacheRefresh', () => {
     })
 
     it('should skip valid caches', async () => {
-      vi.mocked(appSettings.getCacheSettings).mockReturnValue({
-        autoRefresh: true,
-        refreshCheckInterval: 300000,
-      })
+      vi.mocked(appSettings.getCacheSettings).mockReturnValue(
+        cacheSettings({ autoRefresh: true, refreshCheckInterval: 300000 })
+      )
 
       connectionStore.backends = [
-        {
-          id: 'backend-1',
-          name: 'Backend 1',
-          type: 'sparql11',
-          endpoint: 'http://example.org/sparql',
-          authType: 'none',
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-          cacheConfig: {
-            enabled: true,
-            maxElements: 10000,
-            ttl: 86400000,
-            includeClasses: true,
-            includeProperties: true,
-            includeIndividuals: true,
-          },
-        },
+        makeBackend({ cacheConfig: { ...DEFAULT_CACHE_CONFIG, enabled: true } }),
       ]
 
       vi.mocked(cacheStore.getAllCachedBackendIds).mockResolvedValue(['backend-1'])
@@ -291,29 +276,12 @@ describe('useCacheRefresh', () => {
     })
 
     it('should handle errors gracefully', async () => {
-      vi.mocked(appSettings.getCacheSettings).mockReturnValue({
-        autoRefresh: true,
-        refreshCheckInterval: 300000,
-      })
+      vi.mocked(appSettings.getCacheSettings).mockReturnValue(
+        cacheSettings({ autoRefresh: true, refreshCheckInterval: 300000 })
+      )
 
       connectionStore.backends = [
-        {
-          id: 'backend-1',
-          name: 'Backend 1',
-          type: 'sparql11',
-          endpoint: 'http://example.org/sparql',
-          authType: 'none',
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-          cacheConfig: {
-            enabled: true,
-            maxElements: 10000,
-            ttl: 86400000,
-            includeClasses: true,
-            includeProperties: true,
-            includeIndividuals: true,
-          },
-        },
+        makeBackend({ cacheConfig: { ...DEFAULT_CACHE_CONFIG, enabled: true } }),
       ]
 
       vi.mocked(cacheStore.getAllCachedBackendIds).mockRejectedValue(new Error('DB error'))
@@ -335,29 +303,12 @@ describe('useCacheRefresh', () => {
 
   describe('rate limiting', () => {
     it('should enforce rate limit', async () => {
-      vi.mocked(appSettings.getCacheSettings).mockReturnValue({
-        autoRefresh: true,
-        refreshCheckInterval: 300000,
-      })
+      vi.mocked(appSettings.getCacheSettings).mockReturnValue(
+        cacheSettings({ autoRefresh: true, refreshCheckInterval: 300000 })
+      )
 
       connectionStore.backends = [
-        {
-          id: 'backend-1',
-          name: 'Backend 1',
-          type: 'sparql11',
-          endpoint: 'http://example.org/sparql',
-          authType: 'none',
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-          cacheConfig: {
-            enabled: true,
-            maxElements: 10000,
-            ttl: 86400000,
-            includeClasses: true,
-            includeProperties: true,
-            includeIndividuals: true,
-          },
-        },
+        makeBackend({ cacheConfig: { ...DEFAULT_CACHE_CONFIG, enabled: true } }),
       ]
 
       vi.mocked(cacheStore.getAllCachedBackendIds).mockResolvedValue(['backend-1'])
@@ -399,29 +350,12 @@ describe('useCacheRefresh', () => {
     })
 
     it('should not refresh if already in progress', async () => {
-      vi.mocked(appSettings.getCacheSettings).mockReturnValue({
-        autoRefresh: true,
-        refreshCheckInterval: 300000,
-      })
+      vi.mocked(appSettings.getCacheSettings).mockReturnValue(
+        cacheSettings({ autoRefresh: true, refreshCheckInterval: 300000 })
+      )
 
       connectionStore.backends = [
-        {
-          id: 'backend-1',
-          name: 'Backend 1',
-          type: 'sparql11',
-          endpoint: 'http://example.org/sparql',
-          authType: 'none',
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-          cacheConfig: {
-            enabled: true,
-            maxElements: 10000,
-            ttl: 86400000,
-            includeClasses: true,
-            includeProperties: true,
-            includeIndividuals: true,
-          },
-        },
+        makeBackend({ cacheConfig: { ...DEFAULT_CACHE_CONFIG, enabled: true } }),
       ]
 
       vi.mocked(cacheStore.getAllCachedBackendIds).mockResolvedValue(['backend-1'])
@@ -522,10 +456,9 @@ describe('useCacheRefresh', () => {
 
   describe('lastCheckTime', () => {
     it('should update lastCheckTime on check', async () => {
-      vi.mocked(appSettings.getCacheSettings).mockReturnValue({
-        autoRefresh: true,
-        refreshCheckInterval: 300000,
-      })
+      vi.mocked(appSettings.getCacheSettings).mockReturnValue(
+        cacheSettings({ autoRefresh: true, refreshCheckInterval: 300000 })
+      )
 
       const { triggerCheck, lastCheckTime } = useCacheRefresh()
 
@@ -540,50 +473,22 @@ describe('useCacheRefresh', () => {
 
   describe('multiple backends', () => {
     it('should handle multiple backends correctly', async () => {
-      vi.mocked(appSettings.getCacheSettings).mockReturnValue({
-        autoRefresh: true,
-        refreshCheckInterval: 300000,
-      })
+      vi.mocked(appSettings.getCacheSettings).mockReturnValue(
+        cacheSettings({ autoRefresh: true, refreshCheckInterval: 300000 })
+      )
 
       connectionStore.backends = [
-        {
-          id: 'backend-1',
-          name: 'Backend 1',
-          type: 'sparql11',
-          endpoint: 'http://example.org/sparql',
-          authType: 'none',
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-          cacheConfig: {
-            enabled: true,
-            maxElements: 10000,
-            ttl: 86400000,
-            includeClasses: true,
-            includeProperties: true,
-            includeIndividuals: true,
-          },
-        },
-        {
+        makeBackend({ cacheConfig: { ...DEFAULT_CACHE_CONFIG, enabled: true } }),
+        makeBackend({
           id: 'backend-2',
           name: 'Backend 2',
-          type: 'sparql11',
           endpoint: 'http://example2.org/sparql',
-          authType: 'none',
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-          cacheConfig: {
-            enabled: true,
-            maxElements: 10000,
-            ttl: 86400000,
-            includeClasses: true,
-            includeProperties: true,
-            includeIndividuals: true,
-          },
-        },
+          cacheConfig: { ...DEFAULT_CACHE_CONFIG, enabled: true },
+        }),
       ]
 
       vi.mocked(cacheStore.getAllCachedBackendIds).mockResolvedValue(['backend-1', 'backend-2'])
-      vi.mocked(cacheStore.validateCache).mockImplementation(async (backendId) => ({
+      vi.mocked(cacheStore.validateCache).mockImplementation(async () => ({
         exists: true,
         valid: false,
         stale: true,

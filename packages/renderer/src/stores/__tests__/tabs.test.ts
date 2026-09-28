@@ -181,7 +181,7 @@ describe('useTabsStore', () => {
 
     it('should select adjacent tab when active tab is closed', () => {
       const store = useTabsStore()
-      const tab1Id = store.createTab({ name: 'Tab 1' })
+      store.createTab({ name: 'Tab 1' })
       const tab2Id = store.createTab({ name: 'Tab 2' })
       store.createTab({ name: 'Tab 3' })
 
@@ -535,7 +535,7 @@ describe('useTabsStore', () => {
     it('should update when active tab changes', () => {
       const store = useTabsStore()
       store.createTab({ name: 'Tab 1' })
-      const tab2Id = store.createTab({ name: 'Tab 2' })
+      store.createTab({ name: 'Tab 2' })
 
       expect(store.activeTab?.name).toBe('Tab 2')
 

@@ -1,13 +1,6 @@
-import { ipcMain, WebContents } from 'electron'
+import { ipcMain } from 'electron'
 import { fileService } from '../services/FileService.js'
-
-/**
- * Check if the sender is authorized (from main window)
- */
-function isAuthorizedSender(_sender: WebContents): boolean {
-  // Simple authorization - could be enhanced with window tracking
-  return true
-}
+import { isAuthorizedSender } from './security.js'
 
 /**
  * Handle saving SPARQL query to file system
@@ -20,8 +13,8 @@ ipcMain.handle(
     backendMetadata: { id: string; name: string } | null,
     currentFilePath?: string
   ) => {
-    if (!isAuthorizedSender(event.sender)) {
-      throw new Error('Unauthorized')
+    if (!isAuthorizedSender(event.senderFrame)) {
+      throw new Error('Unauthorized IPC sender')
     }
 
     return await fileService.saveQuery(query, backendMetadata, currentFilePath)
@@ -32,8 +25,8 @@ ipcMain.handle(
  * Handle opening SPARQL query from file system
  */
 ipcMain.handle('files:openQuery', async (event) => {
-  if (!isAuthorizedSender(event.sender)) {
-    throw new Error('Unauthorized')
+  if (!isAuthorizedSender(event.senderFrame)) {
+    throw new Error('Unauthorized IPC sender')
   }
 
   return await fileService.openQuery()
@@ -45,8 +38,8 @@ ipcMain.handle('files:openQuery', async (event) => {
 ipcMain.handle(
   'files:saveResults',
   async (event, content: string, queryType: string, format: string) => {
-    if (!isAuthorizedSender(event.sender)) {
-      throw new Error('Unauthorized')
+    if (!isAuthorizedSender(event.senderFrame)) {
+      throw new Error('Unauthorized IPC sender')
     }
 
     return await fileService.saveResults(content, queryType, format)
@@ -57,8 +50,8 @@ ipcMain.handle(
  * Handle opening prefix file from file system
  */
 ipcMain.handle('files:openPrefixFile', async (event) => {
-  if (!isAuthorizedSender(event.sender)) {
-    throw new Error('Unauthorized')
+  if (!isAuthorizedSender(event.senderFrame)) {
+    throw new Error('Unauthorized IPC sender')
   }
 
   return await fileService.openPrefixFile()

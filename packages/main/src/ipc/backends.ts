@@ -4,12 +4,7 @@
 
 import { ipcMain } from 'electron'
 import { getBackendService } from '../services/index.js'
-
-// Validate sender is authorized
-function isAuthorizedSender(frame: Electron.WebFrameMain): boolean {
-  const url = frame.url
-  return url.startsWith('file://') || url.startsWith('http://localhost:5173')
-}
+import { isAuthorizedSender } from './security.js'
 
 /**
  * Get all backends

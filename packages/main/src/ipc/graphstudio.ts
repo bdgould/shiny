@@ -6,12 +6,7 @@ import { ipcMain } from 'electron'
 import axios from 'axios'
 import https from 'https'
 import type { Graphmart, Layer } from '../backends/providers/graphstudio-types.js'
-
-// Validate sender is authorized
-function isAuthorizedSender(frame: Electron.WebFrameMain): boolean {
-  const url = frame.url
-  return url.startsWith('file://') || url.startsWith('http://localhost:5173')
-}
+import { isAuthorizedSender } from './security.js'
 
 /**
  * Create axios instance with SSL configuration

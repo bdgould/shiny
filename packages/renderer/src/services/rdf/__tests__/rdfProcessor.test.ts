@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { RDFProcessor } from '../rdfProcessor'
-import type { DatasetCore, Quad, Term } from '@rdfjs/types'
+import { RDFProcessor, type RdfDataset } from '../rdfProcessor'
+import type { Quad, Term } from '@rdfjs/types'
 import { Readable } from 'readable-stream'
 
 // Create mock RDF terms
@@ -10,18 +10,16 @@ const createNamedNode = (value: string): Term => ({
   equals: vi.fn(),
 })
 
-const createLiteral = (
-  value: string,
-  options?: { datatype?: string; language?: string }
-): Term => ({
-  termType: 'Literal' as const,
-  value,
-  language: options?.language || '',
-  datatype: options?.datatype
-    ? createNamedNode(options.datatype)
-    : createNamedNode('http://www.w3.org/2001/XMLSchema#string'),
-  equals: vi.fn(),
-})
+const createLiteral = (value: string, options?: { datatype?: string; language?: string }): Term =>
+  ({
+    termType: 'Literal' as const,
+    value,
+    language: options?.language || '',
+    datatype: options?.datatype
+      ? createNamedNode(options.datatype)
+      : createNamedNode('http://www.w3.org/2001/XMLSchema#string'),
+    equals: vi.fn(),
+  }) as unknown as Term
 
 const createBlankNode = (value: string): Term => ({
   termType: 'BlankNode' as const,
@@ -47,10 +45,10 @@ const createQuad = (
     object,
     graph,
     equals: vi.fn(),
-  }) as Quad
+  }) as unknown as Quad
 
 // Create a mock dataset
-const createMockDataset = (quads: Quad[]): DatasetCore => {
+const createMockDataset = (quads: Quad[]): RdfDataset => {
   const quadSet = new Set(quads)
   return {
     size: quads.length,
@@ -65,7 +63,7 @@ const createMockDataset = (quads: Quad[]): DatasetCore => {
       stream.push(null)
       return stream
     },
-  } as unknown as DatasetCore
+  } as unknown as RdfDataset
 }
 
 describe('RDFProcessor', () => {

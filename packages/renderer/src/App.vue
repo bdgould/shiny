@@ -64,7 +64,7 @@ const { isDragging, isLoading, handleDragEnter, handleDragLeave, handleDragOver,
   useFileDragDrop()
 
 // Will be set in onMounted
-let saveResultsFunction: ((format: string) => Promise<void>) | null = null
+let saveResultsFunction: ((format: string) => Promise<boolean>) | null = null
 
 async function handleFormatSelected(format: string) {
   if (saveResultsFunction) {

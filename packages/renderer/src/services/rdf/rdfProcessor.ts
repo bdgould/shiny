@@ -4,7 +4,14 @@ import SerializerTurtle from '@rdfjs/serializer-turtle'
 import SerializerNTriples from '@rdfjs/serializer-ntriples'
 import SerializerJsonLd from '@rdfjs/serializer-jsonld'
 import type { DatasetCore, Quad } from '@rdfjs/types'
+import type { RdfExtDataset } from 'rdf-ext'
 import { Readable } from 'readable-stream'
+
+/**
+ * A dataset that supports streaming, as produced by `parseTurtle`.
+ * The RDF/JS serializers consume `toStream()`, which plain `DatasetCore` lacks.
+ */
+export type RdfDataset = RdfExtDataset
 
 export interface EntityTriple {
   predicate: string
@@ -24,7 +31,7 @@ export class RDFProcessor {
   /**
    * Parse Turtle format string into an RDF dataset
    */
-  async parseTurtle(turtleString: string): Promise<DatasetCore> {
+  async parseTurtle(turtleString: string): Promise<RdfDataset> {
     const parser = new ParserN3({ factory: rdf })
     const stream = parser.import(Readable.from([turtleString]))
     return rdf.dataset().import(stream)
@@ -33,7 +40,7 @@ export class RDFProcessor {
   /**
    * Serialize RDF dataset to Turtle format
    */
-  async serializeToTurtle(dataset: DatasetCore): Promise<string> {
+  async serializeToTurtle(dataset: RdfDataset): Promise<string> {
     try {
       // Validate all quads have proper term structures before serializing
       for (const quad of dataset) {
@@ -62,7 +69,7 @@ export class RDFProcessor {
   /**
    * Serialize RDF dataset to N-Triples format
    */
-  async serializeToNTriples(dataset: DatasetCore): Promise<string> {
+  async serializeToNTriples(dataset: RdfDataset): Promise<string> {
     const serializer = new SerializerNTriples()
     const stream = serializer.import(dataset.toStream())
     return this.streamToString(stream)
@@ -79,7 +86,7 @@ export class RDFProcessor {
   /**
    * Serialize RDF dataset to JSON-LD format
    */
-  async serializeToJsonLD(dataset: DatasetCore): Promise<string> {
+  async serializeToJsonLD(dataset: RdfDataset): Promise<string> {
     const serializer = new SerializerJsonLd()
     const stream = serializer.import(dataset.toStream())
     const jsonld = await this.streamToJsonLd(stream)
