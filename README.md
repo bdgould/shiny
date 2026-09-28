@@ -201,6 +201,27 @@ xattr -d com.apple.quarantine /Applications/Shiny.app
 
 After the first time, the app will open normally.
 
+**Linux Users**: Download the `.AppImage` for your architecture, make it executable, and run it:
+
+```bash
+chmod +x Shiny-*-x64.AppImage
+./Shiny-*-x64.AppImage
+```
+
+On Ubuntu 22.04 and later, AppImages need `libfuse2` (`sudo apt install libfuse2`).
+
+### Updates
+
+Shiny checks GitHub releases on launch and every six hours. You can also use **Check for Updates…** in the app menu on macOS or the Help menu elsewhere.
+
+| Platform         | Behavior                                                                                                                                              |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Windows          | Downloads in the background, then offers to restart. Otherwise installs on quit.                                                                      |
+| Linux (AppImage) | Same as Windows.                                                                                                                                      |
+| macOS            | Tells you a new version is available and opens the download page. The builds are unsigned, and macOS will not install unsigned updates automatically. |
+
+Set `SHINY_DISABLE_UPDATES=1` to turn update checks off.
+
 ### Other Commands
 
 ```bash
@@ -535,7 +556,7 @@ Please report security vulnerabilities to [your-email]. Do not open public issue
 - **Process Isolation**: Renderer process runs in sandbox with no Node.js access
 - **IPC Validation**: All inter-process messages validated and sanitized
 - **No Credential Logging**: Credentials never logged or displayed in UI
-- **Secure Updates**: Update verification and code signing (coming in Phase 7)
+- **Updates**: Windows and Linux verify each download against the SHA-512 hash in the release manifest before installing. macOS builds are not code-signed yet
 
 ## License
 

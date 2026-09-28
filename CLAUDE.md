@@ -31,4 +31,8 @@ npm run test:e2e        # Playwright drives the real app (builds main + preload 
 
 ## Releases
 
-Every push to `main` without `[skip ci]` tags `v<version>`, builds installers, publishes a GitHub release, and a bot commits the next version bump. Prefer one merge per release. macOS builds are unsigned.
+Every push to `main` without `[skip ci]` tags `v<version>`, builds installers (`.github/workflows/build.yml`: macOS, Windows, Linux, each x64 and arm64), publishes a GitHub release, and a bot commits the next version bump. Prefer one merge per release.
+
+- `scripts/merge-update-manifests.js` merges the per-arch `latest.yml` / `latest-mac.yml` into one; electron-updater picks the file whose name contains the machine's arch, so artifact names must include `${arch}`.
+- Auto-update (`packages/main/src/updater.ts`) installs on Windows and Linux. macOS builds are unsigned, so macOS only gets a notice with a download link. Set `SHINY_DISABLE_UPDATES=1` to disable (e2e does).
+- PRs that touch packaging run `package-check.yml`, which builds every installer.

@@ -1,0 +1,31 @@
+name: Package Check
+
+# Build every installer on pull requests that touch packaging, so a broken
+# build or update manifest is caught before it reaches a release.
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'package.json'
+      - 'package-lock.json'
+      - 'scripts/**'
+      - 'icons/**'
+      - 'packages/*/package.json'
+      - 'packages/*/tsconfig*.json'
+      - 'packages/main/src/updater.ts'
+      - 'packages/renderer/vite.config.ts'
+      - '.github/workflows/build.yml'
+      - '.github/workflows/release.yml'
+      - '.github/workflows/package-check.yml'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    uses: ./.github/workflows/build.yml
