@@ -118,7 +118,7 @@
           ]
         }
       ],
-      "icon": "icons/shiny.icns",
+      "icon": "icons/linux",
       "category": "Development",
       "artifactName": "${productName}-${version}-${arch}.${ext}",
       "synopsis": "SPARQL client for knowledge graphs"
