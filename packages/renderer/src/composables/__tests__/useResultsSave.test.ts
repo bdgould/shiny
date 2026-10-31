@@ -101,6 +101,16 @@ describe('useResultsSave', () => {
     expect(alertMock).toHaveBeenCalledWith('Failed to save results: Unknown error')
   })
 
+  it('stays silent when the user cancels the save dialog', async () => {
+    saveResultsMock.mockResolvedValueOnce({ success: false, canceled: true })
+    const id = tabsStore.createTab()
+    tabsStore.setTabResults(id, selectResults, 'SELECT')
+    const { saveResults } = useResultsSave()
+
+    expect(await saveResults('json')).toBe(false)
+    expect(alertMock).not.toHaveBeenCalled()
+  })
+
   it('alerts when serialization throws (unsupported format)', async () => {
     const id = tabsStore.createTab()
     tabsStore.setTabResults(id, selectResults, 'SELECT')

@@ -57,7 +57,10 @@ describe('FileService', () => {
       'returns unsuccessful when cancelled %#',
       async (dialogResult) => {
         dialog.showSaveDialog.mockResolvedValue(dialogResult)
-        await expect(service.saveQuery('q', null)).resolves.toEqual({ success: false })
+        await expect(service.saveQuery('q', null)).resolves.toEqual({
+          success: false,
+          canceled: true,
+        })
         expect(fs.writeFile).not.toHaveBeenCalled()
       }
     )
@@ -215,7 +218,10 @@ describe('FileService', () => {
 
     it('returns unsuccessful when cancelled', async () => {
       dialog.showSaveDialog.mockResolvedValue({ canceled: true })
-      await expect(service.saveResults('d', 'SELECT', 'csv')).resolves.toEqual({ success: false })
+      await expect(service.saveResults('d', 'SELECT', 'csv')).resolves.toEqual({
+        success: false,
+        canceled: true,
+      })
       expect(fs.writeFile).not.toHaveBeenCalled()
     })
 

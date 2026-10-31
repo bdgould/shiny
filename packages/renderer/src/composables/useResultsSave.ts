@@ -61,6 +61,9 @@ export function useResultsSave() {
         // eslint-disable-next-line no-console
         console.log('Results saved successfully:', result.filePath)
         return true
+      } else if (result.canceled) {
+        // The user dismissed the save dialog; nothing to report
+        return false
       } else {
         alert(`Failed to save results: ${result.error || 'Unknown error'}`)
         return false
