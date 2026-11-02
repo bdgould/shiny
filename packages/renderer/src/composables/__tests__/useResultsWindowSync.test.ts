@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
-import { nextTick } from 'vue'
+import { isProxy, nextTick } from 'vue'
 import { useResultsWindowSync } from '../useResultsWindowSync'
 import { useTabsStore } from '@/stores/tabs'
 import { useResultsPaneStore } from '@/stores/resultsPane'
@@ -67,6 +67,22 @@ describe('useResultsWindowSync', () => {
       error: null,
       isExecuting: false,
     })
+  })
+
+  it('snapshots the raw results object, not the store proxy', () => {
+    // Electron IPC structured-clones arguments and cannot clone a Vue proxy.
+    const tabs = useTabsStore()
+    const id = tabs.createTab({ name: 'people' })
+    const response = {
+      data: { head: { vars: ['s'] }, results: { bindings: [] } },
+      queryType: 'SELECT',
+    }
+    tabs.setTabResults(id, response, 'SELECT')
+    expect(isProxy(tabs.activeTab?.results)).toBe(true)
+    const { snapshot } = start()
+    const published = snapshot().results
+    expect(isProxy(published)).toBe(false)
+    expect(published).toBe(response)
   })
 
   it('snapshots an empty state with no tabs', () => {
