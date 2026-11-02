@@ -191,6 +191,20 @@ describe('MainPane', () => {
     expect(w.find('.results-section').exists()).toBe(true)
   })
 
+  it('offers Copy next to Save and opens the picker in copy mode', async () => {
+    const tabs = useTabsStore()
+    const id = tabs.createTab()
+    const w = mountPane()
+    expect(w.find('button[title="Copy results…"]').attributes('disabled')).toBeDefined()
+    tabs.setTabResults(id, { data: { head: { vars: [] }, results: { bindings: [] } } }, 'SELECT')
+    await w.vm.$nextTick()
+    await w.find('button[title="Copy results…"]').trigger('click')
+    const exportFlow = useResultsExport()
+    expect(exportFlow.isPickerOpen.value).toBe(true)
+    expect(exportFlow.pickerTitle.value).toBe('Copy results as')
+    exportFlow.closePicker()
+  })
+
   it('disables Save until there are results, then opens the format picker', async () => {
     const tabs = useTabsStore()
     const id = tabs.createTab()
@@ -204,7 +218,14 @@ describe('MainPane', () => {
     await w.find('button[title="Save results…"]').trigger('click')
     const exportFlow = useResultsExport()
     expect(exportFlow.isPickerOpen.value).toBe(true)
-    expect(exportFlow.pickerFormats.value.map((f) => f.value)).toEqual(['csv', 'json'])
+    expect(exportFlow.pickerFormats.value.map((f) => f.value)).toEqual([
+      'csv',
+      'tsv',
+      'json',
+      'xml',
+      'markdown',
+    ])
+    expect(exportFlow.pickerTitle.value).toBe('Save results as')
     exportFlow.closePicker()
   })
 

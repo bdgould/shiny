@@ -1,11 +1,39 @@
 import { describe, it, expect } from 'vitest'
 import {
   serializeToCSV,
+  serializeToTSV,
+  serializeToSparqlXML,
+  serializeAskToSparqlXML,
+  serializeToMarkdown,
   serializeToJSON,
   serializeAskToJSON,
   getAvailableFormats,
   serializeResults,
+  tsvTerm,
+  FORMAT_EXTENSIONS,
+  FORMAT_LABELS,
 } from '../serializeResults'
+
+const typedResults = {
+  data: {
+    head: { vars: ['s', 'label', 'age', 'b'] },
+    results: {
+      bindings: [
+        {
+          s: { type: 'uri', value: 'http://ex.org/a' },
+          label: { type: 'literal', value: 'A "quoted"\ttab', 'xml:lang': 'en' },
+          age: {
+            type: 'literal',
+            value: '42',
+            datatype: 'http://www.w3.org/2001/XMLSchema#integer',
+          },
+          b: { type: 'bnode', value: 'b0' },
+        },
+        { s: { type: 'uri', value: 'http://ex.org/<odd>&' } },
+      ],
+    },
+  },
+}
 
 describe('serializeToCSV', () => {
   it('should serialize SELECT results to CSV format', () => {
@@ -84,6 +112,93 @@ describe('serializeToCSV', () => {
   })
 })
 
+describe('serializeToTSV', () => {
+  it('encodes terms per the SPARQL 1.1 TSV spec', () => {
+    expect(tsvTerm({ type: 'uri', value: 'http://ex.org/a' })).toBe('<http://ex.org/a>')
+    expect(tsvTerm({ type: 'bnode', value: 'b0' })).toBe('_:b0')
+    expect(tsvTerm({ type: 'literal', value: 'plain' })).toBe('"plain"')
+    expect(tsvTerm({ type: 'literal', value: 'hi', 'xml:lang': 'en' })).toBe('"hi"@en')
+    expect(
+      tsvTerm({ type: 'literal', value: '1', datatype: 'http://www.w3.org/2001/XMLSchema#int' })
+    ).toBe('"1"^^<http://www.w3.org/2001/XMLSchema#int>')
+    expect(tsvTerm({ type: 'literal', value: 'a\tb\nc\\d"e' })).toBe('"a\\tb\\nc\\\\d\\"e"')
+    expect(tsvTerm(undefined)).toBe('')
+  })
+
+  it('writes a ?var header and one tab-separated row per binding', () => {
+    const tsv = serializeToTSV(typedResults)
+    expect(tsv.split('\n')).toEqual([
+      '?s\t?label\t?age\t?b',
+      '<http://ex.org/a>\t"A \\"quoted\\"\\ttab"@en\t"42"^^<http://www.w3.org/2001/XMLSchema#integer>\t_:b0',
+      '<http://ex.org/<odd>&>\t\t\t',
+    ])
+  })
+
+  it('returns an empty string with no variables and rejects bad input', () => {
+    expect(serializeToTSV({ head: { vars: [] }, results: { bindings: [] } })).toBe('')
+    expect(() => serializeToTSV({ data: {} })).toThrow('Invalid SELECT query results format')
+  })
+})
+
+describe('serializeToSparqlXML', () => {
+  it('writes the W3C results XML with escaped terms', () => {
+    const xml = serializeToSparqlXML(typedResults)
+    expect(xml).toContain('<sparql xmlns="http://www.w3.org/2005/sparql-results#">')
+    expect(xml).toContain('<variable name="label"/>')
+    expect(xml).toContain('<binding name="s"><uri>http://ex.org/a</uri></binding>')
+    expect(xml).toContain(
+      '<binding name="label"><literal xml:lang="en">A &quot;quoted&quot;\ttab</literal></binding>'
+    )
+    expect(xml).toContain(
+      '<literal datatype="http://www.w3.org/2001/XMLSchema#integer">42</literal>'
+    )
+    expect(xml).toContain('<bnode>b0</bnode>')
+    expect(xml).toContain('<uri>http://ex.org/&lt;odd&gt;&amp;</uri>')
+    expect(xml.split('<result>')).toHaveLength(3)
+    expect(xml.trim().endsWith('</sparql>')).toBe(true)
+  })
+
+  it('serializes ASK results as a boolean', () => {
+    expect(serializeAskToSparqlXML({ data: { head: {}, boolean: true } })).toContain(
+      '<boolean>true</boolean>'
+    )
+    expect(serializeAskToSparqlXML({ boolean: false })).toContain('<boolean>false</boolean>')
+    expect(serializeAskToSparqlXML({})).toContain('<boolean>false</boolean>')
+  })
+})
+
+describe('serializeToMarkdown', () => {
+  it('writes a GFM table with escaped pipes and flattened newlines', () => {
+    const md = serializeToMarkdown({
+      head: { vars: ['a', 'b'] },
+      results: {
+        bindings: [{ a: { value: 'x|y' }, b: { value: 'line1\nline2' } }, { a: { value: 'only' } }],
+      },
+    })
+    expect(md.split('\n')).toEqual([
+      '| a | b |',
+      '| --- | --- |',
+      '| x\\|y | line1 line2 |',
+      '| only |  |',
+    ])
+  })
+
+  it('returns an empty string with no variables', () => {
+    expect(serializeToMarkdown({ head: { vars: [] }, results: { bindings: [] } })).toBe('')
+  })
+})
+
+describe('format tables', () => {
+  it('has an extension and label for every offered format', () => {
+    for (const qt of ['SELECT', 'ASK', 'CONSTRUCT'] as const) {
+      for (const f of getAvailableFormats(qt)) {
+        expect(FORMAT_EXTENSIONS[f.value]).toBeTruthy()
+        expect(FORMAT_LABELS[f.value]).toBe(f.label)
+      }
+    }
+  })
+})
+
 describe('serializeToJSON', () => {
   it('should serialize SELECT results to JSON', () => {
     const results = {
@@ -126,12 +241,15 @@ describe('serializeAskToJSON', () => {
 })
 
 describe('getAvailableFormats', () => {
-  it('should return CSV and JSON for SELECT queries', () => {
+  it('should return tabular formats for SELECT queries', () => {
     const formats = getAvailableFormats('SELECT')
 
     expect(formats).toEqual([
       { value: 'csv', label: 'CSV' },
+      { value: 'tsv', label: 'TSV' },
       { value: 'json', label: 'JSON' },
+      { value: 'xml', label: 'SPARQL XML' },
+      { value: 'markdown', label: 'Markdown table' },
     ])
   })
 
@@ -149,10 +267,13 @@ describe('getAvailableFormats', () => {
     expect(formats).toHaveLength(5)
   })
 
-  it('should return only JSON for ASK queries', () => {
+  it('should return JSON and XML for ASK queries', () => {
     const formats = getAvailableFormats('ASK')
 
-    expect(formats).toEqual([{ value: 'json', label: 'JSON' }])
+    expect(formats).toEqual([
+      { value: 'json', label: 'JSON' },
+      { value: 'xml', label: 'SPARQL XML' },
+    ])
   })
 
   it('should return empty array for null query type', () => {
@@ -195,8 +316,8 @@ describe('serializeResults', () => {
   it('should throw error for unsupported SELECT format', async () => {
     const results = { data: {} }
 
-    await expect(serializeResults(results, 'SELECT', 'xml')).rejects.toThrow(
-      'Unsupported format "xml" for SELECT query'
+    await expect(serializeResults(results, 'SELECT', 'yaml')).rejects.toThrow(
+      'Unsupported format "yaml" for SELECT query'
     )
   })
 

@@ -19,6 +19,7 @@ describe('FormatSelectorDialog', () => {
     { value: 'csv', label: 'CSV' },
     { value: 'turtle', label: 'Turtle' },
     { value: 'ntriples', label: 'N-Triples' },
+    { value: 'markdown', label: 'Markdown table' },
     { value: 'custom', label: 'Custom' },
   ]
 
@@ -42,8 +43,16 @@ describe('FormatSelectorDialog', () => {
       ['CSV', '.csv'],
       ['Turtle', '.ttl'],
       ['N-Triples', '.nt'],
+      ['Markdown table', '.md'],
       ['Custom', '.custom'],
     ])
+  })
+
+  it('shows a default title that the parent can override', async () => {
+    const w = mountDialog()
+    expect(w.find('.dialog-header h3').text()).toBe('Select Export Format')
+    await w.setProps({ title: 'Copy results as' })
+    expect(w.find('.dialog-header h3').text()).toBe('Copy results as')
   })
 
   it('emits select when a format is chosen', async () => {

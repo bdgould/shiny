@@ -69,7 +69,13 @@ describe('useResultsSave', () => {
     tabsStore.setTabResults(id, selectResults, 'SELECT')
     const { canSaveResults, getExportFormats } = useResultsSave()
     expect(canSaveResults()).toBe(true)
-    expect(getExportFormats().map((f) => f.value)).toEqual(['csv', 'json'])
+    expect(getExportFormats().map((f) => f.value)).toEqual([
+      'csv',
+      'tsv',
+      'json',
+      'xml',
+      'markdown',
+    ])
   })
 
   it('serializes results, names the file after the tab, and confirms with a toast', async () => {
@@ -149,6 +155,58 @@ describe('useResultsSave', () => {
 
     expect(await saveResults('csv')).toBe(false)
     expect(messages()).toEqual([['error', 'Error saving results: Unknown error']])
+  })
+})
+
+describe('useResultsSave copyResults', () => {
+  let writeText: ReturnType<typeof vi.fn>
+  let tabsStore: ReturnType<typeof useTabsStore>
+  const toast = useToast()
+
+  beforeEach(() => {
+    localStorage.clear()
+    setActivePinia(createPinia())
+    for (const t of [...toast.toasts.value]) toast.remove(t.id)
+    writeText = vi.fn().mockResolvedValue(undefined)
+    Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true })
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+    tabsStore = useTabsStore()
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  it('copies the serialized results and confirms with the format label', async () => {
+    const id = tabsStore.createTab()
+    tabsStore.setTabResults(id, selectResults, 'SELECT')
+    const { copyResults } = useResultsSave()
+    expect(await copyResults('markdown')).toBe(true)
+    expect(writeText).toHaveBeenCalledWith(
+      '| s | label |\n| --- | --- |\n| http://ex.org/a | A, "x" |'
+    )
+    expect(toast.toasts.value.map((t) => [t.type, t.message])).toEqual([
+      ['success', 'Copied results as Markdown table'],
+    ])
+  })
+
+  it('warns when there is nothing to copy', async () => {
+    tabsStore.createTab()
+    const { copyResults } = useResultsSave()
+    expect(await copyResults('csv')).toBe(false)
+    expect(writeText).not.toHaveBeenCalled()
+    expect(toast.toasts.value[0].message).toBe('No results to copy. Execute a query first.')
+  })
+
+  it('reports clipboard failures', async () => {
+    writeText.mockRejectedValueOnce(new Error('denied'))
+    const id = tabsStore.createTab()
+    tabsStore.setTabResults(id, selectResults, 'SELECT')
+    const { copyResults } = useResultsSave()
+    expect(await copyResults('csv')).toBe(false)
+    expect(toast.toasts.value.map((t) => [t.type, t.message])).toEqual([
+      ['error', 'Error copying results: denied'],
+    ])
   })
 })
 

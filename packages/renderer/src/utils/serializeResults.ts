@@ -5,6 +5,54 @@
 import type { QueryType } from '@/services/sparql/queryDetector'
 import { rdfProcessor } from '@/services/rdf/rdfProcessor'
 
+/** File extension for each export format value. */
+export const FORMAT_EXTENSIONS: Record<string, string> = {
+  csv: 'csv',
+  tsv: 'tsv',
+  json: 'json',
+  xml: 'xml',
+  markdown: 'md',
+  turtle: 'ttl',
+  trig: 'trig',
+  ntriples: 'nt',
+  nquads: 'nq',
+  jsonld: 'jsonld',
+}
+
+/** Human-readable label for each export format value. */
+export const FORMAT_LABELS: Record<string, string> = {
+  csv: 'CSV',
+  tsv: 'TSV',
+  json: 'JSON',
+  xml: 'SPARQL XML',
+  markdown: 'Markdown table',
+  turtle: 'Turtle',
+  trig: 'TriG',
+  ntriples: 'N-Triples',
+  nquads: 'N-Quads',
+  jsonld: 'JSON-LD',
+}
+
+interface Binding {
+  type?: string
+  value?: string
+  datatype?: string
+  'xml:lang'?: string
+}
+
+interface SelectData {
+  head: { vars?: string[] }
+  results: { bindings?: Record<string, Binding>[] }
+}
+
+function selectData(results: any): SelectData {
+  const data = results.data || results
+  if (!data || !data.head || !data.results) {
+    throw new Error('Invalid SELECT query results format')
+  }
+  return data
+}
+
 /**
  * Serialize SELECT query results to CSV format
  */
@@ -50,6 +98,124 @@ export function serializeToCSV(results: any): string {
 }
 
 /**
+ * A binding term in the SPARQL 1.1 TSV encoding: IRIs in angle brackets,
+ * blank nodes as `_:label`, literals quoted with their language or datatype.
+ * Tabs, newlines and backslashes inside literals are escaped.
+ */
+export function tsvTerm(binding: Binding | undefined): string {
+  if (!binding || binding.value === undefined) return ''
+  const value = binding.value
+  switch (binding.type) {
+    case 'uri':
+      return `<${value}>`
+    case 'bnode':
+      return `_:${value}`
+    default: {
+      const escaped = value
+        .replace(/\\/g, '\\\\')
+        .replace(/"/g, '\\"')
+        .replace(/\n/g, '\\n')
+        .replace(/\r/g, '\\r')
+        .replace(/\t/g, '\\t')
+      if (binding['xml:lang']) return `"${escaped}"@${binding['xml:lang']}`
+      if (binding.datatype) return `"${escaped}"^^<${binding.datatype}>`
+      return `"${escaped}"`
+    }
+  }
+}
+
+/**
+ * Serialize SELECT query results to the SPARQL 1.1 TSV format
+ */
+export function serializeToTSV(results: any): string {
+  const data = selectData(results)
+  const variables = data.head.vars || []
+  const bindings = data.results.bindings || []
+  if (variables.length === 0) return ''
+
+  const header = variables.map((v) => `?${v}`).join('\t')
+  const rows = bindings.map((binding) => variables.map((v) => tsvTerm(binding[v])).join('\t'))
+  return [header, ...rows].join('\n')
+}
+
+function escapeXml(text: string): string {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+}
+
+function xmlTerm(binding: Binding): string {
+  const value = escapeXml(binding.value ?? '')
+  switch (binding.type) {
+    case 'uri':
+      return `<uri>${value}</uri>`
+    case 'bnode':
+      return `<bnode>${value}</bnode>`
+    default: {
+      const lang = binding['xml:lang'] ? ` xml:lang="${escapeXml(binding['xml:lang'])}"` : ''
+      const datatype = binding.datatype ? ` datatype="${escapeXml(binding.datatype)}"` : ''
+      return `<literal${lang}${datatype}>${value}</literal>`
+    }
+  }
+}
+
+const XML_HEADER = '<?xml version="1.0"?>\n<sparql xmlns="http://www.w3.org/2005/sparql-results#">'
+
+/**
+ * Serialize SELECT query results to the SPARQL Query Results XML format
+ */
+export function serializeToSparqlXML(results: any): string {
+  const data = selectData(results)
+  const variables = data.head.vars || []
+  const bindings = data.results.bindings || []
+
+  const lines = [XML_HEADER, '  <head>']
+  for (const v of variables) lines.push(`    <variable name="${escapeXml(v)}"/>`)
+  lines.push('  </head>', '  <results>')
+  for (const row of bindings) {
+    lines.push('    <result>')
+    for (const v of variables) {
+      const binding = row[v]
+      if (!binding) continue
+      lines.push(`      <binding name="${escapeXml(v)}">${xmlTerm(binding)}</binding>`)
+    }
+    lines.push('    </result>')
+  }
+  lines.push('  </results>', '</sparql>')
+  return lines.join('\n')
+}
+
+/**
+ * Serialize ASK query results to the SPARQL Query Results XML format
+ */
+export function serializeAskToSparqlXML(results: any): string {
+  const data = results.data || results
+  const value = data?.boolean === true ? 'true' : 'false'
+  return [XML_HEADER, '  <head/>', `  <boolean>${value}</boolean>`, '</sparql>'].join('\n')
+}
+
+/**
+ * Serialize SELECT query results to a GitHub-flavoured Markdown table.
+ * Pipes and newlines inside cells are escaped so the table stays intact.
+ */
+export function serializeToMarkdown(results: any): string {
+  const data = selectData(results)
+  const variables = data.head.vars || []
+  const bindings = data.results.bindings || []
+  if (variables.length === 0) return ''
+
+  const cell = (text: string) => text.replace(/\|/g, '\\|').replace(/\r?\n/g, ' ')
+  const row = (cells: string[]) => `| ${cells.join(' | ')} |`
+  const lines = [row(variables.map(cell)), row(variables.map(() => '---'))]
+  for (const binding of bindings) {
+    lines.push(row(variables.map((v) => cell(binding[v]?.value ?? ''))))
+  }
+  return lines.join('\n')
+}
+
+/**
  * Serialize SELECT query results to JSON format
  */
 export function serializeToJSON(results: any): string {
@@ -75,24 +241,19 @@ export function getAvailableFormats(
 ): Array<{ value: string; label: string }> {
   switch (queryType) {
     case 'SELECT':
-      return [
-        { value: 'csv', label: 'CSV' },
-        { value: 'json', label: 'JSON' },
-      ]
+      return formats('csv', 'tsv', 'json', 'xml', 'markdown')
     case 'CONSTRUCT':
     case 'DESCRIBE':
-      return [
-        { value: 'turtle', label: 'Turtle' },
-        { value: 'trig', label: 'TriG' },
-        { value: 'ntriples', label: 'N-Triples' },
-        { value: 'nquads', label: 'N-Quads' },
-        { value: 'jsonld', label: 'JSON-LD' },
-      ]
+      return formats('turtle', 'trig', 'ntriples', 'nquads', 'jsonld')
     case 'ASK':
-      return [{ value: 'json', label: 'JSON' }]
+      return formats('json', 'xml')
     default:
       return []
   }
+}
+
+function formats(...values: string[]): Array<{ value: string; label: string }> {
+  return values.map((value) => ({ value, label: FORMAT_LABELS[value] }))
 }
 
 /**
@@ -114,18 +275,30 @@ export async function serializeResults(
 
   switch (queryType) {
     case 'SELECT':
-      if (format === 'csv') {
-        return serializeToCSV(results)
-      } else if (format === 'json') {
-        return serializeToJSON(results)
+      switch (format) {
+        case 'csv':
+          return serializeToCSV(results)
+        case 'tsv':
+          return serializeToTSV(results)
+        case 'json':
+          return serializeToJSON(results)
+        case 'xml':
+          return serializeToSparqlXML(results)
+        case 'markdown':
+          return serializeToMarkdown(results)
+        default:
+          throw new Error(`Unsupported format "${format}" for SELECT query`)
       }
-      throw new Error(`Unsupported format "${format}" for SELECT query`)
 
     case 'ASK':
-      if (format === 'json') {
-        return serializeAskToJSON(results)
+      switch (format) {
+        case 'json':
+          return serializeAskToJSON(results)
+        case 'xml':
+          return serializeAskToSparqlXML(results)
+        default:
+          throw new Error(`Unsupported format "${format}" for ASK query`)
       }
-      throw new Error(`Unsupported format "${format}" for ASK query`)
 
     case 'CONSTRUCT':
     case 'DESCRIBE': {
@@ -152,8 +325,9 @@ export async function serializeResults(
 
       switch (format) {
         case 'trig':
-          // TriG is similar to Turtle but supports named graphs
-          // For now, fall back to Turtle since most CONSTRUCT results don't use named graphs
+          // Every Turtle document is a valid TriG document (TriG is a
+          // superset), and CONSTRUCT results carry no named graphs, so the
+          // Turtle serialization is the correct TriG output.
           return rdfProcessor.serializeToTurtle(dataset)
         case 'ntriples':
           return rdfProcessor.serializeToNTriples(dataset)

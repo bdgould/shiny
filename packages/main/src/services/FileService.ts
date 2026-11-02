@@ -172,7 +172,10 @@ export class FileService {
       // Determine file extension based on format
       const extensionMap: Record<string, string> = {
         csv: 'csv',
+        tsv: 'tsv',
         json: 'json',
+        xml: 'xml',
+        markdown: 'md',
         turtle: 'ttl',
         trig: 'trig',
         ntriples: 'nt',
@@ -186,7 +189,10 @@ export class FileService {
       // Determine filter name based on format
       const filterNames: Record<string, string> = {
         csv: 'CSV',
+        tsv: 'TSV',
         json: 'JSON',
+        xml: 'SPARQL XML',
+        markdown: 'Markdown',
         turtle: 'Turtle',
         trig: 'TriG',
         ntriples: 'N-Triples',

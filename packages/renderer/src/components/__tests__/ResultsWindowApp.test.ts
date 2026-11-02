@@ -107,7 +107,14 @@ describe('ResultsWindowApp', () => {
     await wrapper.find('button[title="Save results…"]').trigger('click')
     const picker = wrapper.findComponent(FormatSelectorDialog)
     expect(picker.props('open')).toBe(true)
-    expect(picker.props('formats').map((f: { value: string }) => f.value)).toEqual(['csv', 'json'])
+    expect(picker.props('formats').map((f: { value: string }) => f.value)).toEqual([
+      'csv',
+      'tsv',
+      'json',
+      'xml',
+      'markdown',
+    ])
+    expect(picker.props('title')).toBe('Save results as')
     // Selecting through the component's own picker uses its mirrored source
     picker.vm.$emit('select', 'csv')
     await flushPromises()
@@ -127,11 +134,27 @@ describe('ResultsWindowApp', () => {
     await flushPromises()
     saveResultsMenu?.()
     await flushPromises()
+    expect(picker.props('formats').map((f: { value: string }) => f.value)).toEqual(['json', 'xml'])
+    picker.vm.$emit('select', 'xml')
+    await flushPromises()
     expect(window.electronAPI.files.saveResults).toHaveBeenLastCalledWith(
-      expect.any(String),
+      expect.stringContaining('<boolean>true</boolean>'),
       'ASK',
-      'json',
+      'xml',
       'people'
     )
+  })
+
+  it('copies the mirrored results from the toolbar', async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined)
+    Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true })
+    push(selectState)
+    await flushPromises()
+    await wrapper.find('button[title="Copy results…"]').trigger('click')
+    const picker = wrapper.findComponent(FormatSelectorDialog)
+    expect(picker.props('title')).toBe('Copy results as')
+    picker.vm.$emit('select', 'csv')
+    await flushPromises()
+    expect(writeText).toHaveBeenCalledWith('s')
   })
 })

@@ -73,6 +73,17 @@
                 <path d="M2 11h1.5v2.5h9V11H14v4H2z" />
               </svg>
             </button>
+            <button
+              class="btn-icon"
+              title="Copy results…"
+              :disabled="!canSaveResults()"
+              @click="requestCopy"
+            >
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                <path d="M5 2h8v9h-1.5V3.5H5z" />
+                <path d="M3 5h8v9H3zm1.5 1.5v6h5v-6z" />
+              </svg>
+            </button>
             <button class="btn-icon" title="Pop out results" @click="popOut">
               <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
                 <path d="M9 2h5v5h-1.5V4.6L7.6 9.5 6.5 8.4l4.9-4.9H9z" />
@@ -132,7 +143,7 @@ const queryStore = useQueryStore()
 const tabsStore = useTabsStore()
 const connectionStore = useConnectionStore()
 const resultsPane = useResultsPaneStore()
-const { canSaveResults, requestSave } = useResultsExport()
+const { canSaveResults, requestSave, requestCopy } = useResultsExport()
 const resultsWindow = useResultsWindowSync()
 const isPoppedOut = computed(() => resultsPane.isPoppedOut)
 

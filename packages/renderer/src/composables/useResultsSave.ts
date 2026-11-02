@@ -1,7 +1,7 @@
 import { useTabsStore } from '../stores/tabs'
 import { useToast } from './useToast'
 import type { QueryType } from '../services/sparql/queryDetector'
-import { serializeResults, getAvailableFormats } from '../utils/serializeResults'
+import { serializeResults, getAvailableFormats, FORMAT_LABELS } from '../utils/serializeResults'
 
 /**
  * Last path component of a file path, on either separator.
@@ -103,9 +103,37 @@ export function useResultsSave(getSource: () => ResultsSource | null = activeTab
     }
   }
 
+  /**
+   * Copy serialized results to the clipboard
+   *
+   * @param format - The desired export format (csv, json, turtle, etc.)
+   * @returns Promise<boolean> - true if the clipboard write succeeded
+   */
+  async function copyResults(format: string): Promise<boolean> {
+    try {
+      const source = getSource()
+      if (!source || !source.results || !source.queryType) {
+        toast.warning('No results to copy. Execute a query first.')
+        return false
+      }
+
+      const serialized = await serializeResults(source.results, source.queryType, format)
+      await navigator.clipboard.writeText(serialized)
+      toast.success(`Copied results as ${FORMAT_LABELS[format] ?? format}`)
+      return true
+    } catch (error) {
+      console.error('Error copying results:', error)
+      toast.error(
+        `Error copying results: ${error instanceof Error ? error.message : 'Unknown error'}`
+      )
+      return false
+    }
+  }
+
   return {
     canSaveResults,
     getExportFormats,
     saveResults,
+    copyResults,
   }
 }
