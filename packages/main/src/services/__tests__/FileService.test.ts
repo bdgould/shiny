@@ -210,13 +210,16 @@ describe('FileService', () => {
   describe('saveResults', () => {
     it.each([
       ['csv', 'csv', 'CSV'],
+      ['tsv', 'tsv', 'TSV'],
       ['json', 'json', 'JSON'],
+      ['xml', 'xml', 'SPARQL XML'],
+      ['markdown', 'md', 'Markdown'],
       ['turtle', 'ttl', 'Turtle'],
       ['trig', 'trig', 'TriG'],
       ['ntriples', 'nt', 'N-Triples'],
       ['nquads', 'nq', 'N-Quads'],
       ['jsonld', 'jsonld', 'JSON-LD'],
-      ['xml', 'txt', 'Text'],
+      ['yaml', 'txt', 'Text'],
     ])('uses the right extension for %s', async (format, ext, filterName) => {
       dialog.showSaveDialog.mockResolvedValue({ filePath: `/out.${ext}`, canceled: false })
       await expect(service.saveResults('data', 'SELECT', format)).resolves.toEqual({

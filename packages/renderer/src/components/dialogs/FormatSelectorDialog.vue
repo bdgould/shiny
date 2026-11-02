@@ -3,7 +3,7 @@
     <div v-if="open" class="dialog-overlay" @click="handleOverlayClick">
       <div class="dialog" @click.stop>
         <div class="dialog-header">
-          <h3>Select Export Format</h3>
+          <h3>{{ title }}</h3>
           <button class="btn-close" aria-label="Close dialog" @click="close">×</button>
         </div>
         <div class="dialog-content">
@@ -28,6 +28,8 @@
 </template>
 
 <script setup lang="ts">
+import { FORMAT_EXTENSIONS } from '@/utils/serializeResults'
+
 interface Format {
   value: string
   label: string
@@ -36,6 +38,7 @@ interface Format {
 interface Props {
   formats: ReadonlyArray<Format>
   open: boolean
+  title?: string
 }
 
 interface Emits {
@@ -43,7 +46,7 @@ interface Emits {
   (e: 'close'): void
 }
 
-defineProps<Props>()
+withDefaults(defineProps<Props>(), { title: 'Select Export Format' })
 const emit = defineEmits<Emits>()
 
 function close() {
@@ -59,16 +62,7 @@ function handleOverlayClick() {
 }
 
 function getExtension(format: string): string {
-  const extensionMap: Record<string, string> = {
-    csv: 'csv',
-    json: 'json',
-    turtle: 'ttl',
-    trig: 'trig',
-    ntriples: 'nt',
-    nquads: 'nq',
-    jsonld: 'jsonld',
-  }
-  return extensionMap[format] || format
+  return FORMAT_EXTENSIONS[format] || format
 }
 </script>
 

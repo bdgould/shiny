@@ -14,6 +14,7 @@
     <FormatSelectorDialog
       :formats="pickerFormats"
       :open="isPickerOpen"
+      :title="pickerTitle"
       @select="selectFormat"
       @close="closePicker"
     />
@@ -58,7 +59,8 @@ import type { QueryFileData } from './types/electron'
 const connectionStore = useConnectionStore()
 const tabsStore = useTabsStore()
 const { warning, error } = useToast()
-const { requestSave, selectFormat, closePicker, pickerFormats, isPickerOpen } = useResultsExport()
+const { requestSave, selectFormat, closePicker, pickerFormats, isPickerOpen, pickerTitle } =
+  useResultsExport()
 
 // Drag and drop functionality
 const { isDragging, isLoading, handleDragEnter, handleDragLeave, handleDragOver, handleDrop } =
