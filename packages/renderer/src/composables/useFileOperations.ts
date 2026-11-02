@@ -1,10 +1,13 @@
 import { useTabsStore } from '../stores/tabs'
 import { useConnectionStore } from '../stores/connection'
+import { useToast } from './useToast'
+import { fileBaseName } from './useResultsSave'
 import type { BackendMetadata, QueryFileData } from '../types/electron'
 
 export function useFileOperations() {
   const tabsStore = useTabsStore()
   const connectionStore = useConnectionStore()
+  const toast = useToast()
 
   /**
    * Save the active tab's query to a .rq file
@@ -13,12 +16,12 @@ export function useFileOperations() {
     try {
       const activeTab = tabsStore.activeTab
       if (!activeTab) {
-        alert('No active tab to save')
+        toast.warning('No active tab to save')
         return false
       }
 
       if (!activeTab.query || activeTab.query.trim() === '') {
-        alert('No query to save')
+        toast.warning('No query to save')
         return false
       }
 
@@ -47,19 +50,22 @@ export function useFileOperations() {
         // Update tab with saved state
         tabsStore.markTabSaved(activeTab.id, result.filePath, fileName)
 
-        // eslint-disable-next-line no-console
-        console.log('Query saved successfully:', result.filePath)
+        const savedPath = result.filePath
+        toast.success(`Saved query to ${fileBaseName(savedPath)}`, 6000, {
+          label: 'Reveal',
+          onClick: () => void window.electronAPI.files.showInFolder(savedPath),
+        })
         return true
       } else if (result.canceled) {
         // The user dismissed the save dialog; nothing to report
         return false
       } else {
-        alert(`Failed to save query: ${result.error || 'Unknown error'}`)
+        toast.error(`Failed to save query: ${result.error || 'Unknown error'}`)
         return false
       }
     } catch (error) {
       console.error('Error saving query:', error)
-      alert(`Error saving query: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      toast.error(`Error saving query: ${error instanceof Error ? error.message : 'Unknown error'}`)
       return false
     }
   }
@@ -74,7 +80,7 @@ export function useFileOperations() {
       // Check if result is an error
       if ('error' in result) {
         if (result.error !== 'No file selected') {
-          alert(`Failed to open query: ${result.error}`)
+          toast.error(`Failed to open query: ${result.error}`)
         }
         return false
       }
@@ -110,7 +116,9 @@ export function useFileOperations() {
       return true
     } catch (error) {
       console.error('Error opening query:', error)
-      alert(`Error opening query: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      toast.error(
+        `Error opening query: ${error instanceof Error ? error.message : 'Unknown error'}`
+      )
       return false
     }
   }
@@ -135,8 +143,10 @@ export function useFileOperations() {
    * Show a notification that the backend was not found
    */
   function showBackendNotFoundNotification(backendName: string) {
-    // Simple alert for now - could be replaced with a toast notification
-    alert(`Backend "${backendName}" not found in configuration. Please select a backend manually.`)
+    toast.warning(
+      `Backend "${backendName}" not found in configuration. Please select a backend manually.`,
+      5000
+    )
   }
 
   return {

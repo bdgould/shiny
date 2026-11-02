@@ -1,6 +1,6 @@
 <template>
   <Teleport to="body">
-    <div v-if="isOpen" class="dialog-overlay" @click="handleOverlayClick">
+    <div v-if="open" class="dialog-overlay" @click="handleOverlayClick">
       <div class="dialog" @click.stop>
         <div class="dialog-header">
           <h3>Select Export Format</h3>
@@ -28,15 +28,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-
 interface Format {
   value: string
   label: string
 }
 
 interface Props {
-  formats: Format[]
+  formats: ReadonlyArray<Format>
+  open: boolean
 }
 
 interface Emits {
@@ -47,20 +46,12 @@ interface Emits {
 defineProps<Props>()
 const emit = defineEmits<Emits>()
 
-const isOpen = ref(false)
-
-function open() {
-  isOpen.value = true
-}
-
 function close() {
-  isOpen.value = false
   emit('close')
 }
 
 function selectFormat(format: string) {
   emit('select', format)
-  close()
 }
 
 function handleOverlayClick() {
@@ -79,11 +70,6 @@ function getExtension(format: string): string {
   }
   return extensionMap[format] || format
 }
-
-defineExpose({
-  open,
-  close,
-})
 </script>
 
 <style scoped>

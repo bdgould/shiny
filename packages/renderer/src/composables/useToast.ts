@@ -2,24 +2,36 @@ import { ref, readonly } from 'vue'
 
 export type ToastType = 'info' | 'success' | 'warning' | 'error'
 
+export interface ToastAction {
+  label: string
+  onClick: () => void
+}
+
 export interface Toast {
   id: string
   message: string
   type: ToastType
   duration: number
+  action?: ToastAction
 }
 
 const toasts = ref<Toast[]>([])
 let toastIdCounter = 0
 
 export function useToast() {
-  function show(message: string, type: ToastType = 'info', duration = 4000): string {
+  function show(
+    message: string,
+    type: ToastType = 'info',
+    duration = 4000,
+    action?: ToastAction
+  ): string {
     const id = `toast-${++toastIdCounter}`
     const toast: Toast = {
       id,
       message,
       type,
       duration,
+      ...(action ? { action } : {}),
     }
 
     toasts.value.push(toast)
@@ -44,8 +56,8 @@ export function useToast() {
     return show(message, 'info', duration)
   }
 
-  function success(message: string, duration?: number): string {
-    return show(message, 'success', duration)
+  function success(message: string, duration?: number, action?: ToastAction): string {
+    return show(message, 'success', duration, action)
   }
 
   function warning(message: string, duration?: number): string {

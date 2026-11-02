@@ -1,14 +1,15 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-const { dialog, fs } = vi.hoisted(() => ({
+const { dialog, fs, shell } = vi.hoisted(() => ({
   dialog: { showSaveDialog: vi.fn(), showOpenDialog: vi.fn() },
   fs: { writeFile: vi.fn(), readFile: vi.fn() },
+  shell: { showItemInFolder: vi.fn() },
 }))
 
-vi.mock('electron', () => ({ dialog }))
+vi.mock('electron', () => ({ dialog, shell }))
 vi.mock('fs', () => ({ promises: fs, default: { promises: fs } }))
 
-import { FileService, fileService } from '../FileService'
+import { FileService, fileService, resultsFileStem } from '../FileService'
 
 describe('FileService', () => {
   let service: FileService
@@ -24,6 +25,24 @@ describe('FileService', () => {
 
   it('exports a singleton instance', () => {
     expect(fileService).toBeInstanceOf(FileService)
+  })
+
+  it('reveals a file in the OS file manager', () => {
+    service.showInFolder('/tmp/out.csv')
+    expect(shell.showItemInFolder).toHaveBeenCalledWith('/tmp/out.csv')
+  })
+
+  describe('resultsFileStem', () => {
+    it.each([
+      [undefined, 'results'],
+      ['', 'results'],
+      ['***', 'results'],
+      ['Untitled-1', 'Untitled-1-results'],
+      ['  people   query ', 'people query-results'],
+      ['a/b\\c:d*e?f"g<h>i|j', 'abcdefghij-results'],
+    ])('turns %j into %s', (input, expected) => {
+      expect(resultsFileStem(input)).toBe(expected)
+    })
   })
 
   describe('saveQuery', () => {
@@ -214,6 +233,14 @@ describe('FileService', () => {
         })
       )
       expect(fs.writeFile).toHaveBeenCalledWith(`/out.${ext}`, 'data', 'utf-8')
+    })
+
+    it('names the file after the tab when a base name is given', async () => {
+      dialog.showSaveDialog.mockResolvedValue({ filePath: '/out.csv', canceled: false })
+      await service.saveResults('data', 'SELECT', 'csv', 'People: by/city?')
+      expect(dialog.showSaveDialog).toHaveBeenCalledWith(
+        expect.objectContaining({ defaultPath: 'People bycity-results.csv' })
+      )
     })
 
     it('returns unsuccessful when cancelled', async () => {

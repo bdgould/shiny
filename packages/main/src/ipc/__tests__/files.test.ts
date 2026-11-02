@@ -7,6 +7,7 @@ const { handlers, fileService } = vi.hoisted(() => ({
     openQuery: vi.fn(),
     saveResults: vi.fn(),
     openPrefixFile: vi.fn(),
+    showInFolder: vi.fn(),
   },
 }))
 
@@ -24,6 +25,7 @@ const channels: Record<string, any[]> = {
   'files:openQuery': [],
   'files:saveResults': ['a,b', 'SELECT', 'csv'],
   'files:openPrefixFile': [],
+  'files:showInFolder': ['/tmp/out.csv'],
 }
 
 describe('files IPC handlers', () => {
@@ -66,9 +68,19 @@ describe('files IPC handlers', () => {
   it('saveResults delegates', async () => {
     fileService.saveResults.mockResolvedValue({ success: false })
     await expect(
-      handlers.get('files:saveResults')!(okEvent, 'data', 'CONSTRUCT', 'turtle')
+      handlers.get('files:saveResults')!(okEvent, 'data', 'CONSTRUCT', 'turtle', 'Untitled-1')
     ).resolves.toEqual({ success: false })
-    expect(fileService.saveResults).toHaveBeenCalledWith('data', 'CONSTRUCT', 'turtle')
+    expect(fileService.saveResults).toHaveBeenCalledWith(
+      'data',
+      'CONSTRUCT',
+      'turtle',
+      'Untitled-1'
+    )
+  })
+
+  it('showInFolder delegates', async () => {
+    await handlers.get('files:showInFolder')!(okEvent, '/tmp/out.csv')
+    expect(fileService.showInFolder).toHaveBeenCalledWith('/tmp/out.csv')
   })
 
   it('openPrefixFile delegates', async () => {

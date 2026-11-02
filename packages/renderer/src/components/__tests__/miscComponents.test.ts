@@ -22,22 +22,19 @@ describe('FormatSelectorDialog', () => {
     { value: 'custom', label: 'Custom' },
   ]
 
-  function mountDialog() {
-    return mount(FormatSelectorDialog, { props: { formats } })
+  function mountDialog(open = true) {
+    return mount(FormatSelectorDialog, { props: { formats, open } })
   }
 
-  it('is closed until open() is called', async () => {
-    const w = mountDialog()
+  it('renders nothing until the open prop is set', async () => {
+    const w = mountDialog(false)
     expect(w.find('.dialog-overlay').exists()).toBe(false)
-    ;(w.vm as unknown as { open: () => void }).open()
-    await w.vm.$nextTick()
+    await w.setProps({ open: true })
     expect(w.find('.dialog-overlay').exists()).toBe(true)
   })
 
   it('lists formats with their file extensions', async () => {
     const w = mountDialog()
-    ;(w.vm as unknown as { open: () => void }).open()
-    await w.vm.$nextTick()
     const opts = w
       .findAll('.format-option')
       .map((o) => [o.find('.format-label').text(), o.find('.format-extension').text()])
@@ -49,33 +46,25 @@ describe('FormatSelectorDialog', () => {
     ])
   })
 
-  it('emits select then close when a format is chosen', async () => {
+  it('emits select when a format is chosen', async () => {
     const w = mountDialog()
-    ;(w.vm as unknown as { open: () => void }).open()
-    await w.vm.$nextTick()
     await w.findAll('.format-option')[1].trigger('click')
     expect(w.emitted('select')).toEqual([['turtle']])
-    expect(w.emitted('close')).toHaveLength(1)
-    expect(w.find('.dialog-overlay').exists()).toBe(false)
+    expect(w.emitted('close')).toBeUndefined()
   })
 
   it.each(['.btn-close', '.btn-secondary', '.dialog-overlay'])(
     'closes via %s without selecting',
     async (selector) => {
       const w = mountDialog()
-      ;(w.vm as unknown as { open: () => void }).open()
-      await w.vm.$nextTick()
       await w.find(selector).trigger('click')
       expect(w.emitted('close')).toHaveLength(1)
       expect(w.emitted('select')).toBeUndefined()
-      expect(w.find('.dialog-overlay').exists()).toBe(false)
     }
   )
 
   it('does not close when clicking inside the dialog body', async () => {
     const w = mountDialog()
-    ;(w.vm as unknown as { open: () => void }).open()
-    await w.vm.$nextTick()
     await w.find('.dialog').trigger('click')
     expect(w.emitted('close')).toBeUndefined()
     expect(w.find('.dialog-overlay').exists()).toBe(true)
@@ -111,6 +100,20 @@ describe('ToastContainer', () => {
     ])
     expect(items[1].classes()).toContain('toast-success')
     expect(items[3].classes()).toContain('toast-error')
+  })
+
+  it('renders an action button that runs the action and dismisses the toast', async () => {
+    const w = mount(ToastContainer)
+    const onClick = vi.fn()
+    toast.success('Saved', 0, { label: 'Reveal', onClick })
+    toast.show('Plain', 'info', 0)
+    await w.vm.$nextTick()
+    const items = w.findAll('.toast')
+    expect(items[0].find('.toast-action').text()).toBe('Reveal')
+    expect(items[1].find('.toast-action').exists()).toBe(false)
+    await items[0].find('.toast-action').trigger('click')
+    expect(onClick).toHaveBeenCalledTimes(1)
+    expect(toast.toasts.value.map((t) => t.message)).toEqual(['Plain'])
   })
 
   it('removes a toast when clicked', async () => {

@@ -5,6 +5,8 @@ import MainPane from '../layout/MainPane.vue'
 import TabBar from '../tabs/TabBar.vue'
 import { useTabsStore } from '@/stores/tabs'
 import { useConnectionStore } from '@/stores/connection'
+import { useResultsPaneStore } from '@/stores/resultsPane'
+import { useResultsExport } from '@/composables/useResultsExport'
 import type { BackendConfig } from '@/types/backends'
 
 vi.mock('@/components/editor/MonacoSparqlEditor.vue', () => ({
@@ -118,13 +120,40 @@ describe('MainPane', () => {
     expect(w.find('.results-section').exists()).toBe(true)
   })
 
-  it('collapses and expands the results panel', async () => {
+  it('collapses and expands the results panel, persisting the state', async () => {
     useTabsStore().createTab()
     const w = mountPane()
     await w.find('button[title="Collapse results"]').trigger('click')
     expect(w.find('.editor-section').attributes('style')).toContain('calc(100% - 32px)')
+    expect(useResultsPaneStore().isCollapsed).toBe(true)
+    expect(localStorage.getItem('shiny:results:collapsed')).toBe('true')
     await w.find('button[title="Expand results"]').trigger('click')
     expect(w.find('.results-section').exists()).toBe(true)
+  })
+
+  it('restores the persisted results height', () => {
+    localStorage.setItem('shiny:results:height', '450')
+    useTabsStore().createTab()
+    const w = mountPane()
+    expect(w.find('.results-section').attributes('style')).toContain('height: 450px')
+    expect(w.find('.editor-section').attributes('style')).toContain('calc(100% - 450px - 6px)')
+  })
+
+  it('disables Save until there are results, then opens the format picker', async () => {
+    const tabs = useTabsStore()
+    const id = tabs.createTab()
+    const w = mountPane()
+    const save = w.find('button[title="Save results…"]')
+    expect(save.attributes('disabled')).toBeDefined()
+
+    tabs.setTabResults(id, { data: { head: { vars: [] }, results: { bindings: [] } } }, 'SELECT')
+    await w.vm.$nextTick()
+    expect(w.find('button[title="Save results…"]').attributes('disabled')).toBeUndefined()
+    await w.find('button[title="Save results…"]').trigger('click')
+    const exportFlow = useResultsExport()
+    expect(exportFlow.isPickerOpen.value).toBe(true)
+    expect(exportFlow.pickerFormats.value.map((f) => f.value)).toEqual(['csv', 'json'])
+    exportFlow.closePicker()
   })
 
   it('resizes the results panel by dragging, with a 100px minimum', async () => {
@@ -135,6 +164,7 @@ describe('MainPane', () => {
     document.dispatchEvent(new MouseEvent('mousemove', { clientY: 400 }))
     await w.vm.$nextTick()
     expect(w.find('.results-section').attributes('style')).toContain('height: 400px')
+    expect(localStorage.getItem('shiny:results:height')).toBe('400')
     document.dispatchEvent(new MouseEvent('mousemove', { clientY: 1000 }))
     await w.vm.$nextTick()
     expect(w.find('.results-section').attributes('style')).toContain('height: 100px')

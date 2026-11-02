@@ -8,7 +8,6 @@ import JsonView from '../results/JsonView.vue'
 import ConstructEntityTableView from '../results/ConstructEntityTableView.vue'
 import RdfSerializationView from '../results/RdfSerializationView.vue'
 import AskBadgeView from '../results/AskBadgeView.vue'
-import { useTabsStore } from '@/stores/tabs'
 import { useQueryStore } from '@/stores/query'
 import type { QueryType } from '@/services/sparql/queryDetector'
 
@@ -303,10 +302,8 @@ describe('ResultsView', () => {
   })
 
   function setup(queryType: QueryType | null, data: unknown) {
-    const tabs = useTabsStore()
-    const id = tabs.createTab()
-    tabs.setTabResults(id, { data, queryType }, queryType)
     return mount(ResultsView, {
+      props: { results: { data, queryType: queryType ?? 'UNKNOWN' }, queryType },
       global: {
         stubs: {
           ConstructEntityTableView: true,
@@ -377,7 +374,7 @@ describe('ResultsView', () => {
     expect(w.findAll('.view-button')).toHaveLength(0)
     expect(w.findComponent(JsonView).props('data')).toEqual({
       data: { foo: 'bar' },
-      queryType: null,
+      queryType: 'UNKNOWN',
     })
   })
 })

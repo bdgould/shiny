@@ -123,6 +123,8 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useQueryStore } from '@/stores/query'
+import type { QueryType } from '@/services/sparql/queryDetector'
+import type { QueryResult } from '@/types/electron'
 import TableIcon from './icons/TableIcon.vue'
 import CodeIcon from './icons/CodeIcon.vue'
 import SelectTableView from './SelectTableView.vue'
@@ -131,10 +133,20 @@ import RdfSerializationView from './RdfSerializationView.vue'
 import AskBadgeView from './AskBadgeView.vue'
 import JsonView from './JsonView.vue'
 
+/**
+ * Results are passed in rather than read from the active tab so the same view
+ * can render inside the main window or a popped-out results window.
+ */
+const props = defineProps<{
+  results: QueryResult
+  queryType: QueryType | null
+}>()
+
+// View preferences (table vs JSON, etc.) stay global in the query store
 const queryStore = useQueryStore()
 
-const queryType = computed(() => queryStore.queryType)
-const results = computed(() => queryStore.results)
+const queryType = computed(() => props.queryType)
+const results = computed(() => props.results)
 
 const currentView = computed(() => {
   if (queryType.value === 'SELECT') return queryStore.currentSelectView

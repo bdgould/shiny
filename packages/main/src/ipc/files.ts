@@ -37,14 +37,25 @@ ipcMain.handle('files:openQuery', async (event) => {
  */
 ipcMain.handle(
   'files:saveResults',
-  async (event, content: string, queryType: string, format: string) => {
+  async (event, content: string, queryType: string, format: string, baseName?: string) => {
     if (!isAuthorizedSender(event.senderFrame)) {
       throw new Error('Unauthorized IPC sender')
     }
 
-    return await fileService.saveResults(content, queryType, format)
+    return await fileService.saveResults(content, queryType, format, baseName)
   }
 )
+
+/**
+ * Reveal a previously saved file in the OS file manager
+ */
+ipcMain.handle('files:showInFolder', async (event, filePath: string) => {
+  if (!isAuthorizedSender(event.senderFrame)) {
+    throw new Error('Unauthorized IPC sender')
+  }
+
+  fileService.showInFolder(filePath)
+})
 
 /**
  * Handle opening prefix file from file system
