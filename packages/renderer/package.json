@@ -1,6 +1,6 @@
 {
   "name": "@shiny/renderer",
-  "version": "0.1.18",
+  "version": "0.1.19",
   "description": "Shiny Vue 3 renderer process",
   "type": "module",
   "private": true,
