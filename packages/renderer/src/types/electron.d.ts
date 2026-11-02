@@ -125,6 +125,7 @@ export interface QueryFileData {
 
 export interface SaveQueryResult {
   success: boolean
+  canceled?: boolean
   filePath?: string
   error?: string
 }
@@ -133,6 +134,7 @@ export type OpenQueryResult = QueryFileData | { error: string }
 
 export interface SaveResultsResult {
   success: boolean
+  canceled?: boolean
   filePath?: string
   error?: string
 }

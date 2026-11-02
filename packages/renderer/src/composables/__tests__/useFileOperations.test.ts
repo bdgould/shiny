@@ -99,6 +99,14 @@ describe('useFileOperations', () => {
       expect(alertMock).toHaveBeenCalledWith('Failed to save query: Cancelled')
     })
 
+    it('stays silent when the user cancels the save dialog', async () => {
+      tabsStore.createTab({ query: 'ASK {}' })
+      saveQuery.mockResolvedValue({ success: false, canceled: true })
+      const ops = useFileOperations()
+      expect(await ops.saveQuery()).toBe(false)
+      expect(alertMock).not.toHaveBeenCalled()
+    })
+
     it('alerts with a generic message when success lacks a file path', async () => {
       tabsStore.createTab({ query: 'ASK {}' })
       saveQuery.mockResolvedValue({ success: true })

@@ -12,6 +12,17 @@ interface QueryFileData {
   filePath: string
 }
 
+/**
+ * Outcome of a native save dialog. `canceled` is set when the user dismissed
+ * the dialog, so callers can stay quiet instead of reporting an error.
+ */
+export interface SaveFileResult {
+  success: boolean
+  canceled?: boolean
+  filePath?: string
+  error?: string
+}
+
 export class FileService {
   /**
    * Show save dialog and save query to .rq file with backend metadata
@@ -20,7 +31,7 @@ export class FileService {
     query: string,
     backendMetadata: BackendMetadata | null,
     currentFilePath?: string
-  ): Promise<{ success: boolean; filePath?: string; error?: string }> {
+  ): Promise<SaveFileResult> {
     try {
       const { filePath, canceled } = await dialog.showSaveDialog({
         title: 'Save SPARQL Query',
@@ -33,7 +44,7 @@ export class FileService {
       })
 
       if (canceled || !filePath) {
-        return { success: false }
+        return { success: false, canceled: true }
       }
 
       // Build file content with metadata comment
@@ -138,11 +149,7 @@ export class FileService {
   /**
    * Show save dialog and save query results to file
    */
-  async saveResults(
-    content: string,
-    _queryType: string,
-    format: string
-  ): Promise<{ success: boolean; filePath?: string; error?: string }> {
+  async saveResults(content: string, _queryType: string, format: string): Promise<SaveFileResult> {
     try {
       // Determine file extension based on format
       const extensionMap: Record<string, string> = {
@@ -182,7 +189,7 @@ export class FileService {
       })
 
       if (canceled || !filePath) {
-        return { success: false }
+        return { success: false, canceled: true }
       }
 
       await fs.writeFile(filePath, content, 'utf-8')

@@ -50,6 +50,9 @@ export function useFileOperations() {
         // eslint-disable-next-line no-console
         console.log('Query saved successfully:', result.filePath)
         return true
+      } else if (result.canceled) {
+        // The user dismissed the save dialog; nothing to report
+        return false
       } else {
         alert(`Failed to save query: ${result.error || 'Unknown error'}`)
         return false
