@@ -84,7 +84,10 @@ export function createApplicationMenu(
           label: 'Save Results...',
           accelerator: 'CmdOrCtrl+Shift+S',
           click: () => {
-            mainWindow.webContents.send('menu:saveResults')
+            // Both the main window and the popped-out results window handle
+            // this; send it to whichever the user is looking at.
+            const target = BrowserWindow.getFocusedWindow() ?? mainWindow
+            target.webContents.send('menu:saveResults')
           },
         },
         { type: 'separator' as const },
@@ -140,6 +143,14 @@ export function createApplicationMenu(
         { role: 'resetZoom' as const },
         { role: 'zoomIn' as const },
         { role: 'zoomOut' as const },
+        { type: 'separator' as const },
+        {
+          label: 'Toggle Results Window',
+          accelerator: 'CmdOrCtrl+Shift+R',
+          click: () => {
+            mainWindow.webContents.send('menu:toggleResultsWindow')
+          },
+        },
         { type: 'separator' as const },
         { role: 'togglefullscreen' as const },
       ],

@@ -11,6 +11,7 @@ vi.mock('../../services/index.js', () => ({
 }))
 vi.mock('../../services/FileService.js', () => ({ fileService: {} }))
 vi.mock('../../backends/BackendFactory.js', () => ({ BackendFactory: {} }))
+vi.mock('../../resultsWindow.js', () => ({ getResultsWindowManager: () => null }))
 
 describe('ipc/index', () => {
   it('registers handlers from every IPC module', async () => {
@@ -18,7 +19,16 @@ describe('ipc/index', () => {
     await import('../index.js')
     const prefixes = new Set(channels.map((c) => c.split(':')[0]))
     expect([...prefixes].sort()).toEqual(
-      ['backends', 'cache', 'files', 'graphdb', 'graphstudio', 'mobi', 'query'].sort()
+      [
+        'backends',
+        'cache',
+        'files',
+        'graphdb',
+        'graphstudio',
+        'mobi',
+        'query',
+        'resultsWindow',
+      ].sort()
     )
     expect(new Set(channels).size).toBe(channels.length)
   })

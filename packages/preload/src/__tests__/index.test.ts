@@ -47,6 +47,14 @@ function listenerCount(channel: string): number {
 let api: ElectronAPI
 let exposeCalls: unknown[][] = []
 
+const resultsState = {
+  tabName: 'Untitled-1',
+  queryType: 'SELECT',
+  results: { data: {}, queryType: 'SELECT' },
+  error: null,
+  isExecuting: false,
+}
+
 beforeAll(async () => {
   await import('../index')
   // Snapshot now: mock call history may be cleared between tests
@@ -69,7 +77,17 @@ describe('preload bridge', () => {
     expect(exposeCalls).toHaveLength(1)
     expect(exposeCalls[0]).toEqual(['electronAPI', expect.any(Object)])
     expect(Object.keys(api).sort()).toEqual(
-      ['backends', 'cache', 'files', 'graphdb', 'graphstudio', 'menu', 'mobi', 'query'].sort()
+      [
+        'backends',
+        'cache',
+        'files',
+        'graphdb',
+        'graphstudio',
+        'menu',
+        'mobi',
+        'query',
+        'resultsWindow',
+      ].sort()
     )
   })
 
@@ -255,6 +273,16 @@ describe('preload bridge', () => {
         () => api.cache.testQuery('b1', 'SELECT 1 {}'),
         ['cache:testQuery', { backendId: 'b1', query: 'SELECT 1 {}' }],
       ],
+      ['resultsWindow.open', () => api.resultsWindow.open(), ['resultsWindow:open']],
+      ['resultsWindow.close', () => api.resultsWindow.close(), ['resultsWindow:close']],
+      ['resultsWindow.isOpen', () => api.resultsWindow.isOpen(), ['resultsWindow:isOpen']],
+      [
+        'resultsWindow.publish',
+        () => api.resultsWindow.publish(resultsState),
+        ['resultsWindow:publish', resultsState],
+      ],
+      ['resultsWindow.ready', () => api.resultsWindow.ready(), ['resultsWindow:ready']],
+      ['resultsWindow.execute', () => api.resultsWindow.execute(), ['resultsWindow:execute']],
     ]
 
     it.each(cases)(
@@ -290,6 +318,14 @@ describe('preload bridge', () => {
       ['menu.onOpenQuery', (cb) => api.menu.onOpenQuery(cb), 'menu:openQuery'],
       ['menu.onSaveResults', (cb) => api.menu.onSaveResults(cb), 'menu:saveResults'],
       ['menu.onFormatQuery', (cb) => api.menu.onFormatQuery(cb), 'menu:formatQuery'],
+      [
+        'menu.onToggleResultsWindow',
+        (cb) => api.menu.onToggleResultsWindow(cb),
+        'menu:toggleResultsWindow',
+      ],
+      ['resultsWindow.onClosed', (cb) => api.resultsWindow.onClosed(cb), 'resultsWindow:closed'],
+      ['resultsWindow.onReady', (cb) => api.resultsWindow.onReady(cb), 'resultsWindow:ready'],
+      ['resultsWindow.onExecute', (cb) => api.resultsWindow.onExecute(cb), 'resultsWindow:execute'],
     ]
 
     it.each(menuCases)('%s registers on %s and unsubscribes cleanly', (_n, subscribe, channel) => {
@@ -311,6 +347,16 @@ describe('preload bridge', () => {
       expect(listenerCount(channel)).toBe(0)
       emit(channel)
       expect(cb).toHaveBeenCalledTimes(1)
+    })
+
+    it('resultsWindow.onState forwards the snapshot without the IPC event', () => {
+      const cb = vi.fn()
+      const unsubscribe = api.resultsWindow.onState(cb)
+      emit('resultsWindow:state', resultsState)
+      expect(cb).toHaveBeenCalledWith(resultsState)
+      expect(cb.mock.calls[0]).toHaveLength(1)
+      unsubscribe()
+      expect(listenerCount('resultsWindow:state')).toBe(0)
     })
 
     it('files.onFileOpened forwards the payload without the IPC event', () => {
@@ -406,6 +452,17 @@ describe('preload bridge', () => {
       ['cache.fetch', () => api.cache.fetch('b')],
       ['cache.testQuery', () => api.cache.testQuery('b', 'q')],
       ['cache.onProgress', () => api.cache.onProgress(() => {})],
+      ['menu.onToggleResultsWindow', () => api.menu.onToggleResultsWindow(() => {})],
+      ['resultsWindow.open', () => api.resultsWindow.open()],
+      ['resultsWindow.close', () => api.resultsWindow.close()],
+      ['resultsWindow.isOpen', () => api.resultsWindow.isOpen()],
+      ['resultsWindow.publish', () => api.resultsWindow.publish(resultsState)],
+      ['resultsWindow.ready', () => api.resultsWindow.ready()],
+      ['resultsWindow.execute', () => api.resultsWindow.execute()],
+      ['resultsWindow.onState', () => api.resultsWindow.onState(() => {})],
+      ['resultsWindow.onClosed', () => api.resultsWindow.onClosed(() => {})],
+      ['resultsWindow.onReady', () => api.resultsWindow.onReady(() => {})],
+      ['resultsWindow.onExecute', () => api.resultsWindow.onExecute(() => {})],
     ]
 
     it.each(calls)(

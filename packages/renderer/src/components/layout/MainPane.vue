@@ -37,8 +37,16 @@
 
     <!-- Results section - only show for query tabs, not settings tabs -->
     <template v-if="!isSettingsTab">
+      <!-- Popped out: results live in their own window; closing it brings them back here -->
+      <div v-if="isPoppedOut" class="results-popped-out">
+        <span>Results are open in a separate window</span>
+        <button class="btn-link btn-pop-in" title="Pop results back in" @click="popIn">
+          Pop back in
+        </button>
+      </div>
+
       <div
-        v-if="!isResultsCollapsed"
+        v-else-if="!isResultsCollapsed"
         class="resizer"
         :class="{ resizing: isResizing }"
         @mousedown="startResize"
@@ -46,7 +54,11 @@
         <div class="resizer-line"></div>
       </div>
 
-      <div v-if="!isResultsCollapsed" class="results-section" :style="{ height: resultsHeight }">
+      <div
+        v-if="!isPoppedOut && !isResultsCollapsed"
+        class="results-section"
+        :style="{ height: resultsHeight }"
+      >
         <div class="results-header">
           <h3>Results</h3>
           <div class="results-actions">
@@ -59,6 +71,12 @@
               <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
                 <path d="M8 1v8.6l2.8-2.8 1 1L8 11.6 4.2 7.8l1-1L8 9.6V1z" />
                 <path d="M2 11h1.5v2.5h9V11H14v4H2z" />
+              </svg>
+            </button>
+            <button class="btn-icon" title="Pop out results" @click="popOut">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                <path d="M9 2h5v5h-1.5V4.6L7.6 9.5 6.5 8.4l4.9-4.9H9z" />
+                <path d="M3.5 4.5H7V6H5v5h5V9h1.5v3.5h-8z" />
               </svg>
             </button>
             <button class="btn-icon" title="Collapse results" @click="toggleResultsCollapse">
@@ -80,7 +98,7 @@
         </div>
       </div>
 
-      <div v-else class="results-collapsed">
+      <div v-else-if="!isPoppedOut" class="results-collapsed">
         <button class="btn-expand" title="Expand results" @click="toggleResultsCollapse">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
             <path d="M8 5l5 5H3l5-5z" />
@@ -100,6 +118,7 @@ import { useConnectionStore } from '@/stores/connection'
 import { useResultsPaneStore } from '@/stores/resultsPane'
 import { useKeyboardShortcuts } from '@/composables/useKeyboardShortcuts'
 import { useResultsExport } from '@/composables/useResultsExport'
+import { useResultsWindowSync } from '@/composables/useResultsWindowSync'
 import TabBar from '@/components/tabs/TabBar.vue'
 import MonacoSparqlEditor from '@/components/editor/MonacoSparqlEditor.vue'
 import ResultsView from '@/components/results/ResultsView.vue'
@@ -114,6 +133,16 @@ const tabsStore = useTabsStore()
 const connectionStore = useConnectionStore()
 const resultsPane = useResultsPaneStore()
 const { canSaveResults, requestSave } = useResultsExport()
+const resultsWindow = useResultsWindowSync()
+const isPoppedOut = computed(() => resultsPane.isPoppedOut)
+
+function popOut() {
+  void resultsWindow.popOut()
+}
+
+function popIn() {
+  void resultsWindow.popIn()
+}
 
 // Check if current tab is a settings tab
 const isSettingsTab = computed(() => tabsStore.activeTab?.isSettings ?? false)
@@ -152,8 +181,8 @@ const isResultsCollapsed = computed(() => resultsPane.isCollapsed)
 const isResizing = ref(false)
 
 const editorHeight = computed(() => {
-  if (isResultsCollapsed.value) {
-    return 'calc(100% - 32px)' // Full height minus collapsed bar
+  if (isResultsCollapsed.value || isPoppedOut.value) {
+    return 'calc(100% - 32px)' // Full height minus collapsed / popped-out bar
   }
   return `calc(100% - ${resultsPane.heightPx}px - 6px)` // 6px for resizer
 })
@@ -204,6 +233,7 @@ async function executeQuery() {
 onUnmounted(() => {
   document.removeEventListener('mousemove', handleResize)
   document.removeEventListener('mouseup', stopResize)
+  resultsWindow.dispose()
 })
 </script>
 
@@ -261,6 +291,36 @@ onUnmounted(() => {
 .resizer.resizing .resizer-line {
   opacity: 1;
   background: white;
+}
+
+/* Popped-out placeholder bar */
+.results-popped-out {
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  background: var(--color-bg-header);
+  border-top: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+  font-size: 0.875rem;
+  flex-shrink: 0;
+}
+
+.btn-link {
+  padding: 0.25rem 0.5rem;
+  background: transparent;
+  color: var(--color-primary);
+  border: none;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.btn-link:hover {
+  background: var(--color-bg-main);
+  text-decoration: underline;
 }
 
 /* Collapsed results bar */

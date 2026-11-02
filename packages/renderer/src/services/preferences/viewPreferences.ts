@@ -8,7 +8,8 @@ interface ViewPreferences {
   ask: AskView
 }
 
-const STORAGE_KEY = 'shiny:query:view-preferences'
+export const VIEW_PREFERENCES_STORAGE_KEY = 'shiny:query:view-preferences'
+const STORAGE_KEY = VIEW_PREFERENCES_STORAGE_KEY
 
 const DEFAULT_PREFERENCES: ViewPreferences = {
   select: 'table',

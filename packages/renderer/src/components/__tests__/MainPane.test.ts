@@ -47,6 +47,15 @@ beforeEach(() => {
   setActivePinia(createPinia())
   execute = vi.fn()
   window.electronAPI.query.execute = execute as never
+  const rw = window.electronAPI.resultsWindow as unknown as Record<string, ReturnType<typeof vi.fn>>
+  for (const fn of Object.values(rw)) fn.mockClear()
+  rw.open.mockResolvedValue(true)
+  rw.close.mockResolvedValue(undefined)
+  rw.isOpen.mockResolvedValue(false)
+  rw.publish.mockResolvedValue(true)
+  for (const name of ['onState', 'onClosed', 'onReady', 'onExecute']) {
+    rw[name].mockImplementation(() => () => {})
+  }
   useConnectionStore().backends = backends
 })
 
@@ -137,6 +146,49 @@ describe('MainPane', () => {
     const w = mountPane()
     expect(w.find('.results-section').attributes('style')).toContain('height: 450px')
     expect(w.find('.editor-section').attributes('style')).toContain('calc(100% - 450px - 6px)')
+  })
+
+  it('pops results out and shows the placeholder bar until the window closes', async () => {
+    const tabs = useTabsStore()
+    const id = tabs.createTab()
+    tabs.setTabResults(id, { data: { head: {}, boolean: true }, queryType: 'ASK' }, 'ASK')
+    const rw = window.electronAPI.resultsWindow
+    let closedCb: (() => void) | null = null
+    ;(rw.onClosed as ReturnType<typeof vi.fn>).mockImplementation((cb: () => void) => {
+      closedCb = cb
+      return () => {}
+    })
+    const w = mountPane()
+
+    await w.find('button[title="Pop out results"]').trigger('click')
+    await flushPromises()
+    expect(rw.open).toHaveBeenCalledTimes(1)
+    expect(useResultsPaneStore().isPoppedOut).toBe(true)
+    expect(w.find('.results-section').exists()).toBe(false)
+    expect(w.find('.resizer').exists()).toBe(false)
+    expect(w.find('.results-popped-out').exists()).toBe(true)
+    expect(w.find('.editor-section').attributes('style')).toContain('calc(100% - 32px)')
+    expect(rw.publish).toHaveBeenCalledWith(
+      expect.objectContaining({ tabName: 'Untitled-1', queryType: 'ASK' })
+    )
+
+    // The OS closed the window: the pane comes back
+    closedCb!()
+    await w.vm.$nextTick()
+    expect(w.find('.results-popped-out').exists()).toBe(false)
+    expect(w.find('.results-section').exists()).toBe(true)
+  })
+
+  it('pops results back in from the placeholder bar', async () => {
+    useTabsStore().createTab()
+    useResultsPaneStore().setPoppedOut(true)
+    const w = mountPane()
+    expect(w.find('.results-popped-out').exists()).toBe(true)
+    await w.find('.results-popped-out .btn-pop-in').trigger('click')
+    await flushPromises()
+    expect(window.electronAPI.resultsWindow.close).toHaveBeenCalledTimes(1)
+    expect(useResultsPaneStore().isPoppedOut).toBe(false)
+    expect(w.find('.results-section').exists()).toBe(true)
   })
 
   it('disables Save until there are results, then opens the format picker', async () => {

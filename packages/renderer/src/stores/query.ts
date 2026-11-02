@@ -151,6 +151,17 @@ export const useQueryStore = defineStore('query', () => {
     setViewPreference('ask', view)
   }
 
+  /**
+   * Re-read view preferences from localStorage. The popped-out results window
+   * shares the same storage, so a toggle there shows up here via the
+   * `storage` event and vice versa.
+   */
+  function reloadViewPreferences() {
+    currentSelectView.value = getViewPreference('select')
+    currentConstructView.value = getViewPreference('construct')
+    currentAskView.value = getViewPreference('ask')
+  }
+
   return {
     currentQuery,
     results,
@@ -166,5 +177,6 @@ export const useQueryStore = defineStore('query', () => {
     setSelectView,
     setConstructView,
     setAskView,
+    reloadViewPreferences,
   }
 })

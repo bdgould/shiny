@@ -255,4 +255,16 @@ describe('useQueryStore', () => {
       expect(setViewPreference).toHaveBeenCalledWith('ask', 'json')
     })
   })
+
+  it('reloads view preferences from storage (cross-window sync)', () => {
+    const store = useQueryStore()
+    expect(store.currentSelectView).toBe('json')
+    const read = vi.mocked(getViewPreference)
+    read.mockImplementation(((type: string) =>
+      type === 'select' ? 'table' : type === 'construct' ? 'nquads' : 'json') as never)
+    store.reloadViewPreferences()
+    expect(store.currentSelectView).toBe('table')
+    expect(store.currentConstructView).toBe('nquads')
+    expect(store.currentAskView).toBe('json')
+  })
 })

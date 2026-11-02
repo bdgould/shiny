@@ -132,6 +132,14 @@ export interface SaveQueryResult {
 
 export type OpenQueryResult = QueryFileData | { error: string }
 
+export interface ResultsWindowState {
+  tabName: string
+  queryType: string | null
+  results: QueryResult | null
+  error: string | null
+  isExecuting: boolean
+}
+
 export interface SaveResultsResult {
   success: boolean
   canceled?: boolean
@@ -266,6 +274,19 @@ export interface ElectronAPI {
     onOpenQuery: (callback: () => void) => () => void
     onSaveResults: (callback: () => void) => () => void
     onFormatQuery: (callback: () => void) => () => void
+    onToggleResultsWindow: (callback: () => void) => () => void
+  }
+  resultsWindow: {
+    open: () => Promise<boolean>
+    close: () => Promise<void>
+    isOpen: () => Promise<boolean>
+    publish: (state: ResultsWindowState) => Promise<boolean>
+    ready: () => Promise<boolean>
+    execute: () => Promise<boolean>
+    onState: (callback: (state: ResultsWindowState) => void) => () => void
+    onClosed: (callback: () => void) => () => void
+    onReady: (callback: () => void) => () => void
+    onExecute: (callback: () => void) => () => void
   }
   cache: {
     fetch: (backendId: string, onProgress?: boolean) => Promise<OntologyCache>
