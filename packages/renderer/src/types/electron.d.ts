@@ -251,8 +251,14 @@ export interface ElectronAPI {
     ) => Promise<SaveQueryResult>
     openQuery: () => Promise<OpenQueryResult>
     onFileOpened: (callback: (data: QueryFileData) => void) => () => void
-    saveResults: (content: string, queryType: string, format: string) => Promise<SaveResultsResult>
+    saveResults: (
+      content: string,
+      queryType: string,
+      format: string,
+      baseName?: string
+    ) => Promise<SaveResultsResult>
     openPrefixFile: () => Promise<OpenPrefixFileResult>
+    showInFolder: (filePath: string) => Promise<void>
   }
   menu: {
     onNewQuery: (callback: () => void) => () => void

@@ -1,4 +1,4 @@
-import { dialog } from 'electron'
+import { dialog, shell } from 'electron'
 import { promises as fs } from 'fs'
 
 interface BackendMetadata {
@@ -21,6 +21,19 @@ export interface SaveFileResult {
   canceled?: boolean
   filePath?: string
   error?: string
+}
+
+/**
+ * Build the default results file name from a tab name. Characters that are
+ * unsafe in file names on any platform are dropped; an empty or all-unsafe
+ * name falls back to plain `results`.
+ */
+export function resultsFileStem(baseName?: string): string {
+  const safe = (baseName ?? '')
+    .replace(/[\\/:*?"<>|]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+  return safe ? `${safe}-results` : 'results'
 }
 
 export class FileService {
@@ -149,7 +162,12 @@ export class FileService {
   /**
    * Show save dialog and save query results to file
    */
-  async saveResults(content: string, _queryType: string, format: string): Promise<SaveFileResult> {
+  async saveResults(
+    content: string,
+    _queryType: string,
+    format: string,
+    baseName?: string
+  ): Promise<SaveFileResult> {
     try {
       // Determine file extension based on format
       const extensionMap: Record<string, string> = {
@@ -163,7 +181,7 @@ export class FileService {
       }
 
       const extension = extensionMap[format] || 'txt'
-      const defaultFileName = `results.${extension}`
+      const defaultFileName = `${resultsFileStem(baseName)}.${extension}`
 
       // Determine filter name based on format
       const filterNames: Record<string, string> = {
@@ -202,6 +220,13 @@ export class FileService {
         error: error instanceof Error ? error.message : 'Unknown error',
       }
     }
+  }
+
+  /**
+   * Reveal a saved file in the OS file manager (Finder, Explorer, ...)
+   */
+  showInFolder(filePath: string): void {
+    shell.showItemInFolder(filePath)
   }
 
   /**

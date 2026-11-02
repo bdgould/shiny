@@ -28,6 +28,7 @@ const ALLOWED_CHANNELS = {
     'files:openQuery',
     'files:saveResults',
     'files:openPrefixFile',
+    'files:showInFolder',
     'cache:fetch',
     'cache:testQuery',
   ],
@@ -327,8 +328,14 @@ export interface ElectronAPI {
     ) => Promise<SaveQueryResult>
     openQuery: () => Promise<OpenQueryResult>
     onFileOpened: (callback: (data: QueryFileData) => void) => () => void
-    saveResults: (content: string, queryType: string, format: string) => Promise<SaveResultsResult>
+    saveResults: (
+      content: string,
+      queryType: string,
+      format: string,
+      baseName?: string
+    ) => Promise<SaveResultsResult>
     openPrefixFile: () => Promise<OpenPrefixFileResult>
+    showInFolder: (filePath: string) => Promise<void>
   }
   menu: {
     onNewQuery: (callback: () => void) => () => void
@@ -626,11 +633,17 @@ contextBridge.exposeInMainWorld('electronAPI', {
         ipcRenderer.removeListener('file:opened', listener)
       }
     },
-    saveResults: (content: string, queryType: string, format: string) => {
+    saveResults: (content: string, queryType: string, format: string, baseName?: string) => {
       if (!validateChannel('files:saveResults', 'invoke')) {
         throw new Error('Unauthorized IPC channel')
       }
-      return ipcRenderer.invoke('files:saveResults', content, queryType, format)
+      return ipcRenderer.invoke('files:saveResults', content, queryType, format, baseName)
+    },
+    showInFolder: (filePath: string) => {
+      if (!validateChannel('files:showInFolder', 'invoke')) {
+        throw new Error('Unauthorized IPC channel')
+      }
+      return ipcRenderer.invoke('files:showInFolder', filePath)
     },
     openPrefixFile: () => {
       if (!validateChannel('files:openPrefixFile', 'invoke')) {

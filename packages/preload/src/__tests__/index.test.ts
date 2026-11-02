@@ -236,10 +236,15 @@ describe('preload bridge', () => {
       ['files.openQuery', () => api.files.openQuery(), ['files:openQuery']],
       [
         'files.saveResults',
-        () => api.files.saveResults('a,b', 'SELECT', 'csv'),
-        ['files:saveResults', 'a,b', 'SELECT', 'csv'],
+        () => api.files.saveResults('a,b', 'SELECT', 'csv', 'Untitled-1'),
+        ['files:saveResults', 'a,b', 'SELECT', 'csv', 'Untitled-1'],
       ],
       ['files.openPrefixFile', () => api.files.openPrefixFile(), ['files:openPrefixFile']],
+      [
+        'files.showInFolder',
+        () => api.files.showInFolder('/tmp/out.csv'),
+        ['files:showInFolder', '/tmp/out.csv'],
+      ],
       [
         'cache.fetch',
         () => api.cache.fetch('b1', true),
@@ -392,6 +397,7 @@ describe('preload bridge', () => {
       ['files.onFileOpened', () => api.files.onFileOpened(() => {})],
       ['files.saveResults', () => api.files.saveResults('c', 'SELECT', 'csv')],
       ['files.openPrefixFile', () => api.files.openPrefixFile()],
+      ['files.showInFolder', () => api.files.showInFolder('/x')],
       ['menu.onNewQuery', () => api.menu.onNewQuery(() => {})],
       ['menu.onSaveQuery', () => api.menu.onSaveQuery(() => {})],
       ['menu.onOpenQuery', () => api.menu.onOpenQuery(() => {})],

@@ -20,10 +20,10 @@ export default defineConfig({
       // Ratchet floors: measured across all source files, not just files tests import.
       // Raise these as coverage improves; never lower them.
       thresholds: {
-        lines: 94,
-        functions: 92,
-        branches: 90,
-        statements: 94,
+        lines: 96,
+        functions: 94,
+        branches: 93,
+        statements: 96,
       },
     },
   },

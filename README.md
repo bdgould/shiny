@@ -60,8 +60,10 @@ A SPARQL utility knife for navigating the world of Enterprise Knowledge Graph.
 
 **Export Capabilities**
 
+- Save results from the results pane toolbar or File > Save Results (Cmd/Ctrl+Shift+S)
 - JSON, CSV export for tabular data
 - RDF serialization: Turtle, N-Triples, N-Quads, JSON-LD
+- Files default to `<tab name>-results.<ext>`; a toast offers to reveal the saved file
 - Copy to clipboard support
 
 **Results Visualization**

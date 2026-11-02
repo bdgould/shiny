@@ -49,11 +49,24 @@
       <div v-if="!isResultsCollapsed" class="results-section" :style="{ height: resultsHeight }">
         <div class="results-header">
           <h3>Results</h3>
-          <button class="btn-icon" title="Collapse results" @click="toggleResultsCollapse">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-              <path d="M8 11L3 6h10l-5 5z" />
-            </svg>
-          </button>
+          <div class="results-actions">
+            <button
+              class="btn-icon"
+              title="Save results…"
+              :disabled="!canSaveResults()"
+              @click="requestSave"
+            >
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                <path d="M8 1v8.6l2.8-2.8 1 1L8 11.6 4.2 7.8l1-1L8 9.6V1z" />
+                <path d="M2 11h1.5v2.5h9V11H14v4H2z" />
+              </svg>
+            </button>
+            <button class="btn-icon" title="Collapse results" @click="toggleResultsCollapse">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                <path d="M8 11L3 6h10l-5 5z" />
+              </svg>
+            </button>
+          </div>
         </div>
         <div class="results-content">
           <div v-if="queryStore.isExecuting" class="loading">Executing query...</div>
@@ -61,7 +74,7 @@
             {{ queryStore.error }}
           </div>
           <div v-else-if="queryStore.results" class="results">
-            <ResultsView />
+            <ResultsView :results="queryStore.results" :query-type="queryStore.queryType" />
           </div>
           <div v-else class="empty">No results yet. Write a query and click Execute.</div>
         </div>
@@ -84,7 +97,9 @@ import { ref, computed, onUnmounted } from 'vue'
 import { useQueryStore } from '@/stores/query'
 import { useTabsStore } from '@/stores/tabs'
 import { useConnectionStore } from '@/stores/connection'
+import { useResultsPaneStore } from '@/stores/resultsPane'
 import { useKeyboardShortcuts } from '@/composables/useKeyboardShortcuts'
+import { useResultsExport } from '@/composables/useResultsExport'
 import TabBar from '@/components/tabs/TabBar.vue'
 import MonacoSparqlEditor from '@/components/editor/MonacoSparqlEditor.vue'
 import ResultsView from '@/components/results/ResultsView.vue'
@@ -97,6 +112,8 @@ import PrefixManagementSettingsView from '@/components/settings/PrefixManagement
 const queryStore = useQueryStore()
 const tabsStore = useTabsStore()
 const connectionStore = useConnectionStore()
+const resultsPane = useResultsPaneStore()
+const { canSaveResults, requestSave } = useResultsExport()
 
 // Check if current tab is a settings tab
 const isSettingsTab = computed(() => tabsStore.activeTab?.isSettings ?? false)
@@ -129,22 +146,22 @@ useKeyboardShortcuts([
 const isMac = ref(navigator.platform.toUpperCase().indexOf('MAC') >= 0)
 const shortcutHint = computed(() => (isMac.value ? '⌘↩' : 'Ctrl+↵'))
 
-// Results panel state
-const isResultsCollapsed = ref(false)
-const resultsHeightPx = ref(300) // Default 300px
+// Results panel state lives in the resultsPane store so it persists and can be
+// shared with the popped-out results window
+const isResultsCollapsed = computed(() => resultsPane.isCollapsed)
 const isResizing = ref(false)
 
 const editorHeight = computed(() => {
   if (isResultsCollapsed.value) {
     return 'calc(100% - 32px)' // Full height minus collapsed bar
   }
-  return `calc(100% - ${resultsHeightPx.value}px - 6px)` // 6px for resizer
+  return `calc(100% - ${resultsPane.heightPx}px - 6px)` // 6px for resizer
 })
 
-const resultsHeight = computed(() => `${resultsHeightPx.value}px`)
+const resultsHeight = computed(() => `${resultsPane.heightPx}px`)
 
 function toggleResultsCollapse() {
-  isResultsCollapsed.value = !isResultsCollapsed.value
+  resultsPane.toggleCollapsed()
 }
 
 // Resize functionality
@@ -154,7 +171,7 @@ let startHeight = 0
 function startResize(event: MouseEvent) {
   isResizing.value = true
   startY = event.clientY
-  startHeight = resultsHeightPx.value
+  startHeight = resultsPane.heightPx
 
   document.addEventListener('mousemove', handleResize)
   document.addEventListener('mouseup', stopResize)
@@ -165,8 +182,8 @@ function handleResize(event: MouseEvent) {
   if (!isResizing.value) return
 
   const deltaY = startY - event.clientY // Inverted because we're dragging up/down
-  const newHeight = Math.max(100, startHeight + deltaY) // No max constraint - can expand to full height
-  resultsHeightPx.value = newHeight
+  // The store enforces the minimum; there is no maximum so it can fill the window
+  resultsPane.setHeight(startHeight + deltaY)
 }
 
 function stopResize() {
@@ -178,8 +195,8 @@ function stopResize() {
 async function executeQuery() {
   await queryStore.executeQuery()
   // Auto-expand results when query executes
-  if (isResultsCollapsed.value) {
-    isResultsCollapsed.value = false
+  if (resultsPane.isCollapsed) {
+    resultsPane.setCollapsed(false)
   }
 }
 
@@ -299,6 +316,12 @@ onUnmounted(() => {
   color: var(--color-text-primary);
 }
 
+.results-actions {
+  display: flex;
+  gap: 0.25rem;
+  align-items: center;
+}
+
 .execution-controls,
 .editor-controls {
   display: flex;
@@ -375,9 +398,14 @@ onUnmounted(() => {
   transition: all 0.2s;
 }
 
-.btn-icon:hover {
+.btn-icon:hover:not(:disabled) {
   background: var(--color-bg-main);
   color: var(--color-text-primary);
+}
+
+.btn-icon:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 .results-content {

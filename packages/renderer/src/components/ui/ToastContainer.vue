@@ -10,6 +10,14 @@
         <div class="toast-content">
           <span class="toast-icon">{{ getIcon(toast.type) }}</span>
           <span class="toast-message">{{ toast.message }}</span>
+          <button
+            v-if="toast.action"
+            class="toast-action"
+            type="button"
+            @click.stop="runAction(toast)"
+          >
+            {{ toast.action.label }}
+          </button>
         </div>
       </div>
     </TransitionGroup>
@@ -17,12 +25,17 @@
 </template>
 
 <script setup lang="ts">
-import { useToast, type ToastType } from '@/composables/useToast'
+import { useToast, type Toast, type ToastType } from '@/composables/useToast'
 
 const { toasts, remove } = useToast()
 
 function removeToast(id: string): void {
   remove(id)
+}
+
+function runAction(toast: Toast): void {
+  toast.action?.onClick()
+  remove(toast.id)
 }
 
 function getIcon(type: ToastType): string {
@@ -79,6 +92,22 @@ function getIcon(type: ToastType): string {
   flex: 1;
   font-size: 14px;
   line-height: 1.4;
+}
+
+.toast-action {
+  flex-shrink: 0;
+  padding: 4px 10px;
+  background: rgba(255, 255, 255, 0.2);
+  color: inherit;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.toast-action:hover {
+  background: rgba(255, 255, 255, 0.35);
 }
 
 .toast-info {

@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 import { useFileOperations } from '../useFileOperations'
+import { useToast } from '../useToast'
 import { useTabsStore } from '../../stores/tabs'
 import { useConnectionStore } from '../../stores/connection'
 import type { BackendConfig } from '../../types/backends'
@@ -20,18 +21,23 @@ function backend(id: string, name: string): BackendConfig {
 describe('useFileOperations', () => {
   let saveQuery: ReturnType<typeof vi.fn>
   let openQuery: ReturnType<typeof vi.fn>
-  let alertMock: ReturnType<typeof vi.fn>
+  let showInFolder: ReturnType<typeof vi.fn>
   let tabsStore: ReturnType<typeof useTabsStore>
   let connectionStore: ReturnType<typeof useConnectionStore>
+  const toast = useToast()
+
+  function messages() {
+    return toast.toasts.value.map((t) => [t.type, t.message])
+  }
 
   beforeEach(() => {
     localStorage.clear()
     setActivePinia(createPinia())
+    for (const t of [...toast.toasts.value]) toast.remove(t.id)
     saveQuery = vi.fn()
     openQuery = vi.fn()
-    alertMock = vi.fn()
-    vi.stubGlobal('alert', alertMock)
-    Object.assign(window, { electronAPI: { files: { saveQuery, openQuery } } })
+    showInFolder = vi.fn().mockResolvedValue(undefined)
+    Object.assign(window, { electronAPI: { files: { saveQuery, openQuery, showInFolder } } })
     vi.spyOn(console, 'log').mockImplementation(() => {})
     vi.spyOn(console, 'error').mockImplementation(() => {})
     tabsStore = useTabsStore()
@@ -40,26 +46,25 @@ describe('useFileOperations', () => {
   })
 
   afterEach(() => {
-    vi.unstubAllGlobals()
     vi.restoreAllMocks()
   })
 
   describe('saveQuery', () => {
-    it('alerts when there is no active tab', async () => {
+    it('warns when there is no active tab', async () => {
       const ops = useFileOperations()
       expect(await ops.saveQuery()).toBe(false)
-      expect(alertMock).toHaveBeenCalledWith('No active tab to save')
+      expect(messages()).toEqual([['warning', 'No active tab to save']])
     })
 
-    it('alerts when the query is blank', async () => {
+    it('warns when the query is blank', async () => {
       tabsStore.createTab({ query: '   ' })
       const ops = useFileOperations()
       expect(await ops.saveQuery()).toBe(false)
-      expect(alertMock).toHaveBeenCalledWith('No query to save')
+      expect(messages()).toEqual([['warning', 'No query to save']])
       expect(saveQuery).not.toHaveBeenCalled()
     })
 
-    it('saves with backend metadata and marks the tab saved', async () => {
+    it('saves with backend metadata, marks the tab saved, and confirms with a toast', async () => {
       tabsStore.createTab({ query: 'SELECT * {}', backendId: 'b2' })
       saveQuery.mockResolvedValue({ success: true, filePath: '/home/me/queries/people.rq' })
 
@@ -76,6 +81,17 @@ describe('useFileOperations', () => {
       expect(tab?.filePath).toBe('/home/me/queries/people.rq')
       expect(tab?.isDirty).toBe(false)
       expect(tab?.savedContent).toBe('SELECT * {}')
+      expect(messages()).toEqual([['success', 'Saved query to people.rq']])
+    })
+
+    it('offers to reveal the saved query from the success toast', async () => {
+      tabsStore.createTab({ query: 'SELECT * {}' })
+      saveQuery.mockResolvedValue({ success: true, filePath: '/q/people.rq' })
+      await useFileOperations().saveQuery()
+      const action = toast.toasts.value[0].action
+      expect(action?.label).toBe('Reveal')
+      action?.onClick()
+      expect(showInFolder).toHaveBeenCalledWith('/q/people.rq')
     })
 
     it('passes the existing file path and null metadata for an unknown backend', async () => {
@@ -91,12 +107,12 @@ describe('useFileOperations', () => {
       expect(saveQuery).toHaveBeenCalledWith('ASK {}', null, '/existing/q.rq')
     })
 
-    it('alerts when the save fails', async () => {
+    it('shows an error toast when the save fails', async () => {
       tabsStore.createTab({ query: 'ASK {}' })
-      saveQuery.mockResolvedValue({ success: false, error: 'Cancelled' })
+      saveQuery.mockResolvedValue({ success: false, error: 'Read-only volume' })
       const ops = useFileOperations()
       expect(await ops.saveQuery()).toBe(false)
-      expect(alertMock).toHaveBeenCalledWith('Failed to save query: Cancelled')
+      expect(messages()).toEqual([['error', 'Failed to save query: Read-only volume']])
     })
 
     it('stays silent when the user cancels the save dialog', async () => {
@@ -104,23 +120,23 @@ describe('useFileOperations', () => {
       saveQuery.mockResolvedValue({ success: false, canceled: true })
       const ops = useFileOperations()
       expect(await ops.saveQuery()).toBe(false)
-      expect(alertMock).not.toHaveBeenCalled()
+      expect(messages()).toEqual([])
     })
 
-    it('alerts with a generic message when success lacks a file path', async () => {
+    it('uses a generic message when success lacks a file path', async () => {
       tabsStore.createTab({ query: 'ASK {}' })
       saveQuery.mockResolvedValue({ success: true })
       const ops = useFileOperations()
       expect(await ops.saveQuery()).toBe(false)
-      expect(alertMock).toHaveBeenCalledWith('Failed to save query: Unknown error')
+      expect(messages()).toEqual([['error', 'Failed to save query: Unknown error']])
     })
 
-    it('alerts when the IPC call throws', async () => {
+    it('shows an error toast when the IPC call throws', async () => {
       tabsStore.createTab({ query: 'ASK {}' })
       saveQuery.mockRejectedValue(new Error('IPC down'))
       const ops = useFileOperations()
       expect(await ops.saveQuery()).toBe(false)
-      expect(alertMock).toHaveBeenCalledWith('Error saving query: IPC down')
+      expect(messages()).toEqual([['error', 'Error saving query: IPC down']])
     })
   })
 
@@ -129,14 +145,14 @@ describe('useFileOperations', () => {
       openQuery.mockResolvedValue({ error: 'No file selected' })
       const ops = useFileOperations()
       expect(await ops.openQuery()).toBe(false)
-      expect(alertMock).not.toHaveBeenCalled()
+      expect(messages()).toEqual([])
     })
 
-    it('alerts on other open errors', async () => {
+    it('shows an error toast on other open errors', async () => {
       openQuery.mockResolvedValue({ error: 'Permission denied' })
       const ops = useFileOperations()
       expect(await ops.openQuery()).toBe(false)
-      expect(alertMock).toHaveBeenCalledWith('Failed to open query: Permission denied')
+      expect(messages()).toEqual([['error', 'Failed to open query: Permission denied']])
     })
 
     it('opens the file in a new tab matching backend by id', async () => {
@@ -154,7 +170,7 @@ describe('useFileOperations', () => {
       expect(tab?.filePath).toBe('/q/find-things.rq')
       expect(tab?.backendId).toBe('b1')
       expect(tab?.isDirty).toBe(false)
-      expect(alertMock).not.toHaveBeenCalled()
+      expect(messages()).toEqual([])
     })
 
     it('falls back to matching backend by name', async () => {
@@ -168,7 +184,7 @@ describe('useFileOperations', () => {
       expect(tabsStore.activeTab?.backendId).toBe('b2')
     })
 
-    it('notifies when the backend cannot be found', async () => {
+    it('warns when the backend cannot be found', async () => {
       openQuery.mockResolvedValue({
         content: 'q',
         filePath: '/q/x.rq',
@@ -177,9 +193,12 @@ describe('useFileOperations', () => {
       const ops = useFileOperations()
       expect(await ops.openQuery()).toBe(true)
       expect(tabsStore.activeTab?.backendId).toBeNull()
-      expect(alertMock).toHaveBeenCalledWith(
-        'Backend "Ghost" not found in configuration. Please select a backend manually.'
-      )
+      expect(messages()).toEqual([
+        [
+          'warning',
+          'Backend "Ghost" not found in configuration. Please select a backend manually.',
+        ],
+      ])
     })
 
     it('opens files without metadata', async () => {
@@ -190,11 +209,11 @@ describe('useFileOperations', () => {
       expect(tabsStore.activeTab?.backendId).toBeNull()
     })
 
-    it('alerts when the IPC call throws a non-Error', async () => {
+    it('shows an error toast when the IPC call throws a non-Error', async () => {
       openQuery.mockRejectedValue('nope')
       const ops = useFileOperations()
       expect(await ops.openQuery()).toBe(false)
-      expect(alertMock).toHaveBeenCalledWith('Error opening query: Unknown error')
+      expect(messages()).toEqual([['error', 'Error opening query: Unknown error']])
     })
   })
 })

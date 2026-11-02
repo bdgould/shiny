@@ -1,9 +1,18 @@
 import { useTabsStore } from '../stores/tabs'
+import { useToast } from './useToast'
 import type { QueryType } from '../services/sparql/queryDetector'
 import { serializeResults, getAvailableFormats } from '../utils/serializeResults'
 
+/**
+ * Last path component of a file path, on either separator.
+ */
+export function fileBaseName(filePath: string): string {
+  return filePath.split(/[\\/]/).pop() || filePath
+}
+
 export function useResultsSave() {
   const tabsStore = useTabsStore()
+  const toast = useToast()
 
   /**
    * Check if save results is available for the active tab
@@ -34,12 +43,12 @@ export function useResultsSave() {
     try {
       const activeTab = tabsStore.activeTab
       if (!activeTab) {
-        alert('No active tab')
+        toast.warning('No active tab')
         return false
       }
 
       if (!activeTab.results || !activeTab.queryType) {
-        alert('No results to save')
+        toast.warning('No results to save. Execute a query first.')
         return false
       }
 
@@ -54,23 +63,29 @@ export function useResultsSave() {
       const result = await window.electronAPI.files.saveResults(
         serialized,
         activeTab.queryType,
-        format
+        format,
+        activeTab.name
       )
 
-      if (result.success) {
-        // eslint-disable-next-line no-console
-        console.log('Results saved successfully:', result.filePath)
+      if (result.success && result.filePath) {
+        const savedPath = result.filePath
+        toast.success(`Saved results to ${fileBaseName(savedPath)}`, 6000, {
+          label: 'Reveal',
+          onClick: () => void window.electronAPI.files.showInFolder(savedPath),
+        })
         return true
       } else if (result.canceled) {
         // The user dismissed the save dialog; nothing to report
         return false
       } else {
-        alert(`Failed to save results: ${result.error || 'Unknown error'}`)
+        toast.error(`Failed to save results: ${result.error || 'Unknown error'}`)
         return false
       }
     } catch (error) {
       console.error('Error saving results:', error)
-      alert(`Error saving results: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      toast.error(
+        `Error saving results: ${error instanceof Error ? error.message : 'Unknown error'}`
+      )
       return false
     }
   }

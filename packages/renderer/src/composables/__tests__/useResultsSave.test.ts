@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
-import { useResultsSave } from '../useResultsSave'
+import { useResultsSave, fileBaseName } from '../useResultsSave'
+import { useToast } from '../useToast'
 import { useTabsStore } from '../../stores/tabs'
 
 const selectResults = {
@@ -19,17 +20,22 @@ const selectResults = {
 
 describe('useResultsSave', () => {
   let saveResultsMock: ReturnType<typeof vi.fn>
-  let alertMock: ReturnType<typeof vi.fn>
+  let showInFolderMock: ReturnType<typeof vi.fn>
   let tabsStore: ReturnType<typeof useTabsStore>
+  const toast = useToast()
+
+  function messages() {
+    return toast.toasts.value.map((t) => [t.type, t.message])
+  }
 
   beforeEach(() => {
     localStorage.clear()
     setActivePinia(createPinia())
+    for (const t of [...toast.toasts.value]) toast.remove(t.id)
     saveResultsMock = vi.fn().mockResolvedValue({ success: true, filePath: '/tmp/out.csv' })
-    alertMock = vi.fn()
-    vi.stubGlobal('alert', alertMock)
+    showInFolderMock = vi.fn().mockResolvedValue(undefined)
     Object.assign(window, {
-      electronAPI: { files: { saveResults: saveResultsMock } },
+      electronAPI: { files: { saveResults: saveResultsMock, showInFolder: showInFolderMock } },
     })
     vi.spyOn(console, 'log').mockImplementation(() => {})
     vi.spyOn(console, 'error').mockImplementation(() => {})
@@ -37,7 +43,6 @@ describe('useResultsSave', () => {
   })
 
   afterEach(() => {
-    vi.unstubAllGlobals()
     vi.restoreAllMocks()
   })
 
@@ -46,7 +51,7 @@ describe('useResultsSave', () => {
     expect(canSaveResults()).toBe(false)
     expect(getExportFormats()).toEqual([])
     expect(await saveResults('csv')).toBe(false)
-    expect(alertMock).toHaveBeenCalledWith('No active tab')
+    expect(messages()).toEqual([['warning', 'No active tab']])
     expect(saveResultsMock).not.toHaveBeenCalled()
   })
 
@@ -56,7 +61,7 @@ describe('useResultsSave', () => {
     expect(canSaveResults()).toBe(false)
     expect(getExportFormats()).toEqual([])
     expect(await saveResults('csv')).toBe(false)
-    expect(alertMock).toHaveBeenCalledWith('No results to save')
+    expect(messages()).toEqual([['warning', 'No results to save. Execute a query first.']])
   })
 
   it('offers formats for the active query type', () => {
@@ -67,7 +72,7 @@ describe('useResultsSave', () => {
     expect(getExportFormats().map((f) => f.value)).toEqual(['csv', 'json'])
   })
 
-  it('serializes results and passes them to the save IPC', async () => {
+  it('serializes results, names the file after the tab, and confirms with a toast', async () => {
     const id = tabsStore.createTab()
     tabsStore.setTabResults(id, selectResults, 'SELECT')
     const { saveResults } = useResultsSave()
@@ -76,19 +81,32 @@ describe('useResultsSave', () => {
     expect(saveResultsMock).toHaveBeenCalledWith(
       's,label\nhttp://ex.org/a,"A, ""x"""',
       'SELECT',
-      'csv'
+      'csv',
+      'Untitled-1'
     )
-    expect(alertMock).not.toHaveBeenCalled()
+    expect(messages()).toEqual([['success', 'Saved results to out.csv']])
   })
 
-  it('alerts when the save IPC reports failure', async () => {
+  it('offers to reveal the saved file from the success toast', async () => {
+    const id = tabsStore.createTab()
+    tabsStore.setTabResults(id, selectResults, 'SELECT')
+    const { saveResults } = useResultsSave()
+
+    await saveResults('csv')
+    const action = toast.toasts.value[0].action
+    expect(action?.label).toBe('Reveal')
+    action?.onClick()
+    expect(showInFolderMock).toHaveBeenCalledWith('/tmp/out.csv')
+  })
+
+  it('shows an error toast when the save IPC reports failure', async () => {
     saveResultsMock.mockResolvedValueOnce({ success: false, error: 'Disk full' })
     const id = tabsStore.createTab()
     tabsStore.setTabResults(id, selectResults, 'SELECT')
     const { saveResults } = useResultsSave()
 
     expect(await saveResults('json')).toBe(false)
-    expect(alertMock).toHaveBeenCalledWith('Failed to save results: Disk full')
+    expect(messages()).toEqual([['error', 'Failed to save results: Disk full']])
   })
 
   it('uses a generic message when failure has no error text', async () => {
@@ -98,7 +116,7 @@ describe('useResultsSave', () => {
     const { saveResults } = useResultsSave()
 
     expect(await saveResults('json')).toBe(false)
-    expect(alertMock).toHaveBeenCalledWith('Failed to save results: Unknown error')
+    expect(messages()).toEqual([['error', 'Failed to save results: Unknown error']])
   })
 
   it('stays silent when the user cancels the save dialog', async () => {
@@ -108,18 +126,18 @@ describe('useResultsSave', () => {
     const { saveResults } = useResultsSave()
 
     expect(await saveResults('json')).toBe(false)
-    expect(alertMock).not.toHaveBeenCalled()
+    expect(messages()).toEqual([])
   })
 
-  it('alerts when serialization throws (unsupported format)', async () => {
+  it('shows an error toast when serialization throws (unsupported format)', async () => {
     const id = tabsStore.createTab()
     tabsStore.setTabResults(id, selectResults, 'SELECT')
     const { saveResults } = useResultsSave()
 
     expect(await saveResults('turtle')).toBe(false)
-    expect(alertMock).toHaveBeenCalledWith(
-      'Error saving results: Unsupported format "turtle" for SELECT query'
-    )
+    expect(messages()).toEqual([
+      ['error', 'Error saving results: Unsupported format "turtle" for SELECT query'],
+    ])
     expect(saveResultsMock).not.toHaveBeenCalled()
   })
 
@@ -130,6 +148,16 @@ describe('useResultsSave', () => {
     const { saveResults } = useResultsSave()
 
     expect(await saveResults('csv')).toBe(false)
-    expect(alertMock).toHaveBeenCalledWith('Error saving results: Unknown error')
+    expect(messages()).toEqual([['error', 'Error saving results: Unknown error']])
+  })
+})
+
+describe('fileBaseName', () => {
+  it.each([
+    ['/tmp/out.csv', 'out.csv'],
+    ['C:\\Users\\me\\out.csv', 'out.csv'],
+    ['out.csv', 'out.csv'],
+  ])('extracts the file name from %s', (input, expected) => {
+    expect(fileBaseName(input)).toBe(expected)
   })
 })
