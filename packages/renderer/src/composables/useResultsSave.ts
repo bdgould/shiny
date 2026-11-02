@@ -10,27 +10,44 @@ export function fileBaseName(filePath: string): string {
   return filePath.split(/[\\/]/).pop() || filePath
 }
 
-export function useResultsSave() {
-  const tabsStore = useTabsStore()
+/** What a save needs to know about the results being exported. */
+export interface ResultsSource {
+  name: string
+  results: any | null
+  queryType: QueryType | null
+}
+
+/** Default source: the active tab in the main window. */
+function activeTabSource(): ResultsSource | null {
+  const activeTab = useTabsStore().activeTab
+  if (!activeTab) return null
+  return { name: activeTab.name, results: activeTab.results, queryType: activeTab.queryType }
+}
+
+/**
+ * @param getSource - where the results come from; defaults to the active tab.
+ *   The popped-out results window passes its mirrored snapshot instead.
+ */
+export function useResultsSave(getSource: () => ResultsSource | null = activeTabSource) {
   const toast = useToast()
 
   /**
    * Check if save results is available for the active tab
    */
   function canSaveResults(): boolean {
-    const activeTab = tabsStore.activeTab
-    return !!(activeTab && activeTab.results && activeTab.queryType)
+    const source = getSource()
+    return !!(source && source.results && source.queryType)
   }
 
   /**
    * Get available export formats for the active tab's query type
    */
   function getExportFormats(): Array<{ value: string; label: string }> {
-    const activeTab = tabsStore.activeTab
-    if (!activeTab || !activeTab.queryType) {
+    const source = getSource()
+    if (!source || !source.queryType) {
       return []
     }
-    return getAvailableFormats(activeTab.queryType)
+    return getAvailableFormats(source.queryType)
   }
 
   /**
@@ -41,30 +58,26 @@ export function useResultsSave() {
    */
   async function saveResults(format: string): Promise<boolean> {
     try {
-      const activeTab = tabsStore.activeTab
-      if (!activeTab) {
+      const source = getSource()
+      if (!source) {
         toast.warning('No active tab')
         return false
       }
 
-      if (!activeTab.results || !activeTab.queryType) {
+      if (!source.results || !source.queryType) {
         toast.warning('No results to save. Execute a query first.')
         return false
       }
 
       // Serialize results based on query type and format
-      const serialized = await serializeResults(
-        activeTab.results,
-        activeTab.queryType as QueryType,
-        format
-      )
+      const serialized = await serializeResults(source.results, source.queryType, format)
 
       // Call Electron API to save file
       const result = await window.electronAPI.files.saveResults(
         serialized,
-        activeTab.queryType,
+        source.queryType,
         format,
-        activeTab.name
+        source.name
       )
 
       if (result.success && result.filePath) {

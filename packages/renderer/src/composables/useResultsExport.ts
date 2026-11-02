@@ -1,5 +1,5 @@
 import { ref, readonly } from 'vue'
-import { useResultsSave } from './useResultsSave'
+import { useResultsSave, type ResultsSource } from './useResultsSave'
 import { useToast } from './useToast'
 
 interface ExportFormat {
@@ -18,8 +18,8 @@ const isPickerOpen = ref(false)
  * picker from `isPickerOpen` / `pickerFormats` and call `selectFormat` or
  * `closePicker` from it.
  */
-export function useResultsExport() {
-  const { canSaveResults, getExportFormats, saveResults } = useResultsSave()
+export function useResultsExport(getSource?: () => ResultsSource | null) {
+  const { canSaveResults, getExportFormats, saveResults } = useResultsSave(getSource)
   const toast = useToast()
 
   async function requestSave(): Promise<void> {

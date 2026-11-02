@@ -31,6 +31,12 @@ const ALLOWED_CHANNELS = {
     'files:showInFolder',
     'cache:fetch',
     'cache:testQuery',
+    'resultsWindow:open',
+    'resultsWindow:close',
+    'resultsWindow:isOpen',
+    'resultsWindow:publish',
+    'resultsWindow:ready',
+    'resultsWindow:execute',
   ],
   on: [
     'query:result',
@@ -41,12 +47,40 @@ const ALLOWED_CHANNELS = {
     'menu:openQuery',
     'menu:saveResults',
     'menu:formatQuery',
+    'menu:toggleResultsWindow',
     'cache:progress',
+    'resultsWindow:state',
+    'resultsWindow:closed',
+    'resultsWindow:ready',
+    'resultsWindow:execute',
   ],
 }
 
 function validateChannel(channel: string, type: keyof typeof ALLOWED_CHANNELS): boolean {
   return ALLOWED_CHANNELS[type].includes(channel)
+}
+
+/** invoke() guarded by the channel whitelist. */
+function invokeChecked<T>(channel: string, ...args: unknown[]): Promise<T> {
+  if (!validateChannel(channel, 'invoke')) {
+    throw new Error('Unauthorized IPC channel')
+  }
+  return ipcRenderer.invoke(channel, ...args) as Promise<T>
+}
+
+/** on() guarded by the whitelist; the listener never sees the IPC event. */
+function subscribe<T extends unknown[]>(
+  channel: string,
+  handler: (...args: T) => void
+): () => void {
+  if (!validateChannel(channel, 'on')) {
+    throw new Error('Unauthorized IPC channel')
+  }
+  const listener = (_event: unknown, ...args: unknown[]) => handler(...(args as T))
+  ipcRenderer.on(channel, listener)
+  return () => {
+    ipcRenderer.removeListener(channel, listener)
+  }
 }
 
 // Query result structure returned from main process
@@ -199,6 +233,19 @@ export interface SaveQueryResult {
 
 export type OpenQueryResult = QueryFileData | { error: string }
 
+/**
+ * Snapshot of the active tab the main window publishes to the popped-out
+ * results window. `results` is the raw QueryResult; the window renders it
+ * exactly as the in-pane view would.
+ */
+export interface ResultsWindowState {
+  tabName: string
+  queryType: string | null
+  results: QueryResult | null
+  error: string | null
+  isExecuting: boolean
+}
+
 export interface SaveResultsResult {
   success: boolean
   canceled?: boolean
@@ -343,6 +390,19 @@ export interface ElectronAPI {
     onOpenQuery: (callback: () => void) => () => void
     onSaveResults: (callback: () => void) => () => void
     onFormatQuery: (callback: () => void) => () => void
+    onToggleResultsWindow: (callback: () => void) => () => void
+  }
+  resultsWindow: {
+    open: () => Promise<boolean>
+    close: () => Promise<void>
+    isOpen: () => Promise<boolean>
+    publish: (state: ResultsWindowState) => Promise<boolean>
+    ready: () => Promise<boolean>
+    execute: () => Promise<boolean>
+    onState: (callback: (state: ResultsWindowState) => void) => () => void
+    onClosed: (callback: () => void) => () => void
+    onReady: (callback: () => void) => () => void
+    onExecute: (callback: () => void) => () => void
   }
   cache: {
     fetch: (backendId: string, onProgress?: boolean) => Promise<any>
@@ -703,6 +763,29 @@ contextBridge.exposeInMainWorld('electronAPI', {
         ipcRenderer.removeListener('menu:formatQuery', listener)
       }
     },
+    onToggleResultsWindow: (callback: () => void) => {
+      if (!validateChannel('menu:toggleResultsWindow', 'on')) {
+        throw new Error('Unauthorized IPC channel')
+      }
+      const listener = () => callback()
+      ipcRenderer.on('menu:toggleResultsWindow', listener)
+      return () => {
+        ipcRenderer.removeListener('menu:toggleResultsWindow', listener)
+      }
+    },
+  },
+  resultsWindow: {
+    open: () => invokeChecked<boolean>('resultsWindow:open'),
+    close: () => invokeChecked<void>('resultsWindow:close'),
+    isOpen: () => invokeChecked<boolean>('resultsWindow:isOpen'),
+    publish: (state: ResultsWindowState) => invokeChecked<boolean>('resultsWindow:publish', state),
+    ready: () => invokeChecked<boolean>('resultsWindow:ready'),
+    execute: () => invokeChecked<boolean>('resultsWindow:execute'),
+    onState: (callback: (state: ResultsWindowState) => void) =>
+      subscribe<[ResultsWindowState]>('resultsWindow:state', (state) => callback(state)),
+    onClosed: (callback: () => void) => subscribe('resultsWindow:closed', () => callback()),
+    onReady: (callback: () => void) => subscribe('resultsWindow:ready', () => callback()),
+    onExecute: (callback: () => void) => subscribe('resultsWindow:execute', () => callback()),
   },
   cache: {
     fetch: (backendId: string, onProgress?: boolean) => {

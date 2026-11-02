@@ -121,8 +121,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted, onUnmounted } from 'vue'
 import { useQueryStore } from '@/stores/query'
+import { VIEW_PREFERENCES_STORAGE_KEY } from '@/services/preferences/viewPreferences'
 import type { QueryType } from '@/services/sparql/queryDetector'
 import type { QueryResult } from '@/types/electron'
 import TableIcon from './icons/TableIcon.vue'
@@ -144,6 +145,16 @@ const props = defineProps<{
 
 // View preferences (table vs JSON, etc.) stay global in the query store
 const queryStore = useQueryStore()
+
+// The main window and the popped-out results window share localStorage, so a
+// view toggle in one is picked up by the other through the storage event.
+function handleStorage(event: StorageEvent) {
+  if (event.key === null || event.key === VIEW_PREFERENCES_STORAGE_KEY) {
+    queryStore.reloadViewPreferences()
+  }
+}
+onMounted(() => window.addEventListener('storage', handleStorage))
+onUnmounted(() => window.removeEventListener('storage', handleStorage))
 
 const queryType = computed(() => props.queryType)
 const results = computed(() => props.results)

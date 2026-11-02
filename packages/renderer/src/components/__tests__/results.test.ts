@@ -368,6 +368,27 @@ describe('ResultsView', () => {
     }
   )
 
+  it('follows view preference changes made in another window', async () => {
+    const w = setup('SELECT', selectData)
+    expect(w.findComponent(SelectTableView).exists()).toBe(true)
+    localStorage.setItem(
+      'shiny:query:view-preferences',
+      JSON.stringify({ select: 'json', construct: 'entity-table', ask: 'badge' })
+    )
+    window.dispatchEvent(new StorageEvent('storage', { key: 'shiny:query:view-preferences' }))
+    await w.vm.$nextTick()
+    expect(w.findComponent(JsonView).exists()).toBe(true)
+    // Unrelated keys are ignored
+    localStorage.setItem(
+      'shiny:query:view-preferences',
+      JSON.stringify({ select: 'table', construct: 'entity-table', ask: 'badge' })
+    )
+    window.dispatchEvent(new StorageEvent('storage', { key: 'something-else' }))
+    await w.vm.$nextTick()
+    expect(w.findComponent(JsonView).exists()).toBe(true)
+    w.unmount()
+  })
+
   it('falls back to raw JSON for unknown query types', () => {
     const w = setup(null, { foo: 'bar' })
     expect(w.find('.query-type-badge').exists()).toBe(false)

@@ -6,6 +6,7 @@ import { initializeServices } from './services/index.js'
 import { getMigrationService } from './services/MigrationService.js'
 import { fileService } from './services/FileService.js'
 import { initAutoUpdates } from './updater.js'
+import { initResultsWindow } from './resultsWindow.js'
 import './ipc'
 
 // Track the main window for file opening
@@ -33,6 +34,13 @@ app.whenReady().then(async () => {
 
   mainWindow = createMainWindow()
 
+  // The popped-out results window follows the main window's lifetime
+  const resultsWindow = initResultsWindow(() => mainWindow)
+  mainWindow.on('closed', () => {
+    resultsWindow.close()
+    mainWindow = null
+  })
+
   // Auto-updates run only in packaged builds; see updater.ts.
   const updates = initAutoUpdates(() => mainWindow)
 
@@ -50,6 +58,10 @@ app.whenReady().then(async () => {
     // dock icon is clicked and there are no other windows open.
     if (BrowserWindow.getAllWindows().length === 0) {
       mainWindow = createMainWindow()
+      mainWindow.on('closed', () => {
+        resultsWindow.close()
+        mainWindow = null
+      })
     }
   })
 })

@@ -28,7 +28,8 @@ npm run test:e2e        # Playwright drives the real app (builds main + preload 
 - Main and preload builds use `tsconfig.build.json` (excludes tests). The plain `tsconfig.json` is for type-checking and includes tests.
 - The renderer imports Monaco from `monaco-editor/editor/editor.api` plus `features/register.all`, not the package root, which bundles every language worker.
 - Settings getters in `renderer/src/services/preferences/appSettings.ts` return `structuredClone` of defaults; never hand out the shared default objects.
-- Backends and credentials live in the electron-store named `shiny-config`.
+- Backends and credentials live in the electron-store named `shiny-config`. The popped-out results window's bounds live in `shiny-window-state`.
+- The renderer bundle serves two windows: `main.ts` mounts `ResultsWindowApp.vue` when the URL hash is `#results`, otherwise `App.vue`. The results window is a mirror fed by `resultsWindow:*` IPC (`packages/main/src/resultsWindow.ts`); it must never touch the tabs store's localStorage session.
 
 ## Releases
 

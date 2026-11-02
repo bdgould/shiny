@@ -71,6 +71,7 @@ A SPARQL utility knife for navigating the world of Enterprise Knowledge Graph.
 - Tabular view with sorting and filtering
 - Entity view for exploring individual resources
 - Multiple format display options
+- Pop the results pane out into its own window (View > Toggle Results Window, Cmd/Ctrl+Shift+R); closing the window brings the pane back
 
 **Tab Management**
 
@@ -492,10 +493,12 @@ On first launch, Shiny automatically creates a default backend pointing to DBped
 
 ### Keyboard Shortcuts
 
-- `Cmd/Ctrl+Enter`: Execute query
+- `Cmd/Ctrl+Enter`: Execute query (also from the popped-out results window)
 - `Cmd/Ctrl+W`: Close current tab
 - `Cmd/Ctrl+S`: Save current file
+- `Cmd/Ctrl+Shift+S`: Save results
 - `Cmd/Ctrl+O`: Open file
+- `Cmd/Ctrl+Shift+R`: Pop results out into their own window, or back in
 
 ## Contributing
 
