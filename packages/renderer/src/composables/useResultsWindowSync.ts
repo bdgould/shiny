@@ -1,4 +1,4 @@
-import { watch, type WatchStopHandle } from 'vue'
+import { toRaw, watch, type WatchStopHandle } from 'vue'
 import { useTabsStore } from '@/stores/tabs'
 import { useQueryStore } from '@/stores/query'
 import { useResultsPaneStore } from '@/stores/resultsPane'
@@ -23,7 +23,10 @@ export function useResultsWindowSync() {
     return {
       tabName: tab?.name ?? '',
       queryType: tab?.queryType ?? null,
-      results: tab?.results ?? null,
+      // The tab store wraps results in a reactive proxy, and Electron's IPC
+      // cannot structured-clone a proxy ("An object could not be cloned"), so
+      // send the raw response object.
+      results: toRaw(tab?.results ?? null),
       error: tab?.error ?? null,
       isExecuting: tab?.isExecuting ?? false,
     }
